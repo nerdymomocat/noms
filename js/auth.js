@@ -57,7 +57,8 @@ async function initializeAuth() {
 
     if (botId) {
         // We have a botId, so the user has likely just logged in.
-        const response = await fetch(`${OAUTH_HANDLER_URL}/auth/user`);
+        const userUrl = new URL("/auth/user", OAUTH_HANDLER_URL); // Use URL object!
+        const response = await fetch(userUrl);
 
         if (response.ok) {
             const userData = await response.json();
