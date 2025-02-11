@@ -101,7 +101,8 @@ async function disconnect() {
     const botId = cookies?.match(/notionBotId=([^;]+)/)?.[1];
 
     // Send botId in Authorization Header to /auth/logout
-    const response = await fetch(`${OAUTH_HANDLER_URL}/auth/logout`, { // Use the constant
+    const logoutUrl = new URL("/auth/logout", OAUTH_HANDLER_URL); // Use URL object!
+    const response = await fetch(logoutUrl, { // Use the constant
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${botId}`,
