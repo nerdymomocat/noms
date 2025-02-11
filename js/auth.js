@@ -1,4 +1,5 @@
 // auth.js
+import { OAUTH_HANDLER_URL } from './constants.js'; // Import the constant
 
 // Helper function to set an item in localStorage with an expiration
 function setLocalStorageWithExpiry(key, value, ttl) {
@@ -27,12 +28,12 @@ function getLocalStorageWithExpiry(key) {
 
 // Function to update the UI based on login status
 async function updateUI(userInfoContainer) {
-    const notionData = getLocalStorageWithExpiry("notionData");
+    const nomsData = getLocalStorageWithExpiry("nomsData");
 
-    if (notionData) {
+    if (nomsData) {
         // User is logged in
         userInfoContainer.innerHTML = `
-            <span>Logged in as: ${notionData.workspaceName}</span>
+            <span>Logged in as: ${nomsData.workspaceName}</span>
             <button id="logout-button" class="px-4 py-2 ml-4 text-white bg-black border-4 border-black rounded-md">Logout</button>
             <button id="disconnect-button" class="px-4 py-2 ml-4 text-white bg-red-500 border-4 border-black rounded-md">Disconnect from Notion</button>
         `;
@@ -40,22 +41,25 @@ async function updateUI(userInfoContainer) {
         document.getElementById('disconnect-button').addEventListener('click', disconnect);
     } else {
         // User is not logged in
+        // Construct the URL safely:
+        const loginUrl = new URL("/auth/login", OAUTH_HANDLER_URL); // Use URL object
+
         userInfoContainer.innerHTML = `
-            <a href="https://notion-oauth-handler.nerdymomocat.workers.dev/auth/login" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">Login with Notion</a>
-        `;  // REPLACE WITH YOUR WORKER URL
+            <a href="${loginUrl.href}" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">Login with Notion</a>
+        `;
     }
 }
 
 // Function to handle logout
 async function logout() {
-    localStorage.removeItem("notionData");
+    localStorage.removeItem("nomsData");
     // Find the userInfoContainer in the current page and update it
     const userInfoContainer = document.getElementById('user-info');
     if (userInfoContainer) {
         updateUI(userInfoContainer);
     } else {
         // If not on a page with userInfoContainer, redirect to index.html
-        window.location.href = "/noms/index.html";
+        window.location.href = "./index.html";
     }
 }
 
@@ -66,21 +70,21 @@ async function disconnect() {
     const botId = cookies?.match(/notionBotId=([^;]+)/)?.[1];
 
     // Send botId in Authorization Header to /auth/logout
-    const response = await fetch("https://notion-oauth-handler.nerdymomocat.workers.dev/auth/logout", { // REPLACE WITH YOUR URL
+    const response = await fetch(`${OAUTH_HANDLER_URL}/auth/logout`, { // Use the constant
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${botId}`,
         },
     });
     if (response.ok) {
-        localStorage.removeItem("notionData"); // Clear local storage
+        localStorage.removeItem("nomsData"); // Clear local storage
         // Find the userInfoContainer in the current page and update it
         const userInfoContainer = document.getElementById('user-info');
         if (userInfoContainer) {
             updateUI(userInfoContainer);
         } else {
             // If not on a page with userInfoContainer, redirect to index.html
-            window.location.href = "/noms/index.html";
+            window.location.href = "./index.html";
         }
 
     }

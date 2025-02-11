@@ -44,10 +44,50 @@
     .font-mono {
       font-family: 'Geist Mono', monospace;
     }
+
+    /* Add styles for header from index.html*/
+    header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding: 1rem;
+      background-color: #FEA97F;
+      border-bottom: 8px solid #000;
+    }
+
+    .header-container {
+      max-width: 800px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Responsive header */
+    @media (max-width: 768px) {
+      header {
+        border-bottom-width: 4px;
+      }
+
+      .header-container {
+        padding: 0 1rem;
+      }
+    }
   </style>
 </head>
 
 <body>
+  <header>
+    <div class="header-container">
+      <h1>Noms</h1>
+      <div id="user-info">
+        <!-- Login/Logout/Disconnect buttons and user info will go here -->
+      </div>
+    </div>
+  </header>
   <div id="root" class="min-h-screen bg-gray-100 p-8">
     <div class="mx-auto max-w-2xl">
       <div class="mb-8 flex items-center justify-center space-x-4">
@@ -58,6 +98,9 @@
         <h1 class="text-3xl font-black uppercase tracking-wider">
           Notion Link Enhancer
         </h1>
+      </div>
+      <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center">
+        You need to be logged in to use this tool. Please log in above.
       </div>
 
       <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
@@ -84,13 +127,6 @@
               </div>
             </div>
           </details>
-          <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="notionToken">Notion API Token</label>
-            <input
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-              type="password" id="notionToken" name="notionToken" placeholder="Enter your Notion API Token" required />
-            <p id="notionToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
           <div class="w-full">
             <label class="mb-2 block font-bold uppercase tracking-wide" for="databaseId">Database ID</label>
             <input
@@ -214,8 +250,12 @@
     </div>
   </div>
 
-  <script>
-    // DOM Elements
+  <script type="module">
+
+    import { getLocalStorageWithExpiry, updateUI } from './js/auth.js'; // CORRECT PATH
+    import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
+
+    const userInfoContainer = document.getElementById('user-info');
     const form = document.getElementById('notion-form');
     const submitButton = document.getElementById('submit-button');
     const submitButtonText = document.getElementById('submit-button-text');
@@ -234,46 +274,50 @@
     let progress = { current: 0, total: 0 };
     let logs = [];
 
-    // --- Helper Functions ---
-    function cn(...classes) {
-      return classes.filter(Boolean).join(' ');
+    let notionToken = null; // Store notion token
+
+    // Prefill the workerUrl input
+    const workerUrlInput = document.getElementById('workerUrl');
+    if (WORKER_URL) { // Check if WORKER_URL is defined and not empty
+      workerUrlInput.value = WORKER_URL;
     }
 
-
-    function addLog(message) {
-      logs.push(message);
-      const logElement = document.createElement('div');
-      logElement.textContent = message;
-      logElement.className = 'whitespace-pre-wrap';
-      logsContainer.appendChild(logElement);
-      logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
+    // Prefill the workerToken input (NEW CODE)
+    const workerTokenInput = document.getElementById('workerToken');
+    if (WORKER_TOKEN) {
+      workerTokenInput.value = WORKER_TOKEN;
     }
 
-    function updateProgress(current, total) {
-      progress.current = current;
-      progress.total = total;
-      const progressPercentage = total > 0 ? (current / total) * 100 : 0;
-      progressBar.style.width = `${progressPercentage}%`;
-      progressText.textContent = `${current} / ${total} pages`;
-    }
+    // Function to check login status and redirect if not logged in
+    async function checkAuthAndBanner() {
+      let nomsData = getLocalStorageWithExpiry("nomsData");
+      const authBanner = document.getElementById('auth-banner'); // Get the banner element
 
-    function showError(inputElement, message) {
-      const errorElement = document.getElementById(`${inputElement.name}-error`);
-      if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.classList.remove('hidden');
-        inputElement.classList.add('border-red-500');
+      // If not in localStorage, try to get it from the worker
+      if (!nomsData) {
+        const tokenURL = new URL("/auth/token", OAUTH_HANDLER_URL); // Use URL object
+        const response = await fetch(tokenURL.href); // Get from worker
+        if (!response.ok) {
+          // If not logged in (worker returns unauthorized), show banner
+          authBanner.classList.remove('hidden'); // Show the banner
+          mainContainer.classList.add('hidden'); //Hide the form
+          return; // Stop execution
+        }
+        nomsData = await response.json(); // Get data from worker response
+        setLocalStorageWithExpiry("nomsData", nomsData, 3600 * 1000); // Cache in localStorage
       }
+
+      // If we got here, the user IS logged in (either from localStorage or the worker)
+      notionToken = nomsData.accessToken; // Set the global notionToken
+      updateUI(userInfoContainer); // Update the header UI
+
+      // No need for this double check if it passes earlier checks
+      // if (!nomsData) { 
+      //     window.location.href = "./index.html";
+      //    return;
+      // }
     }
 
-    function clearError(inputElement) {
-      const errorElement = document.getElementById(`${inputElement.name}-error`);
-      if (errorElement) {
-        errorElement.textContent = '';
-        errorElement.classList.add('hidden');
-        inputElement.classList.remove('border-red-500');
-      }
-    }
 
 
     // --- Event Handlers ---
@@ -292,7 +336,7 @@
       if (isProcessing) return;
 
       const formData = {
-        notionToken: form.notionToken.value.trim(),
+        //   notionToken: form.notionToken.value.trim(), // REMOVE.  We're getting it from localStorage/worker
         workerToken: form.workerToken.value.trim(),
         databaseId: form.databaseId.value.trim(),
         urlPropertyName: form.urlPropertyName.value.trim(),
@@ -305,10 +349,7 @@
       };
 
       let isValid = true;
-      if (!formData.notionToken) {
-        showError(form.notionToken, 'Notion API Token is required');
-        isValid = false;
-      }
+      // Remove notionToken check
       if (!formData.workerToken) {
         showError(form.workerToken, 'Worker Token is required');
         isValid = false;
@@ -347,7 +388,8 @@
       updateProgress(0, 0);
 
       try {
-        const enhancer = new NotionEnhancer(formData);
+        // Pass notionToken to the NotionEnhancer
+        const enhancer = new NotionEnhancer(formData, notionToken);
         addLog('Validating database access...');
         await enhancer.validateAccess(); // Removed the return value
         addLog('✓ Database access validated');
@@ -417,39 +459,38 @@
       logsContainer.innerHTML = '';
       updateProgress(0, 0);
     }
+    // --- Helper Functions Moved to auth.js---
 
+    // --- NotionEnhancer Class ---
     class NotionEnhancer {
-      constructor(config) {
+      constructor(config, notionToken) { // Accepts notionToken
         this.config = config;
-        this.titlePropertyName = null; // Initialize titlePropertyName
+        this.notionToken = notionToken; // Use the passed token
+        this.titlePropertyName = null;
       }
 
       async makeRequest(endpoint, options = {}) {
-        const url = `${this.config.workerUrl}${endpoint}?secret=${encodeURIComponent(
-          this.config.notionToken
-        )}&token=${encodeURIComponent(this.config.workerToken)}`;
-        console.log('Making request to:', url);
+        // Use this.notionToken, *not* a secret URL parameter
+        const url = `${this.config.workerUrl}${endpoint}?token=${encodeURIComponent(this.config.workerToken)}`;
 
         try {
           const response = await fetch(url, {
             ...options,
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.notionToken}`, // Use the stored token
               ...options.headers,
             },
           });
 
           if (!response.ok) {
-            console.error('API request failed:', response.status, await response.text());
             throw new Error(`API request failed: ${response.status}`);
           }
 
           const data = await response.json();
-          console.log('API response:', data);
           return data;
 
         } catch (error) {
-          console.error('Request error:', error);
           throw error;
         }
       }
@@ -573,7 +614,7 @@
       }
 
 
-      async updatePage(page, url) { // Changed to accept 'page' object
+      async updatePage(page, url) {
         try {
           const metadata = await this.fetchMetadata(url);
 
@@ -606,7 +647,6 @@
               properties[this.titlePropertyName] = {
                 title: [{ type: 'text', text: { content: metadata.title } }],
               };
-              console.log("added title", properties);
             }
 
           }
@@ -626,7 +666,6 @@
               properties[this.config.ogImagePropertyName] = {
                 files: [{ type: 'external', name: 'OG Image', external: { url: metadata.ogImage } }],
               };
-              console.log("added ogimage", properties);
             }
 
           }
@@ -642,9 +681,6 @@
                   icon: { type: 'external', external: { url: metadata.favicon } },
                 }),
               });
-              console.log("added icon", {
-                icon: { type: 'external', external: { url: metadata.favicon } },
-              });
             }
           }
 
@@ -652,7 +688,6 @@
           // Add checked property
           if (this.config.checkedPropertyName) {
             properties[this.config.checkedPropertyName] = { checkbox: true };
-            console.log("added checked", properties);
           }
 
           // Batch property updates (Title, OG Image and checked)
@@ -670,6 +705,9 @@
         }
       }
     } //end Notion Enhancer Class
+
+    // Call checkAuthAndBanner on page load
+    checkAuthAndBanner();
   </script>
 </body>
 
