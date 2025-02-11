@@ -24,6 +24,7 @@
         };
     </script>
     <style>
+        /* ... (Your existing CSS - NO CHANGES NEEDED) ... */
         body {
             background-color: #f0f0f0;
             color: #000;
@@ -109,6 +110,7 @@
             color: white;
         }
 
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .container {
@@ -166,7 +168,7 @@
     </div>
     <!-- Import the auth.js module -->
     <script type="module">
-        import { updateUI } from './js/auth.js'; // Assuming auth.js is in a js/ subdirectory
+        import { updateUI, getLocalStorageWithExpiry } from './js/auth.js';
         import { createHeader } from './js/header.js'; // Import the header
 
         // Create and insert the header
@@ -175,11 +177,19 @@
 
 
         const userInfoContainer = document.getElementById('user-info');
-        // Call updateUI on page load to initialize the UI
 
         // Wait for the DOM to be fully loaded before running the script
         document.addEventListener('DOMContentLoaded', () => {
-            updateUI(userInfoContainer);
+            // Check for existing login data in localStorage and remove URL query params
+            const nomsData = getLocalStorageWithExpiry("nomsData");
+
+            // Remove code and state from URL, if present
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('code') || urlParams.has('state')) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            updateUI(userInfoContainer); // Update UI based on login status
+
         });
     </script>
 </body>

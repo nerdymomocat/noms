@@ -257,30 +257,22 @@
 
     // Function to check login status, show banner if needed, and update header.
     async function checkAuthStatus() {
-      let nomsData = getLocalStorageWithExpiry("nomsData");
+      const nomsData = getLocalStorageWithExpiry("nomsData");
+      const authBanner = document.getElementById('auth-banner');
 
-      // If not in localStorage, try to get it from the worker
       if (!nomsData) {
-        const tokenURL = new URL("/auth/token", OAUTH_HANDLER_URL);
-        const response = await fetch(tokenURL.href);
-        if (!response.ok) {
-          // Not logged in: Show banner, disable button
-          authBanner.classList.remove('hidden');
-          submitButton.disabled = true; // Disable the button!
-          updateUI(userInfoContainer);  // Update header (login link)
-          return; // Stop execution
-        }
-        nomsData = await response.json();
-        setLocalStorageWithExpiry("nomsData", nomsData, 3600 * 1000);
+        // Not logged in: Show banner, disable button, don't update header here
+        authBanner.classList.remove('hidden');
+        submitButton.disabled = true;
+        return; // Stop execution.  Don't try to fetch from the worker.
       }
 
-      // Logged in (or data retrieved from worker):
+      // Logged in:
       notionToken = nomsData.accessToken;
       updateUI(userInfoContainer); // Update header (logout/disconnect)
       submitButton.disabled = false; // Enable the button
       authBanner.classList.add('hidden'); // Hide the banner
     }
-
 
 
     // --- Event Handlers ---
