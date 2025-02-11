@@ -41,7 +41,7 @@ async function updateUI(userInfoContainer) {
   } else {
     // User is not logged in
     userInfoContainer.innerHTML = `
-            <a href="https://your-oauth-handler-worker.workers.dev/auth/login" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">Login with Notion</a>
+            <a href="https://notion-oauth-handler.nerdymomocat.workers.dev/auth/login" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">Login with Notion</a>
         `;  // REPLACE WITH YOUR WORKER URL
   }
 }
@@ -66,7 +66,7 @@ async function disconnect() {
     const botId = cookies?.match(/notionBotId=([^;]+)/)?.[1];
 
     // Send botId in Authorization Header to /auth/logout
-    const response = await fetch("https://your-oauth-handler-worker.workers.dev/auth/logout", { // REPLACE WITH YOUR URL
+    const response = await fetch("https://notion-oauth-handler.nerdymomocat.workers.dev/auth/logout", { // REPLACE WITH YOUR URL
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${botId}`,
