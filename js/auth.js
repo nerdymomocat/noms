@@ -27,23 +27,23 @@ function getLocalStorageWithExpiry(key) {
 
 // Function to update the UI based on login status
 async function updateUI(userInfoContainer) {
-  const notionData = getLocalStorageWithExpiry("notionData");
+    const notionData = getLocalStorageWithExpiry("notionData");
 
-  if (notionData) {
-    // User is logged in
-    userInfoContainer.innerHTML = `
+    if (notionData) {
+        // User is logged in
+        userInfoContainer.innerHTML = `
             <span>Logged in as: ${notionData.workspaceName}</span>
             <button id="logout-button" class="px-4 py-2 ml-4 text-white bg-black border-4 border-black rounded-md">Logout</button>
             <button id="disconnect-button" class="px-4 py-2 ml-4 text-white bg-red-500 border-4 border-black rounded-md">Disconnect from Notion</button>
         `;
-    document.getElementById('logout-button').addEventListener('click', logout);
-    document.getElementById('disconnect-button').addEventListener('click', disconnect);
-  } else {
-    // User is not logged in
-    userInfoContainer.innerHTML = `
+        document.getElementById('logout-button').addEventListener('click', logout);
+        document.getElementById('disconnect-button').addEventListener('click', disconnect);
+    } else {
+        // User is not logged in
+        userInfoContainer.innerHTML = `
             <a href="https://notion-oauth-handler.nerdymomocat.workers.dev/auth/login" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">Login with Notion</a>
         `;  // REPLACE WITH YOUR WORKER URL
-  }
+    }
 }
 
 // Function to handle logout
@@ -77,10 +77,10 @@ async function disconnect() {
         // Find the userInfoContainer in the current page and update it
         const userInfoContainer = document.getElementById('user-info');
         if (userInfoContainer) {
-             updateUI(userInfoContainer);
+            updateUI(userInfoContainer);
         } else {
-             // If not on a page with userInfoContainer, redirect to index.html
-             window.location.href = "/noms/index.html";
+            // If not on a page with userInfoContainer, redirect to index.html
+            window.location.href = "/noms/index.html";
         }
 
     }

@@ -1,757 +1,604 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Notion Link Enhancer</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Geist', 'system-ui', 'sans-serif'],
-              mono: ['Geist Mono', 'monospace'],
-            },
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notion Link Enhancer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', 'system-ui', 'sans-serif'],
+            mono: ['Geist Mono', 'monospace'],
           },
         },
-      };
-    </script>
-    <style>
-      /*  Helper function to combine class names (equivalent to clsx + twMerge) */
-      .hidden {
-        display: none;
-      }
-      /* Custom styles */
-        body {
-            font-family: 'Geist', sans-serif; /* Geist for body text */
-        }
+      },
+    };
+  </script>
+  <style>
+    /*  Helper function to combine class names (equivalent to clsx + twMerge) */
+    .hidden {
+      display: none;
+    }
 
-        h1 {
-            font-family: 'Geist Mono', monospace; /* Geist Mono for headings */
-        }
-        h2, .font-mono{
-          font-family: 'Geist Mono', monospace;
-        }
-    </style>
-  </head>
-  <body>
-    <div id="root" class="min-h-screen bg-gray-100 p-8">
-      <div class="mx-auto max-w-2xl">
-        <div class="mb-8 flex items-center justify-center space-x-4">
-          <svg
-            class="h-8 w-8"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-            />
-          </svg>
-          <h1 class="text-3xl font-black uppercase tracking-wider">
-            Notion Link Enhancer
-          </h1>
-        </div>
+    /* Custom styles */
+    body {
+      font-family: 'Geist', sans-serif;
+      /* Geist for body text */
+    }
 
-        <div
-          id="main-container"
-          class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]"
-        >
-          <form id="notion-form" class="space-y-6">
-            <details open class="rounded-lg border-4 border-black p-4">
-              <summary
-                class="cursor-pointer font-bold uppercase tracking-wide"
-              >
-                Worker Configuration
-              </summary>
-              <div class="mt-4 space-y-4">
-                <div class="w-full">
-                  <label
-                    class="mb-2 block font-bold uppercase tracking-wide"
-                    for="workerUrl"
-                    >Worker URL</label
-                  >
-                  <input
-                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                    type="url"
-                    id="workerUrl"
-                    name="workerUrl"
-                    placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)"
-                    required
-                  />
-                  <p
-                    id="workerUrl-error"
-                    class="mt-1 hidden text-sm font-bold text-red-500"
-                  ></p>
-                </div>
-                <div class="w-full">
-                  <label
-                    class="mb-2 block font-bold uppercase tracking-wide"
-                    for="workerToken"
-                    >Worker Token</label
-                  >
-                  <input
-                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                    type="password"
-                    id="workerToken"
-                    name="workerToken"
-                    placeholder="Enter your Worker Token"
-                    required
-                  />
-                  <p
-                    id="workerToken-error"
-                    class="mt-1 hidden text-sm font-bold text-red-500"
-                  ></p>
-                </div>
+    h1 {
+      font-family: 'Geist Mono', monospace;
+      /* Geist Mono for headings */
+    }
+
+    h2,
+    .font-mono {
+      font-family: 'Geist Mono', monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root" class="min-h-screen bg-gray-100 p-8">
+    <div class="mx-auto max-w-2xl">
+      <div class="mb-8 flex items-center justify-center space-x-4">
+        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+        </svg>
+        <h1 class="text-3xl font-black uppercase tracking-wider">
+          Notion Link Enhancer
+        </h1>
+      </div>
+
+      <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
+        <form id="notion-form" class="space-y-6">
+          <details open class="rounded-lg border-4 border-black p-4">
+            <summary class="cursor-pointer font-bold uppercase tracking-wide">
+              Worker Configuration
+            </summary>
+            <div class="mt-4 space-y-4">
+              <div class="w-full">
+                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker URL</label>
+                <input
+                  class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                  type="url" id="workerUrl" name="workerUrl"
+                  placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)" required />
+                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
               </div>
-            </details>
-            <div class="w-full">
-              <label
-                class="mb-2 block font-bold uppercase tracking-wide"
-                for="notionToken"
-                >Notion API Token</label
-              >
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="password"
-                id="notionToken"
-                name="notionToken"
-                placeholder="Enter your Notion API Token"
-                required
-              />
-              <p
-                id="notionToken-error"
-                class="mt-1 hidden text-sm font-bold text-red-500"
-              ></p>
-            </div>
-            <div class="w-full">
-              <label
-                class="mb-2 block font-bold uppercase tracking-wide"
-                for="databaseId"
-                >Database ID</label
-              >
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="text"
-                id="databaseId"
-                name="databaseId"
-                placeholder="Enter your Database ID"
-                required
-              />
-              <p
-                id="databaseId-error"
-                class="mt-1 hidden text-sm font-bold text-red-500"
-              ></p>
-            </div>
-            <div class="space-y-3">
-              <h3 class="font-bold uppercase tracking-wide">
-                Elements to Add
-              </h3>
-              <div class="space-y-2">
-                <label class="flex cursor-pointer items-center space-x-2">
-                  <div class="relative">
-                    <input
-                      type="checkbox"
-                      class="peer absolute opacity-0"
-                      id="addTitle"
-                      name="addTitle"
-                      checked
-                    />
-                    <div
-                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]"
-                    >
-                      <svg
-                        class="h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <span class="select-none font-bold">Add Title</span>
-                </label>
-                <label class="flex cursor-pointer items-center space-x-2">
-                  <div class="relative">
-                    <input
-                      type="checkbox"
-                      class="peer absolute opacity-0"
-                      id="addOGImage"
-                      name="addOGImage"
-                      checked
-                    />
-                    <div
-                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]"
-                    >
-                      <svg
-                        class="h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <span class="select-none font-bold">Add OG Image</span>
-                </label>
-
-                <label class="flex cursor-pointer items-center space-x-2">
-                  <div class="relative">
-                    <input
-                      type="checkbox"
-                      class="peer absolute opacity-0"
-                      id="addIcon"
-                      name="addIcon"
-                      checked
-                    />
-                    <div
-                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]"
-                    >
-                      <svg
-                        class="h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <span class="select-none font-bold">Add Icon</span>
-                </label>
+              <div class="w-full">
+                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker Token</label>
+                <input
+                  class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                  type="password" id="workerToken" name="workerToken" placeholder="Enter your Worker Token" required />
+                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
               </div>
             </div>
-            <div class="w-full">
-              <label
-                class="mb-2 block font-bold uppercase tracking-wide"
-                for="urlPropertyName"
-                >URL Property Name</label
-              >
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="text"
-                id="urlPropertyName"
-                name="urlPropertyName"
-                placeholder="Enter the name of the URL property"
-                required
-              />
-              <p
-                id="urlPropertyName-error"
-                class="mt-1 hidden text-sm font-bold text-red-500"
-              ></p>
-            </div>
-            <div class="w-full" id="ogImagePropertyName-container">
-              <label
-                class="mb-2 block font-bold uppercase tracking-wide"
-                for="ogImagePropertyName"
-                >OG Image Property Name</label
-              >
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="text"
-                id="ogImagePropertyName"
-                name="ogImagePropertyName"
-                placeholder="Enter the name of the OG Image property"
-              />
-              <p
-                id="ogImagePropertyName-error"
-                class="mt-1 hidden text-sm font-bold text-red-500"
-              ></p>
-            </div>
-
-            <div class="w-full">
-              <label
-                class="mb-2 block font-bold uppercase tracking-wide"
-                for="checkedPropertyName"
-                >Checked Property Name (Optional)</label
-              >
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="text"
-                id="checkedPropertyName"
-                name="checkedPropertyName"
-                placeholder="Enter the name of the checkbox property"
-              />
-              <p
-                id="checkedPropertyName-error"
-                class="mt-1 hidden text-sm font-bold text-red-500"
-              ></p>
-            </div>
-
-            <button
-              type="submit"
-              id="submit-button"
-              class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50"
-            >
-              <div
-                id="loading-spinner"
-                class="absolute inset-0 hidden items-center justify-center"
-              >
-                <div
-                  class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"
-                ></div>
-              </div>
-              <span id="submit-button-text">Start Update</span>
-            </button>
-          </form>
-
-          <div id="progress-display" class="hidden space-y-6">
-            <div class="space-y-2">
-              <div class="flex items-center justify-between">
-                <h2 class="font-bold uppercase tracking-wide">Progress</h2>
-                <span id="progress-text" class="font-mono font-bold"
-                  >0 / 0 pages</span
-                >
-              </div>
-              <div class="h-4 w-full border-4 border-black bg-white">
-                <div
-                  id="progress-bar"
-                  class="h-full bg-[#FEA97F] transition-all duration-300"
-                  style="width: 0%"
-                ></div>
-              </div>
-            </div>
-            <div
-              id="logs-container"
-              class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono"
-            >
-            </div>
-            <button
-              id="reset-button"
-              class="hidden w-full h-12  items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100"
-            >
-                <svg
-                    class="mr-2 h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                </svg>
-                Start New Update
-            </button>
+          </details>
+          <div class="w-full">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="notionToken">Notion API Token</label>
+            <input
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+              type="password" id="notionToken" name="notionToken" placeholder="Enter your Notion API Token" required />
+            <p id="notionToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
           </div>
+          <div class="w-full">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="databaseId">Database ID</label>
+            <input
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+              type="text" id="databaseId" name="databaseId" placeholder="Enter your Database ID" required />
+            <p id="databaseId-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          </div>
+          <div class="space-y-3">
+            <h3 class="font-bold uppercase tracking-wide">
+              Elements to Add
+            </h3>
+            <div class="space-y-2">
+              <label class="flex cursor-pointer items-center space-x-2">
+                <div class="relative">
+                  <input type="checkbox" class="peer absolute opacity-0" id="addTitle" name="addTitle" checked />
+                  <div
+                    class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                    <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <span class="select-none font-bold">Add Title</span>
+              </label>
+              <label class="flex cursor-pointer items-center space-x-2">
+                <div class="relative">
+                  <input type="checkbox" class="peer absolute opacity-0" id="addOGImage" name="addOGImage" checked />
+                  <div
+                    class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                    <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <span class="select-none font-bold">Add OG Image</span>
+              </label>
+
+              <label class="flex cursor-pointer items-center space-x-2">
+                <div class="relative">
+                  <input type="checkbox" class="peer absolute opacity-0" id="addIcon" name="addIcon" checked />
+                  <div
+                    class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                    <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                      fill="currentColor">
+                      <path fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <span class="select-none font-bold">Add Icon</span>
+              </label>
+            </div>
+          </div>
+          <div class="w-full">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertyName">URL Property Name</label>
+            <input
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+              type="text" id="urlPropertyName" name="urlPropertyName" placeholder="Enter the name of the URL property"
+              required />
+            <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          </div>
+          <div class="w-full" id="ogImagePropertyName-container">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertyName">OG Image Property
+              Name</label>
+            <input
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+              type="text" id="ogImagePropertyName" name="ogImagePropertyName"
+              placeholder="Enter the name of the OG Image property" />
+            <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          </div>
+
+          <div class="w-full">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertyName">Checked Property Name
+              (Optional)</label>
+            <input
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+              type="text" id="checkedPropertyName" name="checkedPropertyName"
+              placeholder="Enter the name of the checkbox property" />
+            <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          </div>
+
+          <button type="submit" id="submit-button"
+            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+              <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+            </div>
+            <span id="submit-button-text">Start Update</span>
+          </button>
+        </form>
+
+        <div id="progress-display" class="hidden space-y-6">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h2 class="font-bold uppercase tracking-wide">Progress</h2>
+              <span id="progress-text" class="font-mono font-bold">0 / 0 pages</span>
+            </div>
+            <div class="h-4 w-full border-4 border-black bg-white">
+              <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+          <div id="logs-container"
+            class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
+          </div>
+          <button id="reset-button"
+            class="hidden w-full h-12  items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Start New Update
+          </button>
         </div>
       </div>
     </div>
+  </div>
 
-    <script>
-      // DOM Elements
-      const form = document.getElementById('notion-form');
-      const submitButton = document.getElementById('submit-button');
-      const submitButtonText = document.getElementById('submit-button-text');
-      const loadingSpinner = document.getElementById('loading-spinner');
-      const progressDisplay = document.getElementById('progress-display');
-      const progressBar = document.getElementById('progress-bar');
-      const progressText = document.getElementById('progress-text');
-      const logsContainer = document.getElementById('logs-container');
-      const resetButton = document.getElementById('reset-button');
-      const mainContainer = document.getElementById('main-container');
-      const ogImagePropertyNameContainer = document.getElementById('ogImagePropertyName-container');
-
-
-      // Form Data and State
-      let isProcessing = false;
-      let progress = { current: 0, total: 0 };
-      let logs = [];
-
-      // --- Helper Functions ---
-        function cn(...classes) {
-          return classes.filter(Boolean).join(' ');
-        }
+  <script>
+    // DOM Elements
+    const form = document.getElementById('notion-form');
+    const submitButton = document.getElementById('submit-button');
+    const submitButtonText = document.getElementById('submit-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const progressDisplay = document.getElementById('progress-display');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const logsContainer = document.getElementById('logs-container');
+    const resetButton = document.getElementById('reset-button');
+    const mainContainer = document.getElementById('main-container');
+    const ogImagePropertyNameContainer = document.getElementById('ogImagePropertyName-container');
 
 
-      function addLog(message) {
-        logs.push(message);
-        const logElement = document.createElement('div');
-        logElement.textContent = message;
-        logElement.className = 'whitespace-pre-wrap';
-        logsContainer.appendChild(logElement);
-        logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
+    // Form Data and State
+    let isProcessing = false;
+    let progress = { current: 0, total: 0 };
+    let logs = [];
+
+    // --- Helper Functions ---
+    function cn(...classes) {
+      return classes.filter(Boolean).join(' ');
+    }
+
+
+    function addLog(message) {
+      logs.push(message);
+      const logElement = document.createElement('div');
+      logElement.textContent = message;
+      logElement.className = 'whitespace-pre-wrap';
+      logsContainer.appendChild(logElement);
+      logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
+    }
+
+    function updateProgress(current, total) {
+      progress.current = current;
+      progress.total = total;
+      const progressPercentage = total > 0 ? (current / total) * 100 : 0;
+      progressBar.style.width = `${progressPercentage}%`;
+      progressText.textContent = `${current} / ${total} pages`;
+    }
+
+    function showError(inputElement, message) {
+      const errorElement = document.getElementById(`${inputElement.name}-error`);
+      if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
+        inputElement.classList.add('border-red-500');
+      }
+    }
+
+    function clearError(inputElement) {
+      const errorElement = document.getElementById(`${inputElement.name}-error`);
+      if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.classList.add('hidden');
+        inputElement.classList.remove('border-red-500');
+      }
+    }
+
+
+    // --- Event Handlers ---
+    form.addEventListener('input', (e) => {
+      if (e.target.tagName === 'INPUT') {
+        clearError(e.target);
       }
 
-      function updateProgress(current, total) {
-        progress.current = current;
-        progress.total = total;
-        const progressPercentage = total > 0 ? (current / total) * 100 : 0;
-        progressBar.style.width = `${progressPercentage}%`;
-        progressText.textContent = `${current} / ${total} pages`;
+      if (e.target.name === 'addOGImage') {
+        ogImagePropertyNameContainer.classList.toggle('hidden', !e.target.checked);
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isProcessing) return;
+
+      const formData = {
+        notionToken: form.notionToken.value.trim(),
+        workerToken: form.workerToken.value.trim(),
+        databaseId: form.databaseId.value.trim(),
+        urlPropertyName: form.urlPropertyName.value.trim(),
+        ogImagePropertyName: form.ogImagePropertyName.value.trim(),
+        checkedPropertyName: form.checkedPropertyName.value.trim(),
+        addTitle: form.addTitle.checked,
+        addOGImage: form.addOGImage.checked,
+        addIcon: form.addIcon.checked,
+        workerUrl: form.workerUrl.value.trim(),
+      };
+
+      let isValid = true;
+      if (!formData.notionToken) {
+        showError(form.notionToken, 'Notion API Token is required');
+        isValid = false;
+      }
+      if (!formData.workerToken) {
+        showError(form.workerToken, 'Worker Token is required');
+        isValid = false;
+      }
+      if (!formData.databaseId) {
+        showError(form.databaseId, 'Database ID is required');
+        isValid = false;
+      }
+      if (!formData.urlPropertyName) {
+        showError(form.urlPropertyName, 'URL Property Name is required');
+        isValid = false;
+      }
+      if (formData.addOGImage && !formData.ogImagePropertyName) {
+        showError(form.ogImagePropertyName, 'OG Image Property Name is required');
+        isValid = false;
+      }
+      if (!formData.workerUrl) {
+        showError(form.workerUrl, 'Worker URL is required');
+        isValid = false;
+
+      } else if (!/^(https?:\/\/)/.test(formData.workerUrl)) {
+        showError(form.workerUrl, "Must be a valid URL starting with http:// or https://");
+        isValid = false;
       }
 
-      function showError(inputElement, message) {
-          const errorElement = document.getElementById(`${inputElement.name}-error`);
-          if (errorElement) {
-              errorElement.textContent = message;
-              errorElement.classList.remove('hidden');
-              inputElement.classList.add('border-red-500');
-          }
-      }
+      if (!isValid) return;
 
-      function clearError(inputElement) {
-          const errorElement = document.getElementById(`${inputElement.name}-error`);
-          if (errorElement) {
-              errorElement.textContent = '';
-              errorElement.classList.add('hidden');
-              inputElement.classList.remove('border-red-500');
-          }
-      }
+      isProcessing = true;
+      submitButton.disabled = true;
+      submitButtonText.classList.add('opacity-0');
+      loadingSpinner.classList.remove('hidden');
+      form.classList.add('hidden');
+      progressDisplay.classList.remove('hidden');
+      logs = [];
+      logsContainer.innerHTML = '';
+      updateProgress(0, 0);
 
-
-      // --- Event Handlers ---
-      form.addEventListener('input', (e) => {
-          if (e.target.tagName === 'INPUT') {
-            clearError(e.target);
-          }
-
-          if (e.target.name === 'addOGImage') {
-            ogImagePropertyNameContainer.classList.toggle('hidden', !e.target.checked);
-          }
-      });
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (isProcessing) return;
-
-        const formData = {
-          notionToken: form.notionToken.value.trim(),
-          workerToken: form.workerToken.value.trim(),
-          databaseId: form.databaseId.value.trim(),
-          urlPropertyName: form.urlPropertyName.value.trim(),
-          ogImagePropertyName: form.ogImagePropertyName.value.trim(),
-          checkedPropertyName: form.checkedPropertyName.value.trim(),
-          addTitle: form.addTitle.checked,
-          addOGImage: form.addOGImage.checked,
-          addIcon: form.addIcon.checked,
-          workerUrl: form.workerUrl.value.trim(),
-        };
-
-        let isValid = true;
-        if (!formData.notionToken) {
-          showError(form.notionToken, 'Notion API Token is required');
-          isValid = false;
-        }
-        if (!formData.workerToken) {
-            showError(form.workerToken, 'Worker Token is required');
-            isValid = false;
-        }
-        if (!formData.databaseId) {
-          showError(form.databaseId, 'Database ID is required');
-            isValid = false;
-        }
-        if (!formData.urlPropertyName) {
-          showError(form.urlPropertyName, 'URL Property Name is required');
-            isValid = false;
-        }
-          if (formData.addOGImage && !formData.ogImagePropertyName) {
-            showError(form.ogImagePropertyName, 'OG Image Property Name is required');
-            isValid = false;
-        }
-          if (!formData.workerUrl) {
-            showError(form.workerUrl, 'Worker URL is required');
-            isValid = false;
-
-          } else if (!/^(https?:\/\/)/.test(formData.workerUrl)) {
-            showError(form.workerUrl, "Must be a valid URL starting with http:// or https://");
-            isValid = false;
-          }
-
-        if (!isValid) return;
-
-        isProcessing = true;
-        submitButton.disabled = true;
-        submitButtonText.classList.add('opacity-0');
-        loadingSpinner.classList.remove('hidden');
-        form.classList.add('hidden');
-        progressDisplay.classList.remove('hidden');
-        logs = [];
-        logsContainer.innerHTML = '';
-        updateProgress(0, 0);
-
-        try {
-          const enhancer = new NotionEnhancer(formData);
-          addLog('Validating database access...');
-          await enhancer.validateAccess(); // Removed the return value
-          addLog('✓ Database access validated');
-
-          const pages = [];
-           for await (const page of enhancer.processPages()) {
-                pages.push(page);
-            }
-           if (pages.length === 0) {
-                addLog('No pages found to process');
-                updateProgress(0, 0);
-                resetButton.classList.remove('hidden');
-                return;
-            }
-
-          let pagesToActuallyProcess = 0;
-          for (const page of pages) {
-            const url = page.properties[formData.urlPropertyName]?.url;
-            if (url) pagesToActuallyProcess++;
-          }
-
-          if (pagesToActuallyProcess === 0){
-            addLog('No pages with URL found to process');
-            resetButton.classList.remove('hidden');
-            return;
-          }
-
-          updateProgress(0, pagesToActuallyProcess);
-          addLog(`Found ${pagesToActuallyProcess} pages to process`);
-
-
-          for (const page of pages) {
-             const url = page.properties[formData.urlPropertyName]?.url;
-            if (!url) continue;
-
-            addLog(`Processing page: ${url}`);
-
-            // Pass the 'page' object to 'updatePage'
-            await enhancer.updatePage(page, url);
-            addLog(`✓ Updated page: ${url}`);
-            updateProgress(progress.current + 1, progress.total);
-
-          }
-          addLog('✨ All pages processed');
-          resetButton.classList.remove('hidden');
-        } catch (error) {
-          addLog(`❌ Error: ${error.message}`);
-          resetButton.classList.remove('hidden');
-
-        } finally {
-            isProcessing = false;
-            submitButton.disabled = false;
-            submitButtonText.classList.remove("opacity-0");
-            loadingSpinner.classList.add("hidden");
-        }
-      });
-
-      resetButton.addEventListener('click', () => {
-        resetForm();
-      });
-
-        function resetForm() {
-            isProcessing = false;
-            progressDisplay.classList.add('hidden');
-            form.classList.remove('hidden');
-            resetButton.classList.add('hidden');
-            logsContainer.innerHTML = '';
-            updateProgress(0,0);
-        }
-
-      class NotionEnhancer {
-        constructor(config) {
-          this.config = config;
-          this.titlePropertyName = null; // Initialize titlePropertyName
-        }
-
-        async makeRequest(endpoint, options = {}) {
-          const url = `${this.config.workerUrl}${endpoint}?secret=${encodeURIComponent(
-            this.config.notionToken
-          )}&token=${encodeURIComponent(this.config.workerToken)}`;
-            console.log('Making request to:', url);
-
-          try {
-            const response = await fetch(url, {
-              ...options,
-              headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-              },
-            });
-
-            if (!response.ok) {
-               console.error('API request failed:', response.status, await response.text());
-              throw new Error(`API request failed: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('API response:', data);
-            return data;
-
-          } catch (error) {
-             console.error('Request error:', error);
-            throw error;
-          }
-        }
-
-async validateAccess() {
-  const database = await this.makeRequest(`/databases/${this.config.databaseId}`);
-  const properties = database.properties;
-
-    // Find and store the title property name
-    for (const propName in properties) {
-        if (properties[propName].type === 'title') {
-            this.titlePropertyName = propName;
-            break;
-        }
-    }
-
-    if (!this.titlePropertyName) {
-        throw new Error("Could not find the title property in the database.");
-    }
-
-    if (!properties[this.config.urlPropertyName]) {
-      throw new Error(`Property "${this.config.urlPropertyName}" does not exist in the database.`);
-    }
-    if (this.config.addOGImage && !properties[this.config.ogImagePropertyName]) {
-      throw new Error(`Property "${this.config.ogImagePropertyName}" does not exist in the database.`);
-    }
-    if(this.config.checkedPropertyName && !properties[this.config.checkedPropertyName]){
-      throw new Error(`Property "${this.config.checkedPropertyName}" does not exist in the database.`);
-    }
-}
-
-
-        async *processPages() {
-          const filters = [
-                {
-                  property: this.config.urlPropertyName,
-                  url: { is_not_empty: true },
-                },
-              ];
-
-          if (this.config.checkedPropertyName) {
-              filters.push({
-                property: this.config.checkedPropertyName,
-                checkbox: { equals: false },
-              });
-            }
-
-          let hasMore = true;
-          let startCursor = undefined;
-
-          while (hasMore) {
-            const response = await this.makeRequest(
-              `/databases/${this.config.databaseId}/query`,
-              {
-                method: 'POST',
-                body: JSON.stringify({
-                  filter: { and: filters },
-                  start_cursor: startCursor,
-                  page_size: 100,
-                }),
-              }
-            );
-
-            for (const page of response.results) {
-              yield page;
-            }
-
-            hasMore = response.has_more;
-            startCursor = response.next_cursor ?? undefined;
-          }
-        }
-
-       async fetchMetadata(url) {
-          try {
-            // First try direct fetch
-            let response = await fetch(url);
-            if (response.ok) {
-              const html = await response.text();
-              return this.parseHtml(html, url); // Return the full metadata
-            } else {
-              throw new Error(`Direct fetch failed: ${response.status}`);
-            }
-          } catch (directError) {
-            // Try proxy if direct fetch fails
-            console.warn(`Direct fetch failed, trying proxy: ${directError}`);
-            const proxyUrl = `${this.config.workerUrl}?url=${encodeURIComponent(url)}&token=${encodeURIComponent(this.config.workerToken)}`;
-            let proxyResponse = await fetch(proxyUrl);
-
-            if (!proxyResponse.ok) {
-              console.error(`Proxy fetch also failed with: ${proxyResponse.status}`);
-              return null; // Return null if both fail
-            }
-            const html = await proxyResponse.text();
-            return this.parseHtml(html, url); // Return the full metadata
-          }
-        }
-
-       parseHtml(html, baseUrl) {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          const metadata = {};
-
-          // Get title if addTitle is checked
-          if (this.config.addTitle) {
-              metadata.title = doc.querySelector('title')?.innerText ?? '';
-          }
-
-          // Get OG Image if addOGImage is checked
-          if (this.config.addOGImage) {
-              metadata.ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ?? '';
-          }
-
-          // Get favicon using Google's favicon service
-          if (this.config.addIcon) {
-                const parsedUrl = new URL(baseUrl);
-                const hostname = parsedUrl.hostname;
-                metadata.favicon = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${hostname}&size=128`;
-            }
-
-          return metadata; // Return ALL extracted data
-        }
-
-
-    async updatePage(page, url) { // Changed to accept 'page' object
       try {
-        const metadata = await this.fetchMetadata(url);
+        const enhancer = new NotionEnhancer(formData);
+        addLog('Validating database access...');
+        await enhancer.validateAccess(); // Removed the return value
+        addLog('✓ Database access validated');
 
-        if (!metadata) {
-          console.warn(`Skipping update for pageId ${page.id} due to fetch failure.`);
+        const pages = [];
+        for await (const page of enhancer.processPages()) {
+          pages.push(page);
+        }
+        if (pages.length === 0) {
+          addLog('No pages found to process');
+          updateProgress(0, 0);
+          resetButton.classList.remove('hidden');
           return;
         }
-        const properties = {};
 
-        // Add Title
+        let pagesToActuallyProcess = 0;
+        for (const page of pages) {
+          const url = page.properties[formData.urlPropertyName]?.url;
+          if (url) pagesToActuallyProcess++;
+        }
+
+        if (pagesToActuallyProcess === 0) {
+          addLog('No pages with URL found to process');
+          resetButton.classList.remove('hidden');
+          return;
+        }
+
+        updateProgress(0, pagesToActuallyProcess);
+        addLog(`Found ${pagesToActuallyProcess} pages to process`);
+
+
+        for (const page of pages) {
+          const url = page.properties[formData.urlPropertyName]?.url;
+          if (!url) continue;
+
+          addLog(`Processing page: ${url}`);
+
+          // Pass the 'page' object to 'updatePage'
+          await enhancer.updatePage(page, url);
+          addLog(`✓ Updated page: ${url}`);
+          updateProgress(progress.current + 1, progress.total);
+
+        }
+        addLog('✨ All pages processed');
+        resetButton.classList.remove('hidden');
+      } catch (error) {
+        addLog(`❌ Error: ${error.message}`);
+        resetButton.classList.remove('hidden');
+
+      } finally {
+        isProcessing = false;
+        submitButton.disabled = false;
+        submitButtonText.classList.remove("opacity-0");
+        loadingSpinner.classList.add("hidden");
+      }
+    });
+
+    resetButton.addEventListener('click', () => {
+      resetForm();
+    });
+
+    function resetForm() {
+      isProcessing = false;
+      progressDisplay.classList.add('hidden');
+      form.classList.remove('hidden');
+      resetButton.classList.add('hidden');
+      logsContainer.innerHTML = '';
+      updateProgress(0, 0);
+    }
+
+    class NotionEnhancer {
+      constructor(config) {
+        this.config = config;
+        this.titlePropertyName = null; // Initialize titlePropertyName
+      }
+
+      async makeRequest(endpoint, options = {}) {
+        const url = `${this.config.workerUrl}${endpoint}?secret=${encodeURIComponent(
+          this.config.notionToken
+        )}&token=${encodeURIComponent(this.config.workerToken)}`;
+        console.log('Making request to:', url);
+
+        try {
+          const response = await fetch(url, {
+            ...options,
+            headers: {
+              'Content-Type': 'application/json',
+              ...options.headers,
+            },
+          });
+
+          if (!response.ok) {
+            console.error('API request failed:', response.status, await response.text());
+            throw new Error(`API request failed: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('API response:', data);
+          return data;
+
+        } catch (error) {
+          console.error('Request error:', error);
+          throw error;
+        }
+      }
+
+      async validateAccess() {
+        const database = await this.makeRequest(`/databases/${this.config.databaseId}`);
+        const properties = database.properties;
+
+        // Find and store the title property name
+        for (const propName in properties) {
+          if (properties[propName].type === 'title') {
+            this.titlePropertyName = propName;
+            break;
+          }
+        }
+
+        if (!this.titlePropertyName) {
+          throw new Error("Could not find the title property in the database.");
+        }
+
+        if (!properties[this.config.urlPropertyName]) {
+          throw new Error(`Property "${this.config.urlPropertyName}" does not exist in the database.`);
+        }
+        if (this.config.addOGImage && !properties[this.config.ogImagePropertyName]) {
+          throw new Error(`Property "${this.config.ogImagePropertyName}" does not exist in the database.`);
+        }
+        if (this.config.checkedPropertyName && !properties[this.config.checkedPropertyName]) {
+          throw new Error(`Property "${this.config.checkedPropertyName}" does not exist in the database.`);
+        }
+      }
+
+
+      async *processPages() {
+        const filters = [
+          {
+            property: this.config.urlPropertyName,
+            url: { is_not_empty: true },
+          },
+        ];
+
+        if (this.config.checkedPropertyName) {
+          filters.push({
+            property: this.config.checkedPropertyName,
+            checkbox: { equals: false },
+          });
+        }
+
+        let hasMore = true;
+        let startCursor = undefined;
+
+        while (hasMore) {
+          const response = await this.makeRequest(
+            `/databases/${this.config.databaseId}/query`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                filter: { and: filters },
+                start_cursor: startCursor,
+                page_size: 100,
+              }),
+            }
+          );
+
+          for (const page of response.results) {
+            yield page;
+          }
+
+          hasMore = response.has_more;
+          startCursor = response.next_cursor ?? undefined;
+        }
+      }
+
+      async fetchMetadata(url) {
+        try {
+          // First try direct fetch
+          let response = await fetch(url);
+          if (response.ok) {
+            const html = await response.text();
+            return this.parseHtml(html, url); // Return the full metadata
+          } else {
+            throw new Error(`Direct fetch failed: ${response.status}`);
+          }
+        } catch (directError) {
+          // Try proxy if direct fetch fails
+          console.warn(`Direct fetch failed, trying proxy: ${directError}`);
+          const proxyUrl = `${this.config.workerUrl}?url=${encodeURIComponent(url)}&token=${encodeURIComponent(this.config.workerToken)}`;
+          let proxyResponse = await fetch(proxyUrl);
+
+          if (!proxyResponse.ok) {
+            console.error(`Proxy fetch also failed with: ${proxyResponse.status}`);
+            return null; // Return null if both fail
+          }
+          const html = await proxyResponse.text();
+          return this.parseHtml(html, url); // Return the full metadata
+        }
+      }
+
+      parseHtml(html, baseUrl) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const metadata = {};
+
+        // Get title if addTitle is checked
         if (this.config.addTitle) {
+          metadata.title = doc.querySelector('title')?.innerText ?? '';
+        }
+
+        // Get OG Image if addOGImage is checked
+        if (this.config.addOGImage) {
+          metadata.ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ?? '';
+        }
+
+        // Get favicon using Google's favicon service
+        if (this.config.addIcon) {
+          const parsedUrl = new URL(baseUrl);
+          const hostname = parsedUrl.hostname;
+          metadata.favicon = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${hostname}&size=128`;
+        }
+
+        return metadata; // Return ALL extracted data
+      }
+
+
+      async updatePage(page, url) { // Changed to accept 'page' object
+        try {
+          const metadata = await this.fetchMetadata(url);
+
+          if (!metadata) {
+            console.warn(`Skipping update for pageId ${page.id} due to fetch failure.`);
+            return;
+          }
+          const properties = {};
+
+          // Add Title
+          if (this.config.addTitle) {
             let updateTitle = false;
             const titleProp = page.properties[this.titlePropertyName];
 
             if (titleProp && titleProp.title) {
-                //check if title property is array and array length>0 and if array[0] is there and rich_text is not empty
-                if (Array.isArray(titleProp.title) && titleProp.title.length > 0 && titleProp.title[0] && titleProp.title[0].plain_text.trim() !== "" && titleProp.title[0].plain_text.trim().toLowerCase() !== "untitled") {
-                    // Title exists and is not "Untitled"
-                    updateTitle = false
-                } else {
-                    updateTitle = true;
-                }
-            } else {
-                // Title property doesn't exist or is malformed.
+              //check if title property is array and array length>0 and if array[0] is there and rich_text is not empty
+              if (Array.isArray(titleProp.title) && titleProp.title.length > 0 && titleProp.title[0] && titleProp.title[0].plain_text.trim() !== "" && titleProp.title[0].plain_text.trim().toLowerCase() !== "untitled") {
+                // Title exists and is not "Untitled"
+                updateTitle = false
+              } else {
                 updateTitle = true;
+              }
+            } else {
+              // Title property doesn't exist or is malformed.
+              updateTitle = true;
             }
 
 
@@ -759,70 +606,71 @@ async validateAccess() {
               properties[this.titlePropertyName] = {
                 title: [{ type: 'text', text: { content: metadata.title } }],
               };
-               console.log("added title", properties);
+              console.log("added title", properties);
             }
 
-        }
+          }
 
-        // Add OG Image
-        if (this.config.addOGImage && metadata.ogImage) {
-          // Check if the OG Image property is empty
+          // Add OG Image
+          if (this.config.addOGImage && metadata.ogImage) {
+            // Check if the OG Image property is empty
             let updateOGImage = false;
             const ogImageProp = page.properties[this.config.ogImagePropertyName];
             //if files in ogImageProperty are not an array, or are empty.
             if (!ogImageProp || !Array.isArray(ogImageProp.files) || ogImageProp.files.length === 0) {
-                updateOGImage = true;
+              updateOGImage = true;
             }
 
 
-          if(updateOGImage){
+            if (updateOGImage) {
               properties[this.config.ogImagePropertyName] = {
                 files: [{ type: 'external', name: 'OG Image', external: { url: metadata.ogImage } }],
               };
               console.log("added ogimage", properties);
+            }
+
           }
 
-        }
 
-
-        // Add icon
-        if (this.config.addIcon && metadata.favicon) {
-              // Check if the page has an icon already. Update only if null
+          // Add icon
+          if (this.config.addIcon && metadata.favicon) {
+            // Check if the page has an icon already. Update only if null
             if (page.icon === null) {
-                await this.makeRequest(`/pages/${page.id}`, {
+              await this.makeRequest(`/pages/${page.id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({
-                    icon: { type: 'external', external: { url: metadata.favicon } },
+                  icon: { type: 'external', external: { url: metadata.favicon } },
                 }),
-                });
-                console.log("added icon",  {
-                    icon: { type: 'external', external: { url: metadata.favicon } },
-                });
+              });
+              console.log("added icon", {
+                icon: { type: 'external', external: { url: metadata.favicon } },
+              });
             }
-        }
+          }
 
 
-        // Add checked property
-        if (this.config.checkedPropertyName) {
+          // Add checked property
+          if (this.config.checkedPropertyName) {
             properties[this.config.checkedPropertyName] = { checkbox: true };
             console.log("added checked", properties);
-        }
+          }
 
-        // Batch property updates (Title, OG Image and checked)
-        if (Object.keys(properties).length > 0) {
-          await this.makeRequest(`/pages/${page.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ properties }),
-          });
-        }
-        return metadata; // Still returning metadata
+          // Batch property updates (Title, OG Image and checked)
+          if (Object.keys(properties).length > 0) {
+            await this.makeRequest(`/pages/${page.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ properties }),
+            });
+          }
+          return metadata; // Still returning metadata
 
-      } catch (error) {
-        console.error(`Failed to update page ${page.id}: ${error.message}`);
-        throw error;
+        } catch (error) {
+          console.error(`Failed to update page ${page.id}: ${error.message}`);
+          throw error;
+        }
       }
-    }
-} //end Notion Enhancer Class
-    </script>
-  </body>
+    } //end Notion Enhancer Class
+  </script>
+</body>
+
 </html>
