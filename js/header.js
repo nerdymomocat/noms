@@ -4,7 +4,7 @@ function createHeader() {
     const headerHTML = `
     <header>
         <div class="header-container">
-            <h1>Noms</h1>
+            <h1><a href="./index.html">Noms</a></h1>
             <div id="user-info">
                 <!-- Login/Logout/Disconnect buttons and user info will go here -->
             </div>
