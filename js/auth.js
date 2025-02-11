@@ -1,7 +1,16 @@
 // auth.js
-import { OAUTH_HANDLER_URL } from './constants.js'; // Import the constant
+import { OAUTH_HANDLER_URL } from './constants.js';
 
-// Helper function to set an item in localStorage with an expiration
+//
+// 1. Local Storage Helpers
+//
+
+/**
+ * Save an item in localStorage with a TTL (time-to-live).
+ * @param {string} key
+ * @param {any} value
+ * @param {number} ttl  Time in ms until this entry expires
+ */
 function setLocalStorageWithExpiry(key, value, ttl) {
     const now = new Date();
     const item = {
@@ -11,7 +20,11 @@ function setLocalStorageWithExpiry(key, value, ttl) {
     localStorage.setItem(key, JSON.stringify(item));
 }
 
-// Helper function to get an item from localStorage, checking for expiration
+/**
+ * Retrieve an item from localStorage, returning null if it’s expired or non-existent.
+ * @param {string} key
+ * @returns {any | null}
+ */
 function getLocalStorageWithExpiry(key) {
     const itemStr = localStorage.getItem(key);
     if (!itemStr) {
@@ -20,107 +33,159 @@ function getLocalStorageWithExpiry(key) {
     const item = JSON.parse(itemStr);
     const now = new Date();
     if (now.getTime() > item.expiry) {
-        localStorage.removeItem(key); // Remove expired item
+        // Item has expired
+        localStorage.removeItem(key);
         return null;
     }
     return item.value;
 }
 
-// Function to update the UI based on login status
+//
+// 2. UI: Show "Login / Logout / Disconnect" Buttons
+//
+
+/**
+ * Update the header or any container with the correct UI
+ * depending on whether the user is logged in or not.
+ * @param {HTMLElement} userInfoContainer – typically a <div> where login/logout info goes
+ */
 async function updateUI(userInfoContainer) {
     const nomsData = getLocalStorageWithExpiry("nomsData");
-
     if (nomsData) {
         // User is logged in
         userInfoContainer.innerHTML = `
             <span>Logged in as: ${nomsData.workspaceName}</span>
-            <button id="logout-button" class="px-4 py-2 ml-4 text-white bg-black border-4 border-black rounded-md">Logout</button>
-            <button id="disconnect-button" class="px-4 py-2 ml-4 text-white bg-red-500 border-4 border-black rounded-md">Disconnect from Notion</button>
+            <button id="logout-button" class="px-4 py-2 ml-4 text-white bg-black border-4 border-black rounded-md">
+                Logout
+            </button>
+            <button id="disconnect-button" class="px-4 py-2 ml-4 text-white bg-red-500 border-4 border-black rounded-md">
+                Disconnect from Notion
+            </button>
         `;
+        // Hook up the event handlers
         document.getElementById('logout-button').addEventListener('click', logout);
         document.getElementById('disconnect-button').addEventListener('click', disconnect);
+
     } else {
         // User is not logged in
-        // Construct the URL safely:
-        const loginUrl = new URL("/auth/login", OAUTH_HANDLER_URL); // Use URL object
-
+        const loginUrl = new URL("/auth/login", OAUTH_HANDLER_URL); // combine base + relative
         userInfoContainer.innerHTML = `
-            <a href="${loginUrl.href}" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">Login with Notion</a>
+            <a href="${loginUrl.href}" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">
+                Login with Notion
+            </a>
         `;
     }
 }
 
-//Initialize authentication
+//
+// 3. Initialization: Check if we just came back from Worker with ?botId=...
+//
+
+/**
+ * Called on page load. Checks if there's a `botId` in the URL. If so, fetches user info
+ * from the Worker, then stores it in localStorage. Finally, removes `botId` from the URL.
+ * @returns {Promise<boolean>} whether the user is logged in
+ */
 async function initializeAuth() {
     const urlParams = new URLSearchParams(window.location.search);
     const botId = urlParams.get('botId');
 
     if (botId) {
-        // We have a botId, so the user has likely just logged in.
-        const userUrl = new URL("/auth/user", OAUTH_HANDLER_URL); // Use URL object!
-        const response = await fetch(userUrl);
+        // We have a botId, so the user presumably completed the OAuth flow
+        // Let’s fetch user info from the Worker
+        const userUrl = new URL("/auth/user", OAUTH_HANDLER_URL);
+        // We could pass the botId in the Authorization header or rely on Worker reading a cookie
+        // But the example Worker checks the cookie by default. 
+        // If you want to ensure it uses the header, do:
+        //   const response = await fetch(userUrl, { headers: { Authorization: `Bearer ${botId}` }});
 
+        const response = await fetch(userUrl);
         if (response.ok) {
             const userData = await response.json();
-            // Store *only* the necessary data in localStorage
-            setLocalStorageWithExpiry("nomsData", {
-                accessToken: userData.accessToken,
-                botId: userData.botId,
-                workspaceName: userData.workspaceName
-            }, 3600 * 1000);
-            // Remove botId from URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+            if (userData && userData.loggedIn) {
+                // Save in localStorage for 1 hour
+                setLocalStorageWithExpiry("nomsData", {
+                    accessToken: userData.accessToken,
+                    botId: userData.botId,
+                    workspaceName: userData.workspaceName,
+                    workspaceIcon: userData.workspaceIcon,
+                }, 3600 * 1000);
+            }
         } else {
-            // Something went wrong fetching user data. Handle appropriately.
             console.error("Error fetching user data:", response.status, await response.text());
             alert("Error logging in. Please try again.");
-            return false; // Stop processing
         }
+
+        // Remove botId from the URL
+        urlParams.delete('botId');
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, document.title, newUrl);
     }
-    //Return if user is logged in or not
+
+    // Return whether we have a valid nomsData in localStorage
     return !!getLocalStorageWithExpiry("nomsData");
 }
 
-// Function to handle logout
+//
+// 4. Actions: logout and disconnect
+//
+
+/**
+ * "Logout" just removes localStorage so the user no longer appears logged in.
+ * It does NOT delete anything from KV on the Worker side.
+ */
 async function logout() {
     localStorage.removeItem("nomsData");
-    // Find the userInfoContainer in the current page and update it
+    // Update UI if we’re on a page with #user-info
     const userInfoContainer = document.getElementById('user-info');
     if (userInfoContainer) {
         updateUI(userInfoContainer);
     } else {
-        // If not on a page with userInfoContainer, redirect to index.html
+        // Otherwise redirect to the home page
         window.location.href = "./index.html";
     }
 }
 
-// Function to handle disconnect
+/**
+ * "Disconnect" means we remove the user’s entry from KV
+ * and also clear localStorage. So the integration no longer
+ * has a token on the Worker side.
+ */
 async function disconnect() {
-    // Get botId from cookie
-    const cookies = document.cookie;
-    const botId = cookies?.match(/notionBotId=([^;]+)/)?.[1];
+    const nomsData = getLocalStorageWithExpiry("nomsData");
+    if (!nomsData || !nomsData.botId) {
+        alert("You are not logged in!");
+        return;
+    }
 
-    // Send botId in Authorization Header to /auth/logout
-    const logoutUrl = new URL("/auth/logout", OAUTH_HANDLER_URL); // Use URL object!
-    const response = await fetch(logoutUrl, { // Use the constant
+    const logoutUrl = new URL("/auth/logout", OAUTH_HANDLER_URL);
+    // Pass the botId in Authorization header so the Worker can find & delete from KV
+    const response = await fetch(logoutUrl, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${botId}`,
+            'Authorization': `Bearer ${nomsData.botId}`,
         },
     });
-    if (response.ok) {
-        localStorage.removeItem("nomsData"); // Clear local storage
-        // Find the userInfoContainer in the current page and update it
-        const userInfoContainer = document.getElementById('user-info');
-        if (userInfoContainer) {
-            updateUI(userInfoContainer);
-        } else {
-            // If not on a page with userInfoContainer, redirect to index.html
-            window.location.href = "./index.html";
-        }
 
+    // Regardless of success, remove localStorage
+    localStorage.removeItem("nomsData");
+
+    // If your Worker returns 302, the user might be redirected. 
+    // But to keep it simple, we can handle the final UI here.
+    const userInfoContainer = document.getElementById('user-info');
+    if (userInfoContainer) {
+        updateUI(userInfoContainer);
+    } else {
+        window.location.href = "./index.html";
     }
 }
 
-// Export the functions so they can be used in other files
-export { setLocalStorageWithExpiry, getLocalStorageWithExpiry, updateUI, logout, disconnect, initializeAuth };
+// Export for usage in other scripts
+export {
+    setLocalStorageWithExpiry,
+    getLocalStorageWithExpiry,
+    updateUI,
+    logout,
+    disconnect,
+    initializeAuth
+};
