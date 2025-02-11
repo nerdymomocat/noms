@@ -109,10 +109,8 @@ function createHeader() {
         }
     </style>
     `;
-
-    const headerElement = document.createElement('div');
-    headerElement.innerHTML = headerHTML + styleHTML;
-    return headerElement;
+    //No need to create element.
+    return headerHTML + styleHTML; //Just return string
 }
 
 export { createHeader };
