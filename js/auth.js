@@ -50,6 +50,36 @@ async function updateUI(userInfoContainer) {
     }
 }
 
+//Initialize authentication
+async function initializeAuth() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const botId = urlParams.get('botId');
+
+    if (botId) {
+        // We have a botId, so the user has likely just logged in.
+        const response = await fetch(`${OAUTH_HANDLER_URL}/auth/user`);
+
+        if (response.ok) {
+            const userData = await response.json();
+            // Store *only* the necessary data in localStorage
+            setLocalStorageWithExpiry("nomsData", {
+                accessToken: userData.accessToken,
+                botId: userData.botId,
+                workspaceName: userData.workspaceName
+            }, 3600 * 1000);
+            // Remove botId from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+            // Something went wrong fetching user data. Handle appropriately.
+            console.error("Error fetching user data:", response.status, await response.text());
+            alert("Error logging in. Please try again.");
+            return; // Stop processing
+        }
+    }
+    //Return if user is logged in or not
+    return !!getLocalStorageWithExpiry("nomsData");
+}
+
 // Function to handle logout
 async function logout() {
     localStorage.removeItem("nomsData");
@@ -91,4 +121,4 @@ async function disconnect() {
 }
 
 // Export the functions so they can be used in other files
-export { setLocalStorageWithExpiry, getLocalStorageWithExpiry, updateUI, logout, disconnect };
+export { setLocalStorageWithExpiry, getLocalStorageWithExpiry, updateUI, logout, disconnect, initializeAuth };

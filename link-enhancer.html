@@ -211,7 +211,7 @@
   </div>
 
   <script type="module">
-    import { getLocalStorageWithExpiry, updateUI } from './js/auth.js';
+    import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
     import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
     import { createHeader } from './js/header.js'; // Import createHeader
 
@@ -693,10 +693,9 @@
       }
     } //end Notion Enhancer Class
 
-    document.addEventListener('DOMContentLoaded', () => {
-      updateUI(userInfoContainer); // Now you can use it
+    document.addEventListener('DOMContentLoaded', async () => { // Now async
+      await initializeAuth(); // Call and AWAIT initializeAuth
       checkAuthStatus();
-
     });
   </script>
 </body>

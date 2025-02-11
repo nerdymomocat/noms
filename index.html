@@ -166,7 +166,7 @@
     </div>
     <!-- Import the auth.js module -->
     <script type="module">
-        import { updateUI, getLocalStorageWithExpiry } from './js/auth.js';
+        import { updateUI, initializeAuth} from './js/auth.js';
         import { createHeader } from './js/header.js'; // Import the header
 
         // Create and insert the header
@@ -177,16 +177,10 @@
         const userInfoContainer = document.getElementById('user-info');
 
         // Wait for the DOM to be fully loaded before running the script
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check for existing login data in localStorage and remove URL query params
-            const nomsData = getLocalStorageWithExpiry("nomsData");
-
-            // Remove code and state from URL, if present
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('code') || urlParams.has('state')) {
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-            updateUI(userInfoContainer); // Update UI based on login status
+        document.addEventListener('DOMContentLoaded', async () => { //Make async
+            // Initialize authentication and THEN update the UI
+            await initializeAuth(); // Wait for auth initialization
+            updateUI(userInfoContainer);
 
         });
     </script>
