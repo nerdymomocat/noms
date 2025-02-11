@@ -74,7 +74,7 @@ async function initializeAuth() {
             // Something went wrong fetching user data. Handle appropriately.
             console.error("Error fetching user data:", response.status, await response.text());
             alert("Error logging in. Please try again.");
-            return; // Stop processing
+            return false; // Stop processing
         }
     }
     //Return if user is logged in or not
