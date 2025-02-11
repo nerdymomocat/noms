@@ -89,6 +89,9 @@
     </div>
   </header>
   <div id="root" class="min-h-screen bg-gray-100 p-8">
+    <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center">
+      You need to be logged in to use this tool. Please log in above.
+    </div>
     <div class="mx-auto max-w-2xl">
       <div class="mb-8 flex items-center justify-center space-x-4">
         <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -98,9 +101,6 @@
         <h1 class="text-3xl font-black uppercase tracking-wider">
           Notion Link Enhancer
         </h1>
-      </div>
-      <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center">
-        You need to be logged in to use this tool. Please log in above.
       </div>
 
       <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
@@ -252,7 +252,7 @@
 
   <script type="module">
 
-    import { getLocalStorageWithExpiry, updateUI } from './js/auth.js'; // CORRECT PATH
+    import { getLocalStorageWithExpiry, updateUI } from './js/auth.js';
     import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
 
     const userInfoContainer = document.getElementById('user-info');
@@ -288,8 +288,8 @@
       workerTokenInput.value = WORKER_TOKEN;
     }
 
-    // Function to check login status and redirect if not logged in
-    async function checkAuthAndBanner() {
+    // Function to check login status, show banner if needed, and update header.
+    async function checkAuthStatus() { // Renamed function
       let nomsData = getLocalStorageWithExpiry("nomsData");
       const authBanner = document.getElementById('auth-banner'); // Get the banner element
 
@@ -301,6 +301,7 @@
           // If not logged in (worker returns unauthorized), show banner
           authBanner.classList.remove('hidden'); // Show the banner
           mainContainer.classList.add('hidden'); //Hide the form
+          updateUI(userInfoContainer); // Update header even if not logged in
           return; // Stop execution
         }
         nomsData = await response.json(); // Get data from worker response
@@ -310,12 +311,8 @@
       // If we got here, the user IS logged in (either from localStorage or the worker)
       notionToken = nomsData.accessToken; // Set the global notionToken
       updateUI(userInfoContainer); // Update the header UI
-
-      // No need for this double check if it passes earlier checks
-      // if (!nomsData) { 
-      //     window.location.href = "./index.html";
-      //    return;
-      // }
+      mainContainer.classList.remove('hidden'); // Ensure form is visible
+      authBanner.classList.add('hidden'); // Ensure banner is hidden
     }
 
 
@@ -459,8 +456,41 @@
       logsContainer.innerHTML = '';
       updateProgress(0, 0);
     }
-    // --- Helper Functions Moved to auth.js---
 
+    function addLog(message) {
+      logs.push(message);
+      const logElement = document.createElement('div');
+      logElement.textContent = message;
+      logElement.className = 'whitespace-pre-wrap';
+      logsContainer.appendChild(logElement);
+      logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
+    }
+
+    function updateProgress(current, total) {
+      progress.current = current;
+      progress.total = total;
+      const progressPercentage = total > 0 ? (current / total) * 100 : 0;
+      progressBar.style.width = `${progressPercentage}%`;
+      progressText.textContent = `${current} / ${total} pages`;
+    }
+
+    function showError(inputElement, message) {
+      const errorElement = document.getElementById(`${inputElement.name}-error`);
+      if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
+        inputElement.classList.add('border-red-500');
+      }
+    }
+
+    function clearError(inputElement) {
+      const errorElement = document.getElementById(`${inputElement.name}-error`);
+      if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.classList.add('hidden');
+        inputElement.classList.remove('border-red-500');
+      }
+    }
     // --- NotionEnhancer Class ---
     class NotionEnhancer {
       constructor(config, notionToken) { // Accepts notionToken
@@ -706,8 +736,7 @@
       }
     } //end Notion Enhancer Class
 
-    // Call checkAuthAndBanner on page load
-    checkAuthAndBanner();
+    checkAuthStatus(); // Use the new function name
   </script>
 </body>
 
