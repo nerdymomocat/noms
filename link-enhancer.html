@@ -46,7 +46,6 @@
     <div id="root" class="min-h-screen bg-gray-100 p-8">
       <div class="mx-auto max-w-2xl">
         <div class="mb-8 flex items-center justify-center space-x-4">
-          <!--  Database icon (you might need to replace this with an actual image or SVG)  -->
           <svg
             class="h-8 w-8"
             xmlns="http://www.w3.org/2000/svg"
@@ -70,7 +69,6 @@
           id="main-container"
           class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]"
         >
-          <!--  Notion Form (Initially shown)  -->
           <form id="notion-form" class="space-y-6">
             <details open class="rounded-lg border-4 border-black p-4">
               <summary
@@ -159,7 +157,7 @@
             </div>
             <div class="space-y-3">
               <h3 class="font-bold uppercase tracking-wide">
-                Elements to Update
+                Elements to Add
               </h3>
               <div class="space-y-2">
                 <label class="flex cursor-pointer items-center space-x-2">
@@ -167,14 +165,13 @@
                     <input
                       type="checkbox"
                       class="peer absolute opacity-0"
-                      id="updateTitle"
-                      name="updateTitle"
+                      id="addTitle"
+                      name="addTitle"
                       checked
                     />
                     <div
                       class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]"
                     >
-                      <!--  Checkmark (you can replace with an SVG if needed)  -->
                       <svg
                         class="h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
@@ -189,21 +186,20 @@
                       </svg>
                     </div>
                   </div>
-                  <span class="select-none font-bold">Update Title</span>
+                  <span class="select-none font-bold">Add Title</span>
                 </label>
                 <label class="flex cursor-pointer items-center space-x-2">
                   <div class="relative">
                     <input
                       type="checkbox"
                       class="peer absolute opacity-0"
-                      id="updateOGImage"
-                      name="updateOGImage"
+                      id="addOGImage"
+                      name="addOGImage"
                       checked
                     />
                     <div
                       class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]"
                     >
-                      <!-- Checkmark -->
                       <svg
                         class="h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
@@ -218,7 +214,7 @@
                       </svg>
                     </div>
                   </div>
-                  <span class="select-none font-bold">Update OG Image</span>
+                  <span class="select-none font-bold">Add OG Image</span>
                 </label>
 
                 <label class="flex cursor-pointer items-center space-x-2">
@@ -226,14 +222,13 @@
                     <input
                       type="checkbox"
                       class="peer absolute opacity-0"
-                      id="updateIcon"
-                      name="updateIcon"
+                      id="addIcon"
+                      name="addIcon"
                       checked
                     />
                     <div
                       class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]"
                     >
-                      <!-- Checkmark -->
                       <svg
                         class="h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
@@ -248,7 +243,7 @@
                       </svg>
                     </div>
                   </div>
-                  <span class="select-none font-bold">Update Icon</span>
+                  <span class="select-none font-bold">Add Icon</span>
                 </label>
               </div>
             </div>
@@ -314,7 +309,6 @@
               id="submit-button"
               class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50"
             >
-              <!--  Loading Spinner (hidden by default)  -->
               <div
                 id="loading-spinner"
                 class="absolute inset-0 hidden items-center justify-center"
@@ -327,7 +321,6 @@
             </button>
           </form>
 
-          <!--  Progress Display (Initially hidden)  -->
           <div id="progress-display" class="hidden space-y-6">
             <div class="space-y-2">
               <div class="flex items-center justify-between">
@@ -348,7 +341,6 @@
               id="logs-container"
               class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono"
             >
-              <!-- Logs will be added here -->
             </div>
             <button
               id="reset-button"
@@ -438,24 +430,20 @@
 
 
       // --- Event Handlers ---
-
-      // Input change handler (for validation feedback)
       form.addEventListener('input', (e) => {
           if (e.target.tagName === 'INPUT') {
             clearError(e.target);
           }
 
-          if (e.target.name === 'updateOGImage') {
+          if (e.target.name === 'addOGImage') {
             ogImagePropertyNameContainer.classList.toggle('hidden', !e.target.checked);
           }
       });
 
-      // Form submission handler
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (isProcessing) return;
 
-        // Collect form data
         const formData = {
           notionToken: form.notionToken.value.trim(),
           workerToken: form.workerToken.value.trim(),
@@ -463,13 +451,12 @@
           urlPropertyName: form.urlPropertyName.value.trim(),
           ogImagePropertyName: form.ogImagePropertyName.value.trim(),
           checkedPropertyName: form.checkedPropertyName.value.trim(),
-          updateTitle: form.updateTitle.checked,
-          updateOGImage: form.updateOGImage.checked,
-          updateIcon: form.updateIcon.checked,
+          addTitle: form.addTitle.checked,
+          addOGImage: form.addOGImage.checked,
+          addIcon: form.addIcon.checked,
           workerUrl: form.workerUrl.value.trim(),
         };
 
-          // Basic validation (more robust validation would be done server-side)
         let isValid = true;
         if (!formData.notionToken) {
           showError(form.notionToken, 'Notion API Token is required');
@@ -487,7 +474,7 @@
           showError(form.urlPropertyName, 'URL Property Name is required');
             isValid = false;
         }
-          if (formData.updateOGImage && !formData.ogImagePropertyName) {
+          if (formData.addOGImage && !formData.ogImagePropertyName) {
             showError(form.ogImagePropertyName, 'OG Image Property Name is required');
             isValid = false;
         }
@@ -496,14 +483,12 @@
             isValid = false;
 
           } else if (!/^(https?:\/\/)/.test(formData.workerUrl)) {
-            //Very rudimentary check
             showError(form.workerUrl, "Must be a valid URL starting with http:// or https://");
             isValid = false;
           }
 
         if (!isValid) return;
 
-        // Start processing
         isProcessing = true;
         submitButton.disabled = true;
         submitButtonText.classList.add('opacity-0');
@@ -511,50 +496,53 @@
         form.classList.add('hidden');
         progressDisplay.classList.remove('hidden');
         logs = [];
-        logsContainer.innerHTML = ''; // Clear previous logs
+        logsContainer.innerHTML = '';
         updateProgress(0, 0);
 
         try {
           const enhancer = new NotionEnhancer(formData);
           addLog('Validating database access...');
-          await enhancer.validateAccess();
+          await enhancer.validateAccess(); // Removed the return value
           addLog('✓ Database access validated');
 
           const pages = [];
            for await (const page of enhancer.processPages()) {
                 pages.push(page);
             }
+           if (pages.length === 0) {
+                addLog('No pages found to process');
+                updateProgress(0, 0);
+                resetButton.classList.remove('hidden');
+                return;
+            }
 
-          if (pages.length === 0) {
-            addLog('No pages found to process');
-            //resetForm(); //don't hide
-            updateProgress(0,0);
+          let pagesToActuallyProcess = 0;
+          for (const page of pages) {
+            const url = page.properties[formData.urlPropertyName]?.url;
+            if (url) pagesToActuallyProcess++;
+          }
+
+          if (pagesToActuallyProcess === 0){
+            addLog('No pages with URL found to process');
             resetButton.classList.remove('hidden');
             return;
           }
-          let pagesToActuallyProcess = 0;
-            for (const page of pages){
-                const url = page.properties[formData.urlPropertyName]?.url;
-                if (url) pagesToActuallyProcess++;
-            }
-          if (pagesToActuallyProcess === 0){
-             addLog('No pages with URL found to process');
-              resetButton.classList.remove('hidden');
-              return;
-          }
-
 
           updateProgress(0, pagesToActuallyProcess);
           addLog(`Found ${pagesToActuallyProcess} pages to process`);
 
+
           for (const page of pages) {
-            const url = page.properties[formData.urlPropertyName]?.url;
+             const url = page.properties[formData.urlPropertyName]?.url;
             if (!url) continue;
 
             addLog(`Processing page: ${url}`);
-            await enhancer.updatePage(page.id, url);
+
+            // Pass the 'page' object to 'updatePage'
+            await enhancer.updatePage(page, url);
             addLog(`✓ Updated page: ${url}`);
             updateProgress(progress.current + 1, progress.total);
+
           }
           addLog('✨ All pages processed');
           resetButton.classList.remove('hidden');
@@ -564,13 +552,12 @@
 
         } finally {
             isProcessing = false;
-            submitButton.disabled = false; // Re-enable in case of an early return
+            submitButton.disabled = false;
             submitButtonText.classList.remove("opacity-0");
             loadingSpinner.classList.add("hidden");
         }
       });
 
-      // Reset button handler
       resetButton.addEventListener('click', () => {
         resetForm();
       });
@@ -582,15 +569,12 @@
             resetButton.classList.add('hidden');
             logsContainer.innerHTML = '';
             updateProgress(0,0);
-            //form.reset(); //dont reset to keep the form data
         }
-
-
-      // --- Notion Enhancer Class ---
 
       class NotionEnhancer {
         constructor(config) {
           this.config = config;
+          this.titlePropertyName = null; // Initialize titlePropertyName
         }
 
         async makeRequest(endpoint, options = {}) {
@@ -623,32 +607,35 @@
           }
         }
 
-        async validateAccess() {
-          try {
+async validateAccess() {
+  const database = await this.makeRequest(`/databases/${this.config.databaseId}`);
+  const properties = database.properties;
 
-            const database = await this.makeRequest(`/databases/${this.config.databaseId}`);
-            const properties = database.properties;
-            if (!properties[this.config.urlPropertyName]) {
-              throw new Error(`Property "${this.config.urlPropertyName}" does not exist in the database.`);
-            }
-            if (!properties[this.config.ogImagePropertyName]) {
-              throw new Error(`Property "${this.config.ogImagePropertyName}" does not exist in the database.`);
-            }
-
-            if(this.config.checkedPropertyName && !properties[this.config.checkedPropertyName]){
-              throw new Error(`Property "${this.config.checkedPropertyName}" does not exist in the database.`);
-            }
-
-
-            return true;
-
-          } catch (error) {
-            throw new Error(`Failed to access database: ${error.message}`);
-          }
+    // Find and store the title property name
+    for (const propName in properties) {
+        if (properties[propName].type === 'title') {
+            this.titlePropertyName = propName;
+            break;
         }
+    }
+
+    if (!this.titlePropertyName) {
+        throw new Error("Could not find the title property in the database.");
+    }
+
+    if (!properties[this.config.urlPropertyName]) {
+      throw new Error(`Property "${this.config.urlPropertyName}" does not exist in the database.`);
+    }
+    if (this.config.addOGImage && !properties[this.config.ogImagePropertyName]) {
+      throw new Error(`Property "${this.config.ogImagePropertyName}" does not exist in the database.`);
+    }
+    if(this.config.checkedPropertyName && !properties[this.config.checkedPropertyName]){
+      throw new Error(`Property "${this.config.checkedPropertyName}" does not exist in the database.`);
+    }
+}
+
 
         async *processPages() {
-
           const filters = [
                 {
                   property: this.config.urlPropertyName,
@@ -674,7 +661,7 @@
                 body: JSON.stringify({
                   filter: { and: filters },
                   start_cursor: startCursor,
-                  page_size: 100, //Notion API Max
+                  page_size: 100,
                 }),
               }
             );
@@ -688,97 +675,154 @@
           }
         }
 
-        async fetchMetadata(url) {
-
+       async fetchMetadata(url) {
           try {
             // First try direct fetch
-            try{
-                const response = await fetch(url);
-                const html = await response.text();
-                return this.parseHtml(html, url);
-            } catch (error) {
-                // If direct fetch fails (likely due to CORS), use the proxy
-                const proxyUrl = `${this.config.workerUrl}?url=${encodeURIComponent(url)}&token=${encodeURIComponent(this.config.workerToken)}`;
-                const response = await fetch(proxyUrl);
-
-                if (!response.ok) {
-                  throw new Error(`Failed to fetch URL through proxy: ${response.status}`);
-                }
-                const html = await response.text();
-                return this.parseHtml(html, url);
+            let response = await fetch(url);
+            if (response.ok) {
+              const html = await response.text();
+              return this.parseHtml(html, url); // Return the full metadata
+            } else {
+              throw new Error(`Direct fetch failed: ${response.status}`);
             }
+          } catch (directError) {
+            // Try proxy if direct fetch fails
+            console.warn(`Direct fetch failed, trying proxy: ${directError}`);
+            const proxyUrl = `${this.config.workerUrl}?url=${encodeURIComponent(url)}&token=${encodeURIComponent(this.config.workerToken)}`;
+            let proxyResponse = await fetch(proxyUrl);
 
-          } catch (error) {
-              throw new Error(`Failed to fetch metadata: ${error.message}`);
+            if (!proxyResponse.ok) {
+              console.error(`Proxy fetch also failed with: ${proxyResponse.status}`);
+              return null; // Return null if both fail
+            }
+            const html = await proxyResponse.text();
+            return this.parseHtml(html, url); // Return the full metadata
           }
         }
 
-        parseHtml(html, baseUrl) {
-
+       parseHtml(html, baseUrl) {
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, 'text/html');
           const metadata = {};
 
-          if (this.config.updateTitle) {
-            metadata.title = doc.querySelector('title')?.innerText ?? '';
+          // Get title if addTitle is checked
+          if (this.config.addTitle) {
+              metadata.title = doc.querySelector('title')?.innerText ?? '';
           }
 
-          if (this.config.updateOGImage) {
-            metadata.ogImage =
-              doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ?? '';
+          // Get OG Image if addOGImage is checked
+          if (this.config.addOGImage) {
+              metadata.ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ?? '';
           }
 
-            if(this.config.updateIcon){
-              const favicon = doc.querySelector('link[rel="icon"]')?.getAttribute('href') ??
-                              doc.querySelector('link[rel="shortcut icon"]')?.getAttribute('href') ??
-                              new URL('/favicon.ico', baseUrl).href;
-              metadata.favicon = new URL(favicon, baseUrl).href;
+          // Get favicon using Google's favicon service
+          if (this.config.addIcon) {
+                const parsedUrl = new URL(baseUrl);
+                const hostname = parsedUrl.hostname;
+                metadata.favicon = `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${hostname}&size=128`;
             }
 
-          return metadata;
+          return metadata; // Return ALL extracted data
         }
 
-        async updatePage(pageId, url) {
-          try {
-            const metadata = await this.fetchMetadata(url);
-            const properties = {};
 
-              if (this.config.updateOGImage && metadata.ogImage) {
-                properties[this.config.ogImagePropertyName] = {
-                  files: [{ type: 'external', name: 'OG Image', external: { url: metadata.ogImage } }],
-                };
-              }
+    async updatePage(page, url) { // Changed to accept 'page' object
+      try {
+        const metadata = await this.fetchMetadata(url);
 
-              if (this.config.checkedPropertyName) {
-                properties[this.config.checkedPropertyName] = { checkbox: true };
-              }
+        if (!metadata) {
+          console.warn(`Skipping update for pageId ${page.id} due to fetch failure.`);
+          return;
+        }
+        const properties = {};
 
+        // Add Title
+        if (this.config.addTitle) {
+            let updateTitle = false;
+            const titleProp = page.properties[this.titlePropertyName];
 
-            // Update properties
-            if (Object.keys(properties).length > 0) {
-               await this.makeRequest(`/pages/${pageId}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ properties }),
-              });
+            if (titleProp && titleProp.title) {
+                //check if title property is array and array length>0 and if array[0] is there and rich_text is not empty
+                if (Array.isArray(titleProp.title) && titleProp.title.length > 0 && titleProp.title[0] && titleProp.title[0].plain_text.trim() !== "" && titleProp.title[0].plain_text.trim().toLowerCase() !== "untitled") {
+                    // Title exists and is not "Untitled"
+                    updateTitle = false
+                } else {
+                    updateTitle = true;
+                }
+            } else {
+                // Title property doesn't exist or is malformed.
+                updateTitle = true;
             }
 
-            // Update icon
-            if (this.config.updateIcon && metadata.favicon) {
-                await this.makeRequest(`/pages/${pageId}`, {
+
+            if (updateTitle && metadata.title) {
+              properties[this.titlePropertyName] = {
+                title: [{ type: 'text', text: { content: metadata.title } }],
+              };
+               console.log("added title", properties);
+            }
+
+        }
+
+        // Add OG Image
+        if (this.config.addOGImage && metadata.ogImage) {
+          // Check if the OG Image property is empty
+            let updateOGImage = false;
+            const ogImageProp = page.properties[this.config.ogImagePropertyName];
+            //if files in ogImageProperty are not an array, or are empty.
+            if (!ogImageProp || !Array.isArray(ogImageProp.files) || ogImageProp.files.length === 0) {
+                updateOGImage = true;
+            }
+
+
+          if(updateOGImage){
+              properties[this.config.ogImagePropertyName] = {
+                files: [{ type: 'external', name: 'OG Image', external: { url: metadata.ogImage } }],
+              };
+              console.log("added ogimage", properties);
+          }
+
+        }
+
+
+        // Add icon
+        if (this.config.addIcon && metadata.favicon) {
+              // Check if the page has an icon already. Update only if null
+            if (page.icon === null) {
+                await this.makeRequest(`/pages/${page.id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({
                     icon: { type: 'external', external: { url: metadata.favicon } },
                 }),
-              });
+                });
+                console.log("added icon",  {
+                    icon: { type: 'external', external: { url: metadata.favicon } },
+                });
             }
-
-            return metadata;
-
-          } catch (error) {
-              throw new Error(`Failed to update page: ${error.message}`);
-          }
         }
-      } //end Notion Enhancer Class
+
+
+        // Add checked property
+        if (this.config.checkedPropertyName) {
+            properties[this.config.checkedPropertyName] = { checkbox: true };
+            console.log("added checked", properties);
+        }
+
+        // Batch property updates (Title, OG Image and checked)
+        if (Object.keys(properties).length > 0) {
+          await this.makeRequest(`/pages/${page.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ properties }),
+          });
+        }
+        return metadata; // Still returning metadata
+
+      } catch (error) {
+        console.error(`Failed to update page ${page.id}: ${error.message}`);
+        throw error;
+      }
+    }
+} //end Notion Enhancer Class
     </script>
   </body>
 </html>
