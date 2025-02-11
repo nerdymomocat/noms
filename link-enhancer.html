@@ -44,50 +44,10 @@
     .font-mono {
       font-family: 'Geist Mono', monospace;
     }
-
-    /* Add styles for header from index.html*/
-    header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      padding: 1rem;
-      background-color: #FEA97F;
-      border-bottom: 8px solid #000;
-    }
-
-    .header-container {
-      max-width: 800px;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-
-    /* Responsive header */
-    @media (max-width: 768px) {
-      header {
-        border-bottom-width: 4px;
-      }
-
-      .header-container {
-        padding: 0 1rem;
-      }
-    }
   </style>
 </head>
 
 <body>
-  <header>
-    <div class="header-container">
-      <h1>Noms</h1>
-      <div id="user-info">
-        <!-- Login/Logout/Disconnect buttons and user info will go here -->
-      </div>
-    </div>
-  </header>
   <div id="root" class="min-h-screen bg-gray-100 p-8">
     <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
       You need to be logged in to use this tool. Please log in above.
@@ -254,6 +214,7 @@
 
     import { getLocalStorageWithExpiry, updateUI } from './js/auth.js';
     import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
+    import { createHeader } from './js/header.js'; // Import createHeader
 
     const userInfoContainer = document.getElementById('user-info');
     const form = document.getElementById('notion-form');
@@ -268,6 +229,10 @@
     const mainContainer = document.getElementById('main-container');
     const ogImagePropertyNameContainer = document.getElementById('ogImagePropertyName-container');
 
+    const headerElement = createHeader(); // Create the header
+    document.body.prepend(headerElement); // Insert as the FIRST element in body
+
+    submitButton.disabled = true; // Disable the button
 
     // Form Data and State
     let isProcessing = false;
@@ -300,7 +265,6 @@
         if (!response.ok) {
           // Not logged in: Show banner, disable button
           authBanner.classList.remove('hidden');
-          submitButton.disabled = true; // Disable the button
           updateUI(userInfoContainer);  // Update header (login link)
           return; // Stop execution
         }
