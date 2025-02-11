@@ -48,6 +48,7 @@
 </head>
 
 <body>
+  <div id="header-container"></div>
   <div id="root" class="min-h-screen bg-gray-100 p-8">
     <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
       You need to be logged in to use this tool. Please log in above.
@@ -211,12 +212,10 @@
   </div>
 
   <script type="module">
-
     import { getLocalStorageWithExpiry, updateUI } from './js/auth.js';
     import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
     import { createHeader } from './js/header.js'; // Import createHeader
 
-    const userInfoContainer = document.getElementById('user-info');
     const form = document.getElementById('notion-form');
     const submitButton = document.getElementById('submit-button');
     const submitButtonText = document.getElementById('submit-button-text');
@@ -228,11 +227,8 @@
     const resetButton = document.getElementById('reset-button');
     const mainContainer = document.getElementById('main-container');
     const ogImagePropertyNameContainer = document.getElementById('ogImagePropertyName-container');
+    const authBanner = document.getElementById('auth-banner');
 
-    const headerElement = createHeader(); // Create the header
-    document.body.prepend(headerElement); // Insert as the FIRST element in body
-
-    submitButton.disabled = true; // Disable the button
 
     // Form Data and State
     let isProcessing = false;
@@ -243,28 +239,34 @@
 
     // Prefill the workerUrl input
     const workerUrlInput = document.getElementById('workerUrl');
-    if (WORKER_URL) { // Check if WORKER_URL is defined and not empty
+    if (WORKER_URL) {
       workerUrlInput.value = WORKER_URL;
     }
 
-    // Prefill the workerToken input (NEW CODE)
+    // Prefill the workerToken input
     const workerTokenInput = document.getElementById('workerToken');
     if (WORKER_TOKEN) {
       workerTokenInput.value = WORKER_TOKEN;
     }
 
+    // --- Insert the header here ---
+    const headerContainer = document.getElementById('header-container');
+    headerContainer.innerHTML = createHeader();
+    const userInfoContainer = document.getElementById('user-info'); // NOW it will find it
+    // ---------------------------------
+
     // Function to check login status, show banner if needed, and update header.
     async function checkAuthStatus() {
       let nomsData = getLocalStorageWithExpiry("nomsData");
-      const authBanner = document.getElementById('auth-banner'); // Get the banner element
 
       // If not in localStorage, try to get it from the worker
       if (!nomsData) {
-        const tokenURL = new URL("/auth/token", OAUTH_HANDLER_URL); // Use URL object
-        const response = await fetch(tokenURL.href); // Get from worker
+        const tokenURL = new URL("/auth/token", OAUTH_HANDLER_URL);
+        const response = await fetch(tokenURL.href);
         if (!response.ok) {
           // Not logged in: Show banner, disable button
           authBanner.classList.remove('hidden');
+          submitButton.disabled = true; // Disable the button!
           updateUI(userInfoContainer);  // Update header (login link)
           return; // Stop execution
         }
@@ -700,7 +702,11 @@
       }
     } //end Notion Enhancer Class
 
-    checkAuthStatus(); // Use the new function name
+    document.addEventListener('DOMContentLoaded', () => {
+      updateUI(userInfoContainer); // Now you can use it
+      checkAuthStatus();
+
+    });
   </script>
 </body>
 
