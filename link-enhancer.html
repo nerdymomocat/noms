@@ -85,150 +85,157 @@
                   type="password" id="workerToken" name="workerToken" placeholder="Enter your Worker Token" required />
                 <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
               </div>
+              <button type="button" id="workerConfig-submit"
+                class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+                Save & Connect
+              </button>
             </div>
           </details>
 
-          <div class="w-full">
-            <div class="flex items-center justify-between mb-2">
-              <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Database</label>
-              <button type="button" id="refreshDatabases"
-                class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </button>
+          <!-- Hide database section initially -->
+          <div id="database-section" class="hidden space-y-6">
+            <div class="w-full">
+              <div class="flex items-center justify-between mb-2">
+                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Database</label>
+                <button type="button" id="refreshDatabases"
+                  class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+              <div class="relative">
+                <input type="text" id="databaseSearch" placeholder="Search databases..."
+                  class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <select id="databaseSelect"
+                  class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                  <option value="">Select a database</option>
+                </select>
+              </div>
+              <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
-            <div class="relative">
-              <input type="text" id="databaseSearch" placeholder="Search databases..."
-                class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-              <select id="databaseSelect"
+
+            <!-- Property selection dropdowns -->
+            <div class="w-full">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
+              <select id="urlPropertySelect" name="urlPropertyName" required
                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="">Select a database</option>
+                <option value="">Select URL property</option>
               </select>
+              <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
-            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
 
-          <!-- Property selection dropdowns -->
-          <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
-            <select id="urlPropertySelect" name="urlPropertyName" required
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-              <option value="">Select URL property</option>
-            </select>
-            <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
-
-          <div class="w-full" id="ogImagePropertyName-container">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertySelect">OG Image
-              Property</label>
-            <select id="ogImagePropertySelect" name="ogImagePropertyName"
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-              <option value="">Select files property</option>
-            </select>
-            <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
-
-          <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertySelect">Checked
-              Property</label>
-            <select id="checkedPropertySelect" name="checkedPropertyName"
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-              <option value="">Select checkbox property</option>
-            </select>
-            <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
-
-          <div class="space-y-3">
-            <h3 class="font-bold uppercase tracking-wide">
-              Elements to Add
-            </h3>
-            <div class="space-y-2">
-              <label class="flex cursor-pointer items-center space-x-2">
-                <div class="relative">
-                  <input type="checkbox" class="peer absolute opacity-0" id="addTitle" name="addTitle" checked />
-                  <div
-                    class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
-                    <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <span class="select-none font-bold">Add Title</span>
-              </label>
-              <label class="flex cursor-pointer items-center space-x-2">
-                <div class="relative">
-                  <input type="checkbox" class="peer absolute opacity-0" id="addOGImage" name="addOGImage" checked />
-                  <div
-                    class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
-                    <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <span class="select-none font-bold">Add OG Image</span>
-              </label>
-
-              <label class="flex cursor-pointer items-center space-x-2">
-                <div class="relative">
-                  <input type="checkbox" class="peer absolute opacity-0" id="addIcon" name="addIcon" checked />
-                  <div
-                    class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
-                    <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <span class="select-none font-bold">Add Icon</span>
-              </label>
+            <div class="w-full" id="ogImagePropertyName-container">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertySelect">OG Image
+                Property</label>
+              <select id="ogImagePropertySelect" name="ogImagePropertyName"
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="">Select files property</option>
+              </select>
+              <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
-          </div>
-          <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertyName">URL Property Name</label>
-            <input
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-              type="text" id="urlPropertyName" name="urlPropertyName" placeholder="Enter the name of the URL property"
-              required />
-            <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
-          <div class="w-full" id="ogImagePropertyName-container">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertyName">OG Image Property
-              Name</label>
-            <input
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-              type="text" id="ogImagePropertyName" name="ogImagePropertyName"
-              placeholder="Enter the name of the OG Image property" />
-            <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
 
-          <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertyName">Checked Property Name
-              (Optional)</label>
-            <input
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-              type="text" id="checkedPropertyName" name="checkedPropertyName"
-              placeholder="Enter the name of the checkbox property" />
-            <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
-
-          <button type="submit" id="submit-button"
-            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
-            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
-              <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+            <div class="w-full">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertySelect">Checked
+                Property</label>
+              <select id="checkedPropertySelect" name="checkedPropertyName"
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="">Select checkbox property</option>
+              </select>
+              <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
-            <span id="submit-button-text">Start Update</span>
-          </button>
+
+            <div class="space-y-3">
+              <h3 class="font-bold uppercase tracking-wide">
+                Elements to Add
+              </h3>
+              <div class="space-y-2">
+                <label class="flex cursor-pointer items-center space-x-2">
+                  <div class="relative">
+                    <input type="checkbox" class="peer absolute opacity-0" id="addTitle" name="addTitle" checked />
+                    <div
+                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                      <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="select-none font-bold">Add Title</span>
+                </label>
+                <label class="flex cursor-pointer items-center space-x-2">
+                  <div class="relative">
+                    <input type="checkbox" class="peer absolute opacity-0" id="addOGImage" name="addOGImage" checked />
+                    <div
+                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                      <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="select-none font-bold">Add OG Image</span>
+                </label>
+
+                <label class="flex cursor-pointer items-center space-x-2">
+                  <div class="relative">
+                    <input type="checkbox" class="peer absolute opacity-0" id="addIcon" name="addIcon" checked />
+                    <div
+                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                      <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="select-none font-bold">Add Icon</span>
+                </label>
+              </div>
+            </div>
+            <div class="w-full">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertyName">URL Property Name</label>
+              <input
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                type="text" id="urlPropertyName" name="urlPropertyName" placeholder="Enter the name of the URL property"
+                required />
+              <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+            </div>
+            <div class="w-full" id="ogImagePropertyName-container">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertyName">OG Image Property
+                Name</label>
+              <input
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                type="text" id="ogImagePropertyName" name="ogImagePropertyName"
+                placeholder="Enter the name of the OG Image property" />
+              <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+            </div>
+
+            <div class="w-full">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertyName">Checked Property Name
+                (Optional)</label>
+              <input
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                type="text" id="checkedPropertyName" name="checkedPropertyName"
+                placeholder="Enter the name of the checkbox property" />
+              <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+            </div>
+
+            <button type="submit" id="submit-button"
+              class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+              <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+              </div>
+              <span id="submit-button-text">Start Update</span>
+            </button>
+          </div>
         </form>
 
         <div id="progress-display" class="hidden space-y-6">
@@ -274,6 +281,9 @@
     const mainContainer = document.getElementById('main-container');
     const ogImagePropertyNameContainer = document.getElementById('ogImagePropertyName-container');
     const authBanner = document.getElementById('auth-banner');
+    const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+    const databaseSection = document.getElementById('database-section');
+    const workerConfigSubmit = document.getElementById('workerConfig-submit');
 
 
     // Form Data and State
@@ -301,6 +311,61 @@
     const userInfoContainer = document.getElementById('user-info'); // NOW it will find it
     // ---------------------------------
 
+    // Load worker config from localStorage or constants
+    function loadWorkerConfig() {
+      const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+      if (savedConfig) {
+        const config = JSON.parse(savedConfig);
+        workerUrlInput.value = config.url;
+        workerTokenInput.value = config.token;
+      } else if (WORKER_URL) {
+        workerUrlInput.value = WORKER_URL;
+        if (WORKER_TOKEN) {
+          workerTokenInput.value = WORKER_TOKEN;
+        }
+      }
+    }
+
+    // Save worker config to localStorage
+    function saveWorkerConfig(url, token) {
+      localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+    }
+
+    // Validate and submit worker config
+    workerConfigSubmit.addEventListener('click', async () => {
+      const url = workerUrlInput.value.trim();
+      const token = workerTokenInput.value.trim();
+
+      // Clear previous errors
+      clearError(workerUrlInput);
+      clearError(workerTokenInput);
+
+      // Validate
+      let isValid = true;
+      if (!url) {
+        showError(workerUrlInput, 'Worker URL is required');
+        isValid = false;
+      } else if (!/^https?:\/\/.+/.test(url)) {
+        showError(workerUrlInput, 'Must be a valid URL starting with http:// or https://');
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      // Save configuration
+      saveWorkerConfig(url, token);
+      
+      // Show database section and fetch databases
+      databaseSection.classList.remove('hidden');
+      try {
+        const databases = await fetchDatabases();
+        populateDropdowns(databases);
+      } catch (error) {
+        console.error('Failed to load databases:', error);
+        showError(workerUrlInput, 'Failed to connect to worker');
+      }
+    });
+
     // Function to check login status, show banner if needed, and update header.
     async function checkAuthStatus() {
       const nomsData = getLocalStorageWithExpiry("nomsData");
@@ -310,6 +375,7 @@
         // Not logged in: Show banner, disable button, don't update header here
         authBanner.classList.remove('hidden');
         submitButton.disabled = true;
+        workerConfigSubmit.disabled = true; // Disable worker config submit too
         return; // Stop execution.  Don't try to fetch from the worker.
       }
 
@@ -317,7 +383,9 @@
       notionToken = nomsData.accessToken;
       updateUI(userInfoContainer); // Update header (logout/disconnect)
       submitButton.disabled = false; // Enable the button
+      workerConfigSubmit.disabled = false; // Enable worker config submit
       authBanner.classList.add('hidden'); // Hide the banner
+      loadWorkerConfig();
     }
 
 
