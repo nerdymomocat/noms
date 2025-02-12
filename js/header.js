@@ -162,7 +162,7 @@ function createHeader() {
     <!-- Notice Banner -->
     <div class="notice-banner" style="max-width: 600px; margin: 1rem auto; padding: 1rem; background-color: rgba(254, 169, 127, 0.1); font-family: 'Geist Mono', monospace; text-align: center; font-size: 1rem;">
       Please note: <br>
-      (a) I cannot guarantee this will be free because Notion requires a CORS proxy, and to fetch URL information via the browser, proxified requests are needed as well.<br>
+      (a) I cannot guarantee this will remain free because Notion requires a CORS proxy, and to fetch URL information via the browser, proxified requests are needed as well.<br>
       (b) Do not close the tab while processing, as it happens in your browser, not on a server.
     </div>
     `; //Just return string
