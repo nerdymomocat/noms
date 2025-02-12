@@ -85,10 +85,6 @@
                   type="password" id="workerToken" name="workerToken" placeholder="Enter your Worker Token" required />
                 <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
               </div>
-              <button type="button" id="workerConfig-submit"
-                class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
-                Connect Worker
-              </button>
             </div>
           </details>
 
@@ -285,8 +281,6 @@
     const authBanner = document.getElementById('auth-banner');
     const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
     const databaseSection = document.getElementById('database-section');
-    const workerConfigSubmit = document.getElementById('workerConfig-submit');
-
 
     // Form Data and State
     let isProcessing = false;
@@ -334,32 +328,6 @@
       localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
     }
 
-    // Validate and submit worker config
-    workerConfigSubmit.addEventListener('click', async () => {
-      const url = workerUrlInput.value.trim();
-      const token = workerTokenInput.value.trim();
-
-      // Clear previous errors
-      clearError(workerUrlInput);
-      clearError(workerTokenInput);
-
-      // Validate
-      let isValid = true;
-      if (!url) {
-        showError(workerUrlInput, 'Worker URL is required');
-        isValid = false;
-      } else if (!/^https?:\/\/.+/.test(url)) {
-        showError(workerUrlInput, 'Must be a valid URL starting with http:// or https://');
-        isValid = false;
-      }
-
-      if (!isValid) return;
-
-      // Save configuration
-      saveWorkerConfig(url, token);
-      checkWorkerUrl(); // This will fetch databases
-    });
-
     // Function to check login status, show banner if needed, and update header.
     async function checkAuthStatus() {
       const nomsData = getLocalStorageWithExpiry("nomsData");
@@ -369,7 +337,6 @@
         // Not logged in: Show banner, disable button, don't update header here
         authBanner.classList.remove('hidden');
         submitButton.disabled = true;
-        workerConfigSubmit.disabled = true; // Disable worker config submit too
         return; // Stop execution.  Don't try to fetch from the worker.
       }
 
@@ -377,19 +344,28 @@
       notionToken = nomsData.accessToken;
       updateUI(userInfoContainer); // Update header (logout/disconnect)
       submitButton.disabled = false; // Enable the button
-      workerConfigSubmit.disabled = false; // Enable worker config submit
       authBanner.classList.add('hidden'); // Hide the banner
       loadWorkerConfig();
       checkWorkerUrl(); // Check initial state
     }
 
-    // Add function to check worker URL and update UI
+    // Add function to check if worker config is complete
+    function isWorkerConfigComplete() {
+      const url = workerUrlInput.value.trim();
+      const token = workerTokenInput.value.trim();
+      return url && token;
+    }
+
+    // Update checkWorkerUrl to check both fields
     function checkWorkerUrl() {
       const url = workerUrlInput.value.trim();
-      submitButton.disabled = !url; // Disable submit if no URL
+      const token = workerTokenInput.value.trim();
+      submitButton.disabled = !url || !token;
 
-      if (url) {
-        // Try to fetch databases only if we have a URL
+      if (url && token) {
+        // Save configuration whenever both fields are filled
+        saveWorkerConfig(url, token);
+        // Try to fetch databases
         fetchDatabases()
           .then(databases => {
             populateDropdowns(databases);
@@ -403,6 +379,11 @@
     // Listen for worker URL changes
     workerUrlInput.addEventListener('input', () => {
       clearError(workerUrlInput);
+      checkWorkerUrl();
+    });
+
+    workerTokenInput.addEventListener('input', () => {
+      clearError(workerTokenInput);
       checkWorkerUrl();
     });
 
@@ -921,6 +902,12 @@
 
       // Add event listeners
       document.getElementById('refreshDatabases').addEventListener('click', async () => {
+        if (!isWorkerConfigComplete()) {
+          showError(workerUrlInput, 'Worker URL and Token are required');
+          showError(workerTokenInput, 'Worker URL and Token are required');
+          return;
+        }
+
         try {
           const databases = await fetchDatabases();
           populateDropdowns(databases);
