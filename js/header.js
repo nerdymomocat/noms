@@ -6,7 +6,7 @@ function createHeader() {
         <div class="header-container">
                         <h1>
                 <a href="./index.html">
-                    <img src="./assets/noms-icon.svg" alt="Noms" class="logo-image">
+                    <img src="./assets/favicon.svg" alt="Noms" class="logo-image">
                 </a>
             </h1>
             <div id="user-info">
