@@ -207,6 +207,7 @@
     </div>
 
     <script type="module">
+
         import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
         import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js';
         import { createHeader } from './js/header.js';
@@ -229,6 +230,11 @@
             const workerTokenInput = document.getElementById('workerToken');
             const databaseSelect = document.getElementById('databaseSelect');
             const databaseSearch = document.getElementById('databaseSearch');
+            const logOutput = document.createElement('textarea'); // Create a new textarea for logs
+            logOutput.id = 'logOutput';
+            logOutput.readOnly = true;
+            logOutput.placeholder = 'Logs will appear here...';
+            logOutput.className = 'mt-4 w-full h-32 border-4 border-black bg-white p-2 text-black font-mono text-sm'; // Tailwind classes
 
             let isProcessing = false;
             let notionToken = null;
@@ -344,13 +350,17 @@
             }
 
             async function getDatabaseInfo(databaseId) {
+                addLog(`Fetching database info for ID: ${databaseId}`);
                 return makeNotionRequest(`/databases/${databaseId}`);
             }
 
             function sanitizeTableName(name) {
                 // Replace spaces and special characters with underscores
-                return name.replace(/[^a-zA-Z0-9_]+/g, '_');
+                const sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_');
+                // Ensure it starts with a letter or underscore
+                return /^[a-zA-Z_]/.test(sanitized) ? sanitized : `_${sanitized}`;
             }
+
 
             function generateDBML(databaseInfo, allDatabases) {
                 let dbml = "";
@@ -365,7 +375,7 @@
                         let dbmlType = "";
 
                         //Sanitize property names
-                        const sanitizedPropName = propName.replace(/[^a-zA-Z0-9_]+/g, '_');
+                        const sanitizedPropName = sanitizeTableName(propName);
 
                         switch (prop.type) {
                             case "title":
@@ -408,7 +418,7 @@
                             default:
                                 dbmlType = "text";
                         }
-                        tableDBML += `  "${sanitizedPropName}" ${dbmlType}\n`;
+                        tableDBML += `  ${sanitizedPropName} ${dbmlType}\n`;
                     }
                     tableDBML += "}\n\n";
                     return tableDBML;
@@ -432,9 +442,9 @@
                                 if (prop.relation.type === "single_property") {
                                     refType = '>';
                                 }
-                                const sanitizedPropName = propName.replace(/[^a-zA-Z0-9_]+/g, '_');
+                                const sanitizedPropName = sanitizeTableName(propName);
 
-                                dbml += `Ref: ${tableName}."${sanitizedPropName}" ${refType} ${relatedTableName}.id\n`;
+                                dbml += `Ref: ${tableName}.${sanitizedPropName} ${refType} ${relatedTableName}.id\n`;
 
                             }
                         }
@@ -470,9 +480,13 @@
 
                 try {
                     async function getAllRelatedDatabases(startingDatabaseId, visited = new Set()) {
-                        if (visited.has(startingDatabaseId)) return [];
+                        if (visited.has(startingDatabaseId)) {
+                            addLog(`Cycle detected, skipping database ID: ${startingDatabaseId}`);
+                            return [];
+                        }
                         visited.add(startingDatabaseId);
 
+                        addLog(`Fetching related databases for: ${startingDatabaseId}`);
                         const relatedDatabases = [await getDatabaseInfo(startingDatabaseId)];
                         const currentDb = relatedDatabases[0];
 
@@ -481,6 +495,7 @@
 
                             if (prop.type === "relation") {
                                 const relatedDbId = prop.relation.database_id;
+                                addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
                                 const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
 
                                 for (const relatedDb of relatedSubDatabases) {
@@ -490,8 +505,10 @@
                                 }
 
                             } else if (prop.type === "rollup") {
+                                addLog(`Checking rollup property: ${propName}`);
                                 if (currentDb.properties[prop.rollup.relation_property_name]?.type === "relation") {
                                     const relatedDbId = currentDb.properties[prop.rollup.relation_property_name].relation.database_id;
+                                    addLog(`Found rollup relation: ${propName} -> Database ID: ${relatedDbId}`);
                                     const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
                                     for (const relatedDb of relatedSubDatabases) {
                                         if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
@@ -500,6 +517,7 @@
                                     }
                                 }
                             } else if (prop.type === "formula") {
+                                addLog(`Checking formula property: ${propName}`);
                                 const formulaExpression = prop.formula.expression;
                                 const relationRegex = /\.relation/g;  // Look for .relation
                                 if (relationRegex.test(formulaExpression)) {
@@ -507,6 +525,8 @@
                                         const innerProp = currentDb.properties[innerPropName];
                                         if (innerProp.type === "relation") {
                                             const relatedDbId = innerProp.relation.database_id;
+                                            addLog(`Found formula relation: ${propName} -> Database ID: ${relatedDbId}`);
+
                                             const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
                                             for (const relatedDb of relatedSubDatabases) {
                                                 if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
@@ -528,6 +548,7 @@
 
                 } catch (error) {
                     dbmlOutput.value = `Error: ${error.message}`;
+                    addLog(`Error generating DBML: ${error.message}`);
                 } finally {
                     isProcessing = false;
                     submitButton.disabled = false;
@@ -538,9 +559,9 @@
             });
 
             function addLog(message) {
-                const logElement = document.createElement('div');
-                logElement.textContent = message;
-                logElement.className = 'whitespace-pre-wrap';
+                const timestamp = new Date().toLocaleTimeString();
+                logOutput.value += `[${timestamp}] ${message}\n`;
+                logOutput.scrollTop = logOutput.scrollHeight; // Auto-scroll to the bottom
             }
 
             function showError(inputElement, message) {
@@ -571,6 +592,7 @@
                 form.classList.remove('hidden');
                 resetButton.classList.add('hidden');
                 dbmlOutput.value = '';
+                logOutput.value = ''; //clear logs
             }
 
             function populateDropdowns(databases) {
@@ -590,6 +612,7 @@
                 if (!isWorkerConfigComplete()) {
                     throw new Error('Worker URL and Token are required');
                 }
+                addLog('Fetching databases...');
                 const workerUrl = workerUrlInput.value.trim();
                 const workerToken = workerTokenInput.value.trim();
 
@@ -610,6 +633,7 @@
                 if (!response.ok) throw new Error('Failed to fetch databases');
                 const data = await response.json();
                 localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
+                addLog(`Fetched ${data.results.length} databases.`);
                 return data.results;
             }
 
@@ -619,11 +643,11 @@
                 copyButton.textContent = "Copied!";
                 setTimeout(() => {
                     copyButton.innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                        <span>Copy to Clipboard</span>`;
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <span>Copy to Clipboard</span>`;
                 }, 2000);
             });
 
@@ -650,6 +674,9 @@
                 );
                 populateDropdowns(filtered);
             });
+
+            // Add the logOutput textarea just after the dbmlOutput textarea
+            dbmlOutput.after(logOutput);
 
             await checkAuthStatus();
             updateUI(userInfoContainer);
