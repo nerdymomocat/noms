@@ -87,13 +87,60 @@
               </div>
             </div>
           </details>
+
           <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="databaseId">Database ID</label>
-            <input
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-              type="text" id="databaseId" name="databaseId" placeholder="Enter your Database ID" required />
-            <p id="databaseId-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+            <div class="flex items-center justify-between mb-2">
+              <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Database</label>
+              <button type="button" id="refreshDatabases"
+                class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+            </div>
+            <div class="relative">
+              <input type="text" id="databaseSearch" placeholder="Search databases..."
+                class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+              <select id="databaseSelect"
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="">Select a database</option>
+              </select>
+            </div>
+            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
           </div>
+
+          <!-- Property selection dropdowns -->
+          <div class="w-full">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
+            <select id="urlPropertySelect" name="urlPropertyName" required
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+              <option value="">Select URL property</option>
+            </select>
+            <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          </div>
+
+          <div class="w-full" id="ogImagePropertyName-container">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertySelect">OG Image
+              Property</label>
+            <select id="ogImagePropertySelect" name="ogImagePropertyName"
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+              <option value="">Select files property</option>
+            </select>
+            <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          </div>
+
+          <div class="w-full">
+            <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertySelect">Checked
+              Property</label>
+            <select id="checkedPropertySelect" name="checkedPropertyName"
+              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+              <option value="">Select checkbox property</option>
+            </select>
+            <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          </div>
+
           <div class="space-y-3">
             <h3 class="font-bold uppercase tracking-wide">
               Elements to Add
@@ -292,10 +339,10 @@
       const formData = {
         //   notionToken: form.notionToken.value.trim(), // REMOVE.  We're getting it from localStorage/worker
         workerToken: form.workerToken.value.trim(),
-        databaseId: form.databaseId.value.trim(),
-        urlPropertyName: form.urlPropertyName.value.trim(),
-        ogImagePropertyName: form.ogImagePropertyName.value.trim(),
-        checkedPropertyName: form.checkedPropertyName.value.trim(),
+        databaseId: document.getElementById('databaseSelect').value,
+        urlPropertyName: document.getElementById('urlPropertySelect').value,
+        ogImagePropertyName: document.getElementById('ogImagePropertySelect').value,
+        checkedPropertyName: document.getElementById('checkedPropertySelect').value,
         addTitle: form.addTitle.checked,
         addOGImage: form.addOGImage.checked,
         addIcon: form.addIcon.checked,
@@ -309,15 +356,15 @@
         isValid = false;
       }
       if (!formData.databaseId) {
-        showError(form.databaseId, 'Database ID is required');
+        showError(document.getElementById('databaseSelect'), 'Database ID is required');
         isValid = false;
       }
       if (!formData.urlPropertyName) {
-        showError(form.urlPropertyName, 'URL Property Name is required');
+        showError(document.getElementById('urlPropertySelect'), 'URL Property Name is required');
         isValid = false;
       }
       if (formData.addOGImage && !formData.ogImagePropertyName) {
-        showError(form.ogImagePropertyName, 'OG Image Property Name is required');
+        showError(document.getElementById('ogImagePropertySelect'), 'OG Image Property Name is required');
         isValid = false;
       }
       if (!formData.workerUrl) {
@@ -693,10 +740,129 @@
       }
     } //end Notion Enhancer Class
 
+    async function fetchDatabases() {
+      try {
+        const response = await fetch(`${WORKER_URL}/search`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${notionToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            filter: {
+              value: "database",
+              property: "object"
+            }
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch databases');
+
+        const data = await response.json();
+        localStorage.setItem('nomsDataDatabases', JSON.stringify(data.results));
+        return data.results;
+      } catch (error) {
+        console.error('Error fetching databases:', error);
+        throw error;
+      }
+    }
+
+    function populateDropdowns(databases) {
+      const databaseSelect = document.getElementById('databaseSelect');
+      databaseSelect.innerHTML = '<option value="">Select a database</option>';
+
+      databases.forEach(db => {
+        const option = document.createElement('option');
+        option.value = db.id;
+        option.textContent = db.title[0]?.plain_text || 'Untitled';
+        databaseSelect.appendChild(option);
+      });
+    }
+
+    async function loadDatabaseProperties(databaseId) {
+      try {
+        const response = await fetch(`${WORKER_URL}/databases/${databaseId}`, {
+          headers: {
+            'Authorization': `Bearer ${notionToken}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch database properties');
+
+        const data = await response.json();
+        const properties = data.properties;
+
+        // Populate property dropdowns
+        const urlProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'url');
+        const fileProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'files');
+        const checkboxProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'checkbox');
+
+        populatePropertyDropdown('urlPropertySelect', urlProperties);
+        populatePropertyDropdown('ogImagePropertySelect', fileProperties);
+        populatePropertyDropdown('checkedPropertySelect', checkboxProperties);
+      } catch (error) {
+        console.error('Error loading database properties:', error);
+      }
+    }
+
+    function populatePropertyDropdown(selectId, properties) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = `<option value="">Select ${selectId.replace('PropertySelect', '')} property</option>`;
+
+      properties.forEach(([name]) => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+    }
+
+    // Initialize database selection
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeAuth();
+      checkAuthStatus();
+
+      // Load saved databases or fetch new ones
+      let databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
+      if (!databases.length) {
+        try {
+          databases = await fetchDatabases();
+        } catch (error) {
+          console.error('Failed to load databases:', error);
+        }
+      }
+      populateDropdowns(databases);
+
+      // Add event listeners
+      document.getElementById('refreshDatabases').addEventListener('click', async () => {
+        try {
+          const databases = await fetchDatabases();
+          populateDropdowns(databases);
+        } catch (error) {
+          console.error('Failed to refresh databases:', error);
+        }
+      });
+
+      document.getElementById('databaseSelect').addEventListener('change', (e) => {
+        if (e.target.value) {
+          loadDatabaseProperties(e.target.value);
+        }
+      });
+
+      document.getElementById('databaseSearch').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
+        const filtered = databases.filter(db =>
+          db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+        );
+        populateDropdowns(filtered);
+      });
+    });
+
     document.addEventListener('DOMContentLoaded', async () => { // Now async
       await initializeAuth(); // Call and AWAIT initializeAuth
       checkAuthStatus();
-      updateUI(userInfoContainer); 
+      updateUI(userInfoContainer);
     });
   </script>
 </body>
