@@ -257,7 +257,7 @@
     </div>
     <!-- Import the auth.js module -->
     <script type="module">
-        import { updateUI, initializeAuth } from './js/auth.js';
+        import { updateUIHeader, initializeAuth } from './js/auth.js';
         import { createHeader } from './js/header.js'; // Import the header
 
         // Create and insert the header
@@ -271,7 +271,7 @@
         document.addEventListener('DOMContentLoaded', async () => { //Make async
             // Initialize authentication and THEN update the UI
             await initializeAuth(); // Wait for auth initialization
-            updateUI(userInfoContainer);
+            updateUIHeader(userInfoContainer);
 
         });
     </script>
