@@ -208,314 +208,456 @@
 
     <script type="module">
         import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
-        import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
-        import { createHeader } from './js/header.js'; // Import createHeader
+        import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js';
+        import { createHeader } from './js/header.js';
 
-        // Get DOM elements
-        const form = document.getElementById('erd-form');
-        const submitButton = document.getElementById('submit-button');
-        const submitButtonText = document.getElementById('submit-button-text');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const outputSection = document.getElementById('output-section');
-        const dbmlOutput = document.getElementById('dbmlOutput');
-        const copyButton = document.getElementById('copy-button');
-        const resetButton = document.getElementById('reset-button');
-        const authBanner = document.getElementById('auth-banner');
-        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
-        const databaseSection = document.getElementById('database-section');
-        const propertySelect = document.getElementById("propertySelect");
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+
+            const form = document.getElementById('erd-form');
+            const submitButton = document.getElementById('submit-button');
+            const submitButtonText = document.getElementById('submit-button-text');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const outputSection = document.getElementById('output-section');
+            const dbmlOutput = document.getElementById('dbmlOutput');
+            const copyButton = document.getElementById('copy-button');
+            const resetButton = document.getElementById('reset-button');
+            const authBanner = document.getElementById('auth-banner');
+            const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+            const databaseSection = document.getElementById('database-section');
+            const workerUrlInput = document.getElementById('workerUrl');
+            const workerTokenInput = document.getElementById('workerToken');
+            const databaseSelect = document.getElementById('databaseSelect');
+            const databaseSearch = document.getElementById('databaseSearch');
 
 
-        // Form Data and State
-        let isProcessing = false;
-        let notionToken = null;
 
-        // Prefill the workerUrl input
-        const workerUrlInput = document.getElementById('workerUrl');
-        if (WORKER_URL) {
-            workerUrlInput.value = WORKER_URL;
-        }
+            // Form Data and State
+            let isProcessing = false;
+            let notionToken = null;
 
-        // Prefill the workerToken input
-        const workerTokenInput = document.getElementById('workerToken');
-        if (WORKER_TOKEN) {
-            workerTokenInput.value = WORKER_TOKEN;
-        }
-
-        // --- Insert the header here ---
-        const headerContainer = document.getElementById('header-container');
-        headerContainer.innerHTML = createHeader();
-        const userInfoContainer = document.getElementById('user-info');
-        // ---------------------------------
-
-        // --- Utility Functions (like config loading) ---
-        function loadWorkerConfig() {
-            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
-            if (savedConfig) {
-                const config = JSON.parse(savedConfig);
-                workerUrlInput.value = config.url;
-                workerTokenInput.value = config.token;
-            } else if (WORKER_URL) {
+            // Prefill the workerUrl input
+            if (WORKER_URL) {
                 workerUrlInput.value = WORKER_URL;
-                if (WORKER_TOKEN) {
-                    workerTokenInput.value = WORKER_TOKEN;
+            }
+
+            // Prefill the workerToken input
+            if (WORKER_TOKEN) {
+                workerTokenInput.value = WORKER_TOKEN;
+            }
+
+            // --- Insert the header here ---
+            const headerContainer = document.getElementById('header-container');
+            headerContainer.innerHTML = createHeader();
+            const userInfoContainer = document.getElementById('user-info'); // NOW it will find it
+
+
+            function loadWorkerConfig() {
+                const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+                if (savedConfig) {
+                    const config = JSON.parse(savedConfig);
+                    workerUrlInput.value = config.url;
+                    workerTokenInput.value = config.token;
+                } else if (WORKER_URL) {
+                    workerUrlInput.value = WORKER_URL;
+                    if (WORKER_TOKEN) {
+                        workerTokenInput.value = WORKER_TOKEN;
+                    }
+                }
+                checkWorkerUrl();
+            }
+
+            function saveWorkerConfig(url, token) {
+                localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+            }
+
+            async function checkAuthStatus() {
+                const nomsData = getLocalStorageWithExpiry("nomsData");
+
+                if (!nomsData) {
+                    authBanner.classList.remove('hidden');
+                    submitButton.disabled = true;
+                    return;
+                }
+
+                notionToken = nomsData.accessToken;
+                updateUI(userInfoContainer);
+                submitButton.disabled = false;
+                authBanner.classList.add('hidden');
+                loadWorkerConfig();
+                checkWorkerUrl();
+            }
+
+            function isWorkerConfigComplete() {
+                const url = workerUrlInput.value.trim();
+                const token = workerTokenInput.value.trim();
+                return url && token;
+            }
+
+            function checkWorkerUrl() {
+                const url = workerUrlInput.value.trim();
+                const token = workerTokenInput.value.trim();
+                submitButton.disabled = !url || !token;
+                if (url && token) {
+                    saveWorkerConfig(url, token);
                 }
             }
-            checkWorkerUrl(); // Check URL state after loading config
-        }
 
-        function saveWorkerConfig(url, token) {
-            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
-        }
+            form.addEventListener('input', (e) => {
+                if (e.target.tagName === 'INPUT') {
+                    clearError(e.target);
+                }
+            });
 
-        async function checkAuthStatus() {
-            const nomsData = getLocalStorageWithExpiry("nomsData");
-            const authBanner = document.getElementById('auth-banner');
+            workerUrlInput.addEventListener('input', () => {
+                clearError(workerUrlInput);
+                checkWorkerUrl();
+            });
 
-            if (!nomsData) {
-                authBanner.classList.remove('hidden');
-                submitButton.disabled = true;
-                return;
+            workerTokenInput.addEventListener('input', () => {
+                clearError(workerTokenInput);
+                checkWorkerUrl();
+            });
+
+            // --- Notion API Request Helpers ---
+            async function makeNotionRequest(endpoint, options = {}) {
+                if (!isWorkerConfigComplete()) {
+                    throw new Error('Worker URL and Token are required');
+                }
+
+                const workerUrl = workerUrlInput.value.trim();
+                const workerToken = workerTokenInput.value.trim();
+
+                const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${notionToken}`,
+                            ...options.headers,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => null);
+                        const errorMessage = errorData?.message || `API request failed: ${response.status}`;
+                        throw new Error(errorMessage);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    throw error;
+                }
             }
 
-            notionToken = nomsData.accessToken;
-            updateUI(userInfoContainer);
-            submitButton.disabled = false;
-            authBanner.classList.add('hidden');
-            loadWorkerConfig();
-            checkWorkerUrl();
-        }
-
-        function isWorkerConfigComplete() {
-            const url = workerUrlInput.value.trim();
-            const token = workerTokenInput.value.trim();
-            return url && token;
-        }
-
-        function checkWorkerUrl() {
-            const url = workerUrlInput.value.trim();
-            const token = workerTokenInput.value.trim();
-            submitButton.disabled = !url || !token;
-
-            if (url && token) {
-                saveWorkerConfig(url, token);
-            }
-        }
-
-        // --- Event Handlers for input fields ---
-        form.addEventListener('input', (e) => {
-            if (e.target.tagName === 'INPUT') {
-                clearError(e.target);
-            }
-        });
-
-        workerUrlInput.addEventListener('input', () => {
-            clearError(workerUrlInput);
-            checkWorkerUrl();
-        });
-
-        workerTokenInput.addEventListener('input', () => {
-            clearError(workerTokenInput);
-            checkWorkerUrl();
-        });
-
-        // --- Notion API Request Helpers ---
-
-        async function makeNotionRequest(endpoint, options = {}) {
-            if (!isWorkerConfigComplete()) {
-                throw new Error('Worker URL and Token are required');
+            async function getDatabaseInfo(databaseId) {
+                return makeNotionRequest(`/databases/${databaseId}`);
             }
 
-            const workerUrl = workerUrlInput.value.trim();
-            const workerToken = workerTokenInput.value.trim();
+            // --- DBML Generation ---
+            function generateDBML(databaseInfo, allDatabases) {
+                let dbml = "";
 
-            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+                function generateTable(dbInfo) {
+                    let tableDBML = `Table ${dbInfo.title[0]?.plain_text || 'Untitled'} {\n`;
+                    tableDBML += `  id text [primary key]\n`; // Assume all databases have an 'id'
 
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${notionToken}`, // Use stored token
-                        ...options.headers,
-                    },
+                    for (const propName in dbInfo.properties) {
+                        const prop = dbInfo.properties[propName];
+                        let dbmlType = "";
+
+                        switch (prop.type) {
+                            case "title":
+                                dbmlType = "text";
+                                break;
+                            case "rich_text":
+                            case "url":
+                            case "email":
+                            case "phone_number":
+                                dbmlType = "text";
+                                break;
+                            case "number":
+                                dbmlType = "number";
+                                break;
+                            case "select":
+                                dbmlType = "text"; // Treat select as text, since it's an option
+                                break;
+                            case "multi_select":
+                                dbmlType = "text[]";
+                                break;
+                            case "date":
+                                dbmlType = "timestamp"; // Or date, depending on how you want to represent
+                                break;
+                            case "checkbox":
+                                dbmlType = "boolean";
+                                break;
+                            case "files":
+                                dbmlType = "text[]"; // Store file URLs (probably)
+                                break;
+                            case "created_by":
+                            case "last_edited_by":
+                                dbmlType = "text"; //  User IDs
+                                break;
+                            case "created_time":
+                            case "last_edited_time":
+                                dbmlType = "timestamp";
+                                break;
+                            case "formula":
+                                dbmlType = "text";  // Store the formula expression as text
+                                break;
+                            case "relation":
+                                // We'll handle relations separately below.
+                                continue; // Skip for now
+                            case "rollup":
+                                dbmlType = "text";
+                                break;
+                            case "status":
+                                dbmlType = "text";
+                                break;
+                            case "unique_id":
+                                dbmlType = "text";
+                                break;
+                            default:
+                                dbmlType = "text"; // Default to text
+                        }
+
+                        tableDBML += `  "${propName}" ${dbmlType}\n`;
+                    }
+                    tableDBML += "}\n\n";
+                    return tableDBML;
+                }
+
+                // Create tables for all databases
+                allDatabases.forEach(db => {
+                    dbml += generateTable(db);
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => null);
-                    const errorMessage = errorData?.message || `API request failed: ${response.status}`;
-                    throw new Error(errorMessage);
+                // Handle relations AFTER tables are defined.
+                for (const dbInfo of allDatabases) { // Iterate through all, not only starting
+                    const tableName = dbInfo.title[0]?.plain_text || 'Untitled';
+
+                    for (const propName in dbInfo.properties) {
+                        const prop = dbInfo.properties[propName];
+                        if (prop.type === "relation") {
+                            const relatedDbId = prop.relation.database_id;
+
+                            // Find the related database (by ID) in our array.
+                            const relatedDb = allDatabases.find(db => db.id === relatedDbId);
+                            if (relatedDb) {
+                                const relatedTableName = relatedDb.title[0]?.plain_text || 'Untitled';
+                                let refType = "-"; // default to many-to-many
+                                if (prop.relation.type === "single_property")
+                                    refType = '>';
+
+                                dbml += `Ref: ${tableName}."${propName}" ${refType} ${relatedTableName}.id\n`;
+                            }
+                        }
+                    }
                 }
 
-                return await response.json();
-            } catch (error) {
-                throw error; // Re-throw to be caught by caller
-            }
-        }
-
-        async function getDatabaseInfo(databaseId) {
-            return makeNotionRequest(`/databases/${databaseId}`);
-        }
-
-
-        // --- Form Submission and Processing ---
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (isProcessing) return;
-
-            const databaseId = document.getElementById('databaseSelect').value;
-
-            let isValid = true;
-            if (!databaseId) {
-                showError(document.getElementById('databaseSelect'), 'Database is required');
-                isValid = false;
-            }
-
-            if (!isWorkerConfigComplete()) {
-                showError(workerUrlInput, "Worker URL is required");
-                showError(workerTokenInput, "Worker Token is required");
-                isValid = false;
+                return dbml;
             }
 
 
-            if (!isValid) return;
 
-            isProcessing = true;
-            submitButton.disabled = true;
-            submitButtonText.classList.add('opacity-0');
-            loadingSpinner.classList.remove('hidden');
-            form.classList.add('hidden');
-            outputSection.classList.remove('hidden');
-            dbmlOutput.value = ''; // Initialize/clear textarea
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (isProcessing) return;
 
+                const databaseId = databaseSelect.value;
 
-            try {
-                // Placeholder for now.  We'll put the generateDBML code *here*.
-                addLog("Generating DBML...");
-                dbmlOutput.value = "Placeholder DBML output.  Full implementation pending."; // Set the textarea
+                let isValid = true;
+                if (!databaseId) {
+                    showError(databaseSelect, 'Database is required');
+                    isValid = false;
+                }
 
-            } catch (error) {
-                dbmlOutput.value = `Error: ${error.message}`; // Display error in textarea
-            } finally {
-                isProcessing = false;
-                submitButton.disabled = false;
-                submitButtonText.classList.remove("opacity-0");
-                loadingSpinner.classList.add("hidden");
-                resetButton.classList.remove('hidden'); // Show reset
-            }
-        });
+                if (!isWorkerConfigComplete()) {
+                    showError(workerUrlInput, "Worker URL is required");
+                    showError(workerTokenInput, "Worker Token is required");
+                    isValid = false;
+                }
 
 
-        // --- UI Helper Functions ---
-        function addLog(message) {
-            // Implementation of the addLog function from other files
-            const logElement = document.createElement('div');
-            logElement.textContent = message;
-            logElement.className = 'whitespace-pre-wrap';
-            // You will need to have a logsContainer element in your HTML as well.
-            // Example: <div id="logs-container"></div>
-        }
+                if (!isValid) return;
 
-        function showError(inputElement, message) {
-            const errorElement = document.getElementById(`${inputElement.name}-error`);
-            if (errorElement) {
-                errorElement.textContent = message;
-                errorElement.classList.remove('hidden');
-                inputElement.classList.add('border-red-500');
-            }
-        }
+                isProcessing = true;
+                submitButton.disabled = true;
+                submitButtonText.classList.add('opacity-0');
+                loadingSpinner.classList.remove('hidden');
+                form.classList.add('hidden');
+                outputSection.classList.remove('hidden');
+                dbmlOutput.value = '';
 
-        function clearError(inputElement) {
-            const errorElement = document.getElementById(`${inputElement.name}-error`);
-            if (errorElement) {
-                errorElement.textContent = '';
-                errorElement.classList.add('hidden');
-                inputElement.classList.remove('border-red-500');
-            }
-        }
 
-        resetButton.addEventListener('click', () => {
-            resetForm();
-        });
+                try {
 
-        function resetForm() {
-            isProcessing = false;
-            outputSection.classList.add('hidden');
-            form.classList.remove('hidden');
-            resetButton.classList.add('hidden');
-            dbmlOutput.value = '';
-        }
+                    async function getAllRelatedDatabases(startingDatabaseId, visited = new Set()) {
+                        if (visited.has(startingDatabaseId)) {
+                            return []; // Avoid infinite loops
+                        }
+                        visited.add(startingDatabaseId);
 
-        // --- Populate Dropdowns ---
-        function populateDropdowns(databases) {
-            const databaseSelect = document.getElementById('databaseSelect');
-            databaseSelect.innerHTML = '<option value="">-</option>';
+                        const relatedDatabases = [await getDatabaseInfo(startingDatabaseId)];
+                        const currentDb = relatedDatabases[0];
 
-            databases.forEach(db => {
-                const option = document.createElement('option');
-                option.value = db.id;
-                option.textContent = db.title[0]?.plain_text || 'Untitled';
-                databaseSelect.appendChild(option);
-            });
-        }
+                        for (const propName in currentDb.properties) {
+                            const prop = currentDb.properties[propName];
 
-        // --- Fetch Databases ---
-        async function fetchDatabases() {
-            if (!isWorkerConfigComplete()) {
-                throw new Error('Worker URL and Token are required');
-            }
-            const workerUrl = workerUrlInput.value.trim();
-            const workerToken = workerTokenInput.value.trim();
+                            if (prop.type === "relation") {
+                                const relatedDbId = prop.relation.database_id;
+                                const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
+                                // Merge results, avoiding duplicates
+                                for (const relatedDb of relatedSubDatabases) {
+                                    if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
+                                        relatedDatabases.push(relatedDb);
+                                    }
+                                }
 
-            const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${notionToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    filter: {
-                        value: "database",
-                        property: "object"
+                            } else if (prop.type === "rollup") {
+                                // Check rollup's relation property.
+                                const relationPropId = prop.rollup.relation_property_id
+                                if (currentDb.properties[prop.rollup.relation_property_name].type == "relation") {
+                                    const relatedDbId = currentDb.properties[prop.rollup.relation_property_name].relation.database_id;
+                                    const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
+                                    for (const relatedDb of relatedSubDatabases) {
+                                        if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
+                                            relatedDatabases.push(relatedDb);
+                                        }
+                                    }
+                                }
+                            } else if (prop.type === "formula") {
+                                //basic regex to find relation
+                                const formulaExpression = prop.formula.expression;
+                                const relationRegex = /\.relation/g;
+                                if (relationRegex.test(formulaExpression)) {
+                                    //check which properties have a relation
+                                    for (const innerPropName in currentDb.properties) {
+                                        const innerProp = currentDb.properties[innerPropName];
+                                        if (innerProp.type === "relation") {
+                                            const relatedDbId = innerProp.relation.database_id;
+                                            const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
+
+                                            for (const relatedDb of relatedSubDatabases) {
+                                                if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
+                                                    relatedDatabases.push(relatedDb);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return relatedDatabases;
                     }
-                })
+
+                    const allRelatedDatabases = await getAllRelatedDatabases(databaseId);
+
+                    const dbml = generateDBML(allRelatedDatabases[0], allRelatedDatabases);
+                    dbmlOutput.value = dbml;
+                    addLog("DBML Generated!"); // Add this line
+
+                } catch (error) {
+                    dbmlOutput.value = `Error: ${error.message}`;
+                } finally {
+                    isProcessing = false;
+                    submitButton.disabled = false;
+                    submitButtonText.classList.remove("opacity-0");
+                    loadingSpinner.classList.add("hidden");
+                    resetButton.classList.remove('hidden');
+                }
             });
 
-            if (!response.ok) throw new Error('Failed to fetch databases');
+            function addLog(message) {
+                const logElement = document.createElement('div');
+                logElement.textContent = message;
+                logElement.className = 'whitespace-pre-wrap';
+            }
 
-            const data = await response.json();
-            localStorage.setItem('nomsDatabases', JSON.stringify(data.results)); // Corrected line
-            return data.results;
 
-        }
+            function showError(inputElement, message) {
+                const errorElement = document.getElementById(`${inputElement.name}-error`);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.classList.remove('hidden');
+                    inputElement.classList.add('border-red-500');
+                }
+            }
 
-        // Copy to clipboard functionality:
-        document.getElementById('copy-button').addEventListener('click', () => {
-            dbmlOutput.select(); // Select the text
-            document.execCommand('copy'); // Copy
-            // Optional: Add visual feedback (e.g., change button text)
-            copyButton.textContent = "Copied!";
-            setTimeout(() => {
-                copyButton.innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            function clearError(inputElement) {
+                const errorElement = document.getElementById(`${inputElement.name}-error`);
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.classList.add('hidden');
+                    inputElement.classList.remove('border-red-500');
+                }
+            }
+
+            resetButton.addEventListener('click', () => {
+                resetForm();
+            });
+
+            function resetForm() {
+                isProcessing = false;
+                outputSection.classList.add('hidden');
+                form.classList.remove('hidden');
+                resetButton.classList.add('hidden');
+                dbmlOutput.value = '';
+            }
+
+            function populateDropdowns(databases) {
+                databaseSelect.innerHTML = '<option value="">-</option>';
+
+                databases.forEach(db => {
+                    const option = document.createElement('option');
+                    option.value = db.id;
+                    option.textContent = db.title[0]?.plain_text || 'Untitled';
+                    databaseSelect.appendChild(option);
+                });
+            }
+
+            async function fetchDatabases() {
+                if (!isWorkerConfigComplete()) {
+                    throw new Error('Worker URL and Token are required');
+                }
+                const workerUrl = workerUrlInput.value.trim();
+                const workerToken = workerTokenInput.value.trim();
+
+                const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${notionToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filter: {
+                            value: "database",
+                            property: "object"
+                        }
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch databases');
+                const data = await response.json();
+                localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
+                return data.results;
+            }
+
+
+            document.getElementById('copy-button').addEventListener('click', () => {
+                dbmlOutput.select();
+                document.execCommand('copy');
+                copyButton.textContent = "Copied!";
+                setTimeout(() => {
+                    copyButton.innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
-                        <span>Copy to Clipboard</span>`; // Reset
-            }, 2000);
-        });
-
-        // --- Event Listeners ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            await initializeAuth();
-            checkAuthStatus();
-            updateUI(userInfoContainer); // Update UI
-
-            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
-            if (databases.length) {
-                populateDropdowns(databases);
-            }
+                        <span>Copy to Clipboard</span>`;
+                }, 2000);
+            });
 
             document.getElementById('refreshDatabases').addEventListener('click', async () => {
                 if (!isWorkerConfigComplete()) {
@@ -523,18 +665,16 @@
                     showError(workerTokenInput, 'Worker URL and Token are required');
                     return;
                 }
-
                 try {
                     const databases = await fetchDatabases();
                     populateDropdowns(databases);
                 } catch (error) {
                     console.error('Failed to refresh databases:', error);
-                    addLog(`Error refreshing databases: ${error.message}`); // Consistent logging
+                    addLog(`Error refreshing databases: ${error.message}`);
                 }
             });
 
-
-            document.getElementById('databaseSearch').addEventListener('input', (e) => {
+            databaseSearch.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
                 const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
                 const filtered = databases.filter(db =>
@@ -542,6 +682,8 @@
                 );
                 populateDropdowns(filtered);
             });
+
+            await checkAuthStatus();
         });
     </script>
     <script src="./js/loadKofi.js"></script>
