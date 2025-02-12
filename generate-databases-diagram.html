@@ -92,8 +92,10 @@
 
         /* New styles for pasteMessage anchor tags */
         #pasteMessage a {
+            all: unset;
             color: inherit;
             text-decoration: underline;
+            cursor: pointer;
             font-weight: normal;
         }
     </style>
@@ -207,7 +209,7 @@
                         class="mt-4 w-full h-32 border-4 border-black bg-white p-2 text-black font-mono text-sm"></textarea>
                     <div id="pasteMessage"></div>
                     <button id="copy-button" disabled
-                        class="w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        class="w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -585,6 +587,8 @@
                         outputCode = generateDBML(allRelatedDatabases[0], allRelatedDatabases);
                     }
                     diagramOutput.value = outputCode;
+
+                    addLog(diagramType === "mermaid" ? "Mermaid ER Diagram Generated!" : "DBML Generated!");
                     // Update pasteMessage and copy button only if outputCode is not empty
                     const pasteMessage = document.getElementById('pasteMessage');
                     if (outputCode.trim()) {
@@ -601,7 +605,6 @@
                         pasteMessage.classList.remove('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
                         copyButton.disabled = true;
                     }
-                    addLog(diagramType === "mermaid" ? "Mermaid ER Diagram Generated!" : "DBML Generated!");
 
                 } catch (error) {
                     diagramOutput.value = `Error: ${error.message}`;
