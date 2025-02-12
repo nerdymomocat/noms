@@ -82,7 +82,9 @@ async function initializeAuth() {
         urlParams.delete('workspaceName');
         urlParams.delete('workspaceIcon');
         urlParams.delete('accessToken');
-        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+
+        const queryString = urlParams.toString();
+        const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
     }
 
