@@ -446,6 +446,7 @@
                 selectedOptionSpan.appendChild(removeButton);
                 oldOptionsSelected.appendChild(selectedOptionSpan);
             });
+            updateNewOptionSelect();
         }
 
         // Update checkboxes in the dropdown to match the selectedOldOptions array
@@ -453,6 +454,22 @@
             oldOptionsList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 checkbox.checked = selectedOldOptions.includes(checkbox.value);
             });
+        }
+
+        /* NEW: Update new option select based on selected old options */
+        function updateNewOptionSelect() {
+            newOptionSelect.innerHTML = '<option value="">-</option>';
+            propertyOptions.forEach(optionName => {
+                if (!selectedOldOptions.includes(optionName)) {
+                    const option = document.createElement('option');
+                    option.value = optionName;
+                    option.textContent = optionName;
+                    newOptionSelect.appendChild(option);
+                }
+            });
+            if (selectedOldOptions.includes(newOptionSelect.value)) {
+                newOptionSelect.value = "";
+            }
         }
 
         // --- Utility Functions (like config loading) ---
@@ -891,14 +908,8 @@
                 oldOptionsList.appendChild(optionDiv);
             });
 
-            // Populate newOptionSelect
-            newOptionSelect.innerHTML = '<option value="">-</option>'; // Clear
-            propertyOptions.forEach(optionName => {
-                const option = document.createElement('option');
-                option.value = optionName;
-                option.textContent = optionName;
-                newOptionSelect.appendChild(option);
-            });
+            // Initially update newOptionSelect
+            updateNewOptionSelect();
 
             // Reset selected options when the property changes
             selectedOldOptions = [];
