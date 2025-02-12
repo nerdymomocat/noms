@@ -126,7 +126,7 @@
                   class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
                 <select id="databaseSelect"
                   class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                  <option value="" class="text-gray-400">Select a database</option>
+                  <option value="" class="text-gray-400">-</option>
                 </select>
               </div>
               <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
@@ -192,7 +192,7 @@
               <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
               <select id="urlPropertySelect" name="urlPropertyName" required
                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="" class="text-gray-400">Select URL property</option>
+                <option value="" class="text-gray-400">-</option>
               </select>
               <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
@@ -202,7 +202,7 @@
                 Property</label>
               <select id="ogImagePropertySelect" name="ogImagePropertyName"
                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="" class="text-gray-400">Select files property</option>
+                <option value="" class="text-gray-400">-</option>
               </select>
               <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
@@ -212,7 +212,7 @@
                 Property</label>
               <select id="checkedPropertySelect" name="checkedPropertyName"
                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="" class="text-gray-400">Select checkbox property</option>
+                <option value="" class="text-gray-400">-</option>
               </select>
               <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
@@ -792,7 +792,7 @@
     // Move helper functions to top
     function populateDropdowns(databases) {
       const databaseSelect = document.getElementById('databaseSelect');
-      databaseSelect.innerHTML = '<option value="">Select a database</option>';
+      databaseSelect.innerHTML = '<option value="">-</option>';
 
       databases.forEach(db => {
         const option = document.createElement('option');
@@ -804,7 +804,7 @@
 
     function populatePropertyDropdown(selectId, properties) {
       const select = document.getElementById(selectId);
-      select.innerHTML = `<option value="">Select ${selectId.replace('PropertySelect', '')} property</option>`;
+      select.innerHTML = `<option value="">-</option>`;
 
       properties.forEach(([name]) => {
         const option = document.createElement('option');
