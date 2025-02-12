@@ -165,12 +165,8 @@ async function disconnect() {
     // Clear localStorage
     localStorage.removeItem('nomsData');
 
-    const userInfoContainer = document.getElementById('user-info');
-    if (userInfoContainer) {
-        updateUI(userInfoContainer);
-    } else {
-        window.location.href = './index.html';
-    }
+    // Reload the current page instead of updating UI or redirecting
+    window.location.reload();
 }
 
 // Export all needed functions:
