@@ -811,44 +811,158 @@
 
                 switch (prop.type) {
                     case 'rich_text':
-                        if (prop.rich_text.length > 0) {
-                            filter.rich_text = { equals: prop.rich_text[0].plain_text };
-                        } else continue; //skip this prop if it is an empty rich_text
+                        if (prop.rich_text && prop.rich_text.length > 0) {
+                            // Use plain_text for comparison, handle empty rich_text
+                            const textValue = prop.rich_text.map(item => item.plain_text).join('');
+                            if (textValue.trim() !== "") { // check for empty string or string with only spaces.
+                                filter.rich_text = { equals: textValue };
+                            }
+                            else {
+                                continue;
+                            }
+                        } else {
+                            continue; // Skip empty rich_text
+                        }
                         break;
                     case 'title':
-                        if (prop.title.length > 0) {
-                            filter.title = { equals: prop.title[0].plain_text };
-                        } else continue; //skip this prop if it is an empty title
+                        if (prop.title && prop.title.length > 0) {
+                            // Use plain_text for comparison, handle empty title
+                            const textValue = prop.title.map(item => item.plain_text).join('');
+                            if (textValue.trim() !== "") { //check for empty string
+                                filter.title = { equals: textValue };
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            continue; // Skip empty title
+                        }
                         break;
                     case 'number':
-                        filter.number = { equals: prop.number };
+                        if (prop.number !== null && prop.number !== undefined) { //check for null and undefined
+                            filter.number = { equals: prop.number };
+                        } else {
+                            continue;//skip if number is null
+                        }
                         break;
                     case 'select':
-                        if (prop.select) {
+                        if (prop.select && prop.select.name) {
                             filter.select = { equals: prop.select.name };
-                        } else continue; //skip this prop if it is an empty select.
+                        } else {
+                            continue; // Skip if select is null or has no name
+                        }
                         break;
                     case 'multi_select':
                         if (prop.multi_select && prop.multi_select.length > 0) {
-                            // Handle multi_select as "contains any"
+                            // all should match
                             filter = {
-                                or: prop.multi_select.map(option => ({
+                                and: prop.multi_select.map(option => ({
                                     property: propName,
                                     multi_select: { contains: option.name }
                                 }))
                             };
-                        } else continue; //skip this prop if it is an empty multi select.
+                        } else {
+                            continue; // Skip if multi_select is empty or null
+                        }
                         break;
                     case 'date':
-                        if (prop.date) {
+                        if (prop.date && prop.date.start) {
                             filter.date = { equals: prop.date.start };
                         } else continue;
                         break;
-                    // Add other property types as needed
+                    case 'checkbox':
+                        //checkbox can be only true or false.
+                        filter.checkbox = { equals: prop.checkbox };
+                        break;
+                    case 'email':
+                        if (prop.email) { // Check for null/undefined email
+                            filter.email = { equals: prop.email };
+                        } else continue;
+                        break;
+                    case 'phone_number':
+                        if (prop.phone_number) { // Check for null/undefined
+                            filter.phone_number = { equals: prop.phone_number };
+                        } else continue;
+                        break;
+                    case 'url':
+                        if (prop.url) {
+                            filter.url = { equals: prop.url };
+                        } else continue;
+                        break;
+                    case 'files':
+                        //Files are complicated and may not be a good candidate for duplicate detection. we'll skip these, but we may want to notify user that we do so.
+                        continue;
+                    case 'relation':
+                        if (prop.relation && prop.relation.length > 0) {
+                            // all relations should match
+                            filter = {
+                                and: prop.relation.map(relation => ({
+                                    property: propName,
+                                    relation: { contains: relation.id } // Assuming 'id' is the correct property
+                                }))
+                            };
+                        }
+                        else {
+                            continue;
+                        }
+                        break;
+                    case 'created_by':
+                    case 'last_edited_by':
+                        //We could potentially compare user IDs, but let's keep it simpler for now and skip.
+                        continue;
+                    case 'created_time':
+                    case 'last_edited_time':
+                        //Cannot be used in filters according to Notion API.
+                        continue;
+                    case 'formula':
+                        // Handle formula based on its result type
+                        if (prop.formula) {
+                            switch (prop.formula.type) {
+                                case 'string':
+                                    if (prop.formula.string) {
+                                        filter.formula = { string: { equals: prop.formula.string } };
+                                    } else continue;
+                                    break;
+                                case 'number':
+                                    if (prop.formula.number !== null) {
+                                        filter.formula = { number: { equals: prop.formula.number } };
+                                    } else continue;
+                                    break;
+                                case 'boolean':
+                                    filter.formula = { checkbox: { equals: prop.formula.boolean } };
+                                    break;
+                                case 'date':
+                                    if (prop.formula.date && prop.formula.date.start) {
+                                        filter.formula = { date: { equals: prop.formula.date.start } };
+                                    } else continue;
+                                    break;
+                                default:
+                                    continue; // Unsupported formula type
+                            }
+                        } else continue
+                        break;
+                    case 'rollup':
+                        //rollups are also read-only and depend on other properties. we can't compare them.
+                        continue;
+                    case 'unique_id':
+                        //should be unique so never be the same.
+                        continue;
+                    case 'button':
+                        //buttons are action items.
+                        continue;
+                    case 'status':
+                        if (prop.status && prop.status.name) {
+                            filter.status = { equals: prop.status.name };
+                        } else {
+                            continue; // Skip if status is null or has no name
+                        }
+                        break;
                     default:
+                        console.warn(`Unsupported property type for comparison: ${prop.type}`);
                         continue; // Ignore unsupported property types
                 }
-                filters.push(filter);
+                if (Object.keys(filter).length > 1) { // Make sure we added a filter condition
+                    filters.push(filter);
+                }
             }
             return filters;
         }
@@ -914,19 +1028,24 @@
                     });
                     break;
                 case 'relation':
-                    // Assuming you have a way to get the current relations, and that the
-                    // relation property is a "relation" type. This is complex and might
-                    // require additional API calls to fetch and update.  Simplified here.
+                    // Fetch current relations, then add the new one.
+                    const pageInfo = await makeNotionRequest(`/pages/${pageId}`);
+                    const currentRelations = pageInfo.properties[conditionalProperty]?.relation || [];
+
+                    // Create a new array with the new relation and existing ones
+                    const updatedRelations = [...currentRelations, { id: pageId }];
+
                     await makeNotionRequest(`/pages/${pageId}`, {
                         method: 'PATCH',
                         body: JSON.stringify({
                             properties: {
                                 [conditionalProperty]: {
-                                    relation: [{ id: pageId }] //Add itself to the relation
+                                    relation: updatedRelations
                                 }
                             },
                         }),
                     });
+
                     break;
             }
         }
@@ -988,13 +1107,34 @@
             });
         }
 
+        const supportedPropertyTypes = new Set([
+            "rich_text",
+            "title",
+            "number",
+            "select",
+            "multi_select",
+            "date",
+            "checkbox",
+            "email",
+            "phone_number",
+            "url",
+            "status",
+            "relation", // Added relation
+            "formula" // Added formula
+
+        ]);
         function populateComparePropertiesDropdown(databaseInfo) {
             comparePropertiesList.innerHTML = ''; // Clear existing
             allProperties = databaseInfo.properties; // Store *all* properties
 
             for (const propName in allProperties) {
-                const optionDiv = createMultiselectOption(propName);
-                comparePropertiesList.appendChild(optionDiv);
+                const propType = allProperties[propName].type;
+                // Only include supported property types in dropdown
+                if (supportedPropertyTypes.has(propType)) {
+                    const optionDiv = createMultiselectOption(propName);
+                    comparePropertiesList.appendChild(optionDiv);
+                }
+
             }
             // Reset selected properties.
             selectedCompareProperties = [];
