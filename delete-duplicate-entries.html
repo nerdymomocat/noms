@@ -25,7 +25,6 @@
         };
     </script>
     <style>
-        /* ... (Same CSS as merge-options.html, including multiselect styles) ... */
         .hidden {
             display: none;
         }
@@ -72,7 +71,6 @@
             max-width: 600px;
         }
 
-        /* --- MULTI-SELECT STYLES (Copied from merge-options) --- */
         .multiselect-container {
             position: relative;
             /* VERY IMPORTANT for absolute positioning of dropdown */
@@ -345,11 +343,17 @@
                                 class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
                             <p id="lastCheckedDate-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
                             <p class="text-sm text-gray-600 mt-1">
-                                Note: The code uses entries on or after this date (instead of just after) to avoid
+                                The code uses entries on or after this date (instead of just after) to avoid
                                 time-based issues.
                             </p>
                         </div>
 
+                        <!-- Note about duplicate marking -->
+                        <p class="text-sm text-gray-600 mt-4 bg-[#FEA97F]/20 p-2">
+                            Items once marked as duplicates (via checkbox or relation properties) are no longer considered
+                            for duplicate checking. To include them again, reset the state of the duplicate outcome
+                            property (set checkbox to false, or remove relations).
+                        </p>
 
                         <!-- Submit button -->
                         <button type="submit" id="submit-button"
@@ -690,7 +694,7 @@
                 const [timestampType, direction] = retainCriteria.split('|');
 
                 // 1. Get initial set of pages (with optional date filter)
-                let initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null));
+                let initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null, outcome, conditionalProperty));
 
                 addLog(`Found ${initialPages.length} initial pages.`);
 
@@ -706,7 +710,7 @@
                     if (comparisonFilters.length === 0) continue;  // No properties to compare
 
                     // 4. Query for potential duplicates
-                    const potentialDuplicates = await withExponentialBackoff(() => queryForDuplicates(databaseId, comparisonFilters, page.id, timestampType, direction));
+                    const potentialDuplicates = await withExponentialBackoff(() => queryForDuplicates(databaseId, comparisonFilters, page.id, timestampType, direction, outcome, conditionalProperty));
 
 
                     // 5. Apply the outcome
@@ -729,7 +733,7 @@
                     progressBar.style.width = `${progressPercentage}%`;
 
                     // Fetch pages again (or filter) to avoid reprocessing.  Simpler to re-fetch.
-                    initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null));
+                    initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null, outcome, conditionalProperty));
                 }
 
 
@@ -752,12 +756,9 @@
 
         // --- Helper Functions for Duplicate Removal ---
 
-        async function fetchPages(databaseId, lastCheckedDate = null) {
+        async function fetchPages(databaseId, lastCheckedDate = null, outcome = null, conditionalProperty = null) {
             const filters = [];
             if (lastCheckedDate) {
-                // const filterDate = new Date(lastCheckedDate);
-                // filterDate.setDate(filterDate.getDate() - 1);
-                // const formattedDate = filterDate.toISOString();
                 const formattedDate = lastCheckedDate.toISOString();
 
                 filters.push({
@@ -767,6 +768,24 @@
                     }
                 });
             }
+
+            // Add outcome-based filters
+            if (outcome === 'checkbox' && conditionalProperty) {
+                filters.push({
+                    property: conditionalProperty,
+                    checkbox: {
+                        equals: false
+                    }
+                });
+            } else if (outcome === 'relation' && conditionalProperty) {
+                filters.push({
+                    property: conditionalProperty,
+                    relation: {
+                        is_empty: true
+                    }
+                });
+            }
+
 
             const data = filters.length > 0 ? { filter: { and: filters } } : {};
             let allResults = [];
@@ -953,14 +972,32 @@
             return filters;
         }
 
-        async function queryForDuplicates(databaseId, comparisonFilters, originalPageId, timestampType, direction) {
+        async function queryForDuplicates(databaseId, comparisonFilters, originalPageId, timestampType, direction, outcome, conditionalProperty) {
             if (comparisonFilters.length === 0) return [];
+
+            const andFilters = [...comparisonFilters];
+
+            // Add outcome-based filters *here* too
+            if (outcome === 'checkbox' && conditionalProperty) {
+                andFilters.push({
+                    property: conditionalProperty,
+                    checkbox: {
+                        equals: false
+                    }
+                });
+            } else if (outcome === 'relation' && conditionalProperty) {
+                andFilters.push({
+                    property: conditionalProperty,
+                    relation: {
+                        is_empty: true
+                    }
+                });
+            }
+
 
             const data = {
                 filter: {
-                    and: [
-                        ...comparisonFilters,
-                    ],
+                    and: andFilters,
                 },
                 sorts: [ // Add sorting
                     {
@@ -1013,7 +1050,7 @@
                     const currentRelations = pageInfo.properties[conditionalProperty]?.relation || [];
 
                     // Create a new array with the new relation and existing ones
-                    const updatedRelations = [...currentRelations, { id: main_pageid_for_relations }];
+                    const updatedRelations = [...currentRelations, { id: main_pageid_for_relation }];
 
                     await makeNotionRequest(`/pages/${pageId}`, {
                         method: 'PATCH',
