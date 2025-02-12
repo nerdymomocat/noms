@@ -71,9 +71,16 @@ export default {
             const state = url.searchParams.get("state");
             const error = url.searchParams.get("error");
 
+            // If user clicks "Cancel" in the Notion OAuth prompt => error=access_denied
             if (error) {
-                return new Response(`Authorization Error: ${error}`, { status: 400 });
+                // Instead of returning an error, redirect to your base URL with ?error=cancelled
+                const redirectUrl = buildUrl(env.BASE_URL, { error: "cancelled" });
+                return new Response(null, {
+                    status: 302,
+                    headers: { Location: redirectUrl },
+                });
             }
+
             if (!code || !state) {
                 return new Response("Invalid callback parameters", { status: 400 });
             }
@@ -117,16 +124,13 @@ export default {
             // Store the entire tokenData in KV for future use (optional)
             await env.NOTION_OAUTH_KV.put(`user:${botId}`, JSON.stringify(tokenData));
 
-            // *** Key part: pass data in final redirect URL so front-end can skip KV read. ***
-            // We'll pass everything you might need in query params. 
-            // (Again, *beware* that means your token shows up in the URL bar!)
+            // *** Key part: pass data in final redirect URL so the front-end can skip KV read. ***
+            // Note: Passing tokens in the URL is not recommended for production security
             const redirectParams = {
                 botId,
                 workspaceName: tokenData.workspace_name ?? "",
                 workspaceIcon: tokenData.workspace_icon ?? "",
-                // If you want to pass the access token directly, do it here:
                 accessToken: tokenData.access_token,
-                // ... but note that it's more secure NOT to include the token in the URL
             };
 
             const finalUrl = buildUrl(env.BASE_URL, redirectParams);
@@ -151,7 +155,6 @@ export default {
                 await env.NOTION_OAUTH_KV.delete(`user:${botId}`);
             }
 
-            // Then redirect or just 200
             const corsHeaders = handleCors(request);
             return new Response(null, {
                 status: 302,
@@ -164,8 +167,7 @@ export default {
         }
 
         //
-        // 4. /auth/user — (Optional) Return user info from KV 
-        //    If you still want an endpoint to re-check or refresh data
+        // 4. /auth/user — (Optional) Return user info from KV
         //
         if (pathname === "/auth/user") {
             const botId = request.headers.get("Authorization")?.split(" ")[1];
