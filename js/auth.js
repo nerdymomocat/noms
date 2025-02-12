@@ -50,6 +50,13 @@ function getLocalStorageWithExpiry(key) {
  */
 async function initializeAuth() {
     const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    if (error === 'cancelled') {
+        alert('Login cancelled by user.');
+        urlParams.delete('error');
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, document.title, newUrl);
+    }
 
     // If your Worker appended these fields, parse them here.
     const botId = urlParams.get('botId');
