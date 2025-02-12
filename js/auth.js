@@ -73,7 +73,7 @@ async function initializeAuth() {
             workspaceName,
             workspaceIcon,
             accessToken,
-        }, 3600 * 1000);
+        }, 2592000 * 1000);
 
         // Clean up the URL so these sensitive query params don’t stay in the address bar
         urlParams.delete('botId');

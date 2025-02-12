@@ -140,7 +140,7 @@ export default {
                 status: 302,
                 headers: {
                     Location: finalUrl,
-                    "Set-Cookie": `notionBotId=${botId}; HttpOnly; Secure; Path=/; Max-Age=3600`,
+                    "Set-Cookie": `notionBotId=${botId}; HttpOnly; Secure; Path=/; Max-Age=2592000`,
                 },
             });
         }
