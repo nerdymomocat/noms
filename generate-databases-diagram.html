@@ -240,47 +240,26 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeAuth();
 
-            // DOM Element Variables (Reduced repetition)
-            const elements = {
-                form: document.getElementById('diagram-form'),
-                submitButton: document.getElementById('submit-button'),
-                submitButtonText: document.getElementById('submit-button-text'),
-                loadingSpinner: document.getElementById('loading-spinner'),
-                outputSection: document.getElementById('output-section'),
-                diagramOutput: document.getElementById('diagramOutput'),
-                copyButton: document.getElementById('copy-button'),
-                resetButton: document.getElementById('reset-button'),
-                authBanner: document.getElementById('auth-banner'),
-                workerUrlInput: document.getElementById('workerUrl'),
-                workerTokenInput: document.getElementById('workerToken'),
-                databaseSelect: document.getElementById('databaseSelect'),
-                databaseSearch: document.getElementById('databaseSearch'),
-                logOutput: document.getElementById('logOutput'),
-                headerContainer: document.getElementById('header-container'),
-                userInfoContainer: document.getElementById('user-info'),
-                pasteMessage: document.getElementById('pasteMessage')
-            };
-
             const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
             let isProcessing = false;
             let notionToken = null;
 
             // Initialize Worker URL and Token if constants are defined
-            if (WORKER_URL) elements.workerUrlInput.value = WORKER_URL;
-            if (WORKER_TOKEN) elements.workerTokenInput.value = WORKER_TOKEN;
+            if (WORKER_URL) document.getElementById('workerUrl').value = WORKER_URL;
+            if (WORKER_TOKEN) document.getElementById('workerToken').value = WORKER_TOKEN;
 
-            elements.headerContainer.innerHTML = createHeader();
+            document.getElementById('header-container').innerHTML = createHeader();
 
             // Helper Functions (Utility and Validation)
             const loadWorkerConfig = () => {
                 const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
                 if (savedConfig) {
                     const config = JSON.parse(savedConfig);
-                    elements.workerUrlInput.value = config.url;
-                    elements.workerTokenInput.value = config.token;
+                    document.getElementById('workerUrl').value = config.url;
+                    document.getElementById('workerToken').value = config.token;
                 } else if (WORKER_URL) {
-                    elements.workerUrlInput.value = WORKER_URL;
-                    if (WORKER_TOKEN) elements.workerTokenInput.value = WORKER_TOKEN;
+                    document.getElementById('workerUrl').value = WORKER_URL;
+                    if (WORKER_TOKEN) document.getElementById('workerToken').value = WORKER_TOKEN;
                 }
                 checkWorkerUrl();
             };
@@ -292,31 +271,31 @@
             const checkAuthStatus = async () => {
                 const nomsData = getLocalStorageWithExpiry("nomsData");
                 if (!nomsData) {
-                    elements.authBanner.classList.remove('hidden');
-                    elements.submitButton.disabled = true;
+                    document.getElementById('auth-banner').classList.remove('hidden');
+                    document.getElementById('submit-button').disabled = true;
                     return;
                 }
                 notionToken = nomsData.accessToken;
-                updateUI(elements.userInfoContainer);
-                elements.submitButton.disabled = false;
-                elements.authBanner.classList.add('hidden');
+                updateUI(document.getElementById('user-info'));
+                document.getElementById('submit-button').disabled = false;
+                document.getElementById('auth-banner').classList.add('hidden');
                 loadWorkerConfig();
                 checkWorkerUrl();
             };
 
-            const isWorkerConfigComplete = () => elements.workerUrlInput.value.trim() && elements.workerTokenInput.value.trim();
+            const isWorkerConfigComplete = () => document.getElementById('workerUrl').value.trim() && document.getElementById('workerToken').value.trim();
 
             const checkWorkerUrl = () => {
-                elements.submitButton.disabled = !isWorkerConfigComplete();
+                document.getElementById('submit-button').disabled = !isWorkerConfigComplete();
                 if (isWorkerConfigComplete()) {
-                    saveWorkerConfig(elements.workerUrlInput.value.trim(), elements.workerTokenInput.value.trim());
+                    saveWorkerConfig(document.getElementById('workerUrl').value.trim(), document.getElementById('workerToken').value.trim());
                 }
             };
 
             const addLog = (message) => {
                 const timestamp = new Date().toLocaleTimeString();
-                elements.logOutput.value += `[${timestamp}] ${message}\n`;
-                elements.logOutput.scrollTop = elements.logOutput.scrollHeight;
+                document.getElementById('logOutput').value += `[${timestamp}] ${message}\n`;
+                document.getElementById('logOutput').scrollTop = document.getElementById('logOutput').scrollHeight;
             };
 
             const showError = (inputElement, message) => {
@@ -339,31 +318,31 @@
 
             const resetForm = () => {
                 isProcessing = false;
-                elements.outputSection.classList.add('hidden');
-                elements.form.classList.remove('hidden');
-                elements.resetButton.classList.add('hidden');
-                elements.diagramOutput.value = '';
-                elements.logOutput.value = '';
-                elements.pasteMessage.innerHTML = '';
-                elements.pasteMessage.classList.remove('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
-                elements.copyButton.disabled = true;
+                document.getElementById('output-section').classList.add('hidden');
+                document.getElementById('diagram-form').classList.remove('hidden');
+                document.getElementById('reset-button').classList.add('hidden');
+                document.getElementById('diagramOutput').value = '';
+                document.getElementById('logOutput').value = '';
+                document.getElementById('pasteMessage').innerHTML = '';
+                document.getElementById('pasteMessage').classList.remove('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
+                document.getElementById('copy-button').disabled = true;
             };
 
             const populateDropdowns = (databases) => {
-                elements.databaseSelect.innerHTML = '<option value="">-</option>';
+                document.getElementById('databaseSelect').innerHTML = '<option value="">-</option>';
                 databases.forEach(db => {
                     const title = db.title?.[0]?.plain_text ?? 'Untitled';
                     const option = document.createElement('option');
                     option.value = db.id;
                     option.textContent = title;
-                    elements.databaseSelect.appendChild(option);
+                    document.getElementById('databaseSelect').appendChild(option);
                 });
             };
 
             // API Interaction Functions
             const makeNotionRequest = async (endpoint, options = {}) => {
                 if (!isWorkerConfigComplete()) throw new Error('Worker URL and Token are required');
-                const url = `${elements.workerUrlInput.value.trim()}${endpoint}?token=${encodeURIComponent(elements.workerTokenInput.value.trim())}`;
+                const url = `${document.getElementById('workerUrl').value.trim()}${endpoint}?token=${encodeURIComponent(document.getElementById('workerToken').value.trim())}`;
                 try {
                     const response = await fetch(url, {
                         ...options,
@@ -615,68 +594,69 @@
 
 
             // Event Listeners and Form Submission
-            elements.form.addEventListener('input', (e) => { if (e.target.tagName === 'INPUT') clearError(e.target); });
-            elements.workerUrlInput.addEventListener('input', () => { clearError(elements.workerUrlInput); checkWorkerUrl(); });
-            elements.workerTokenInput.addEventListener('input', () => { clearError(elements.workerTokenInput); checkWorkerUrl(); });
-            elements.resetButton.addEventListener('click', resetForm);
-            elements.databaseSearch.addEventListener('input', (e) => {
+
+            document.getElementById('diagram-form').addEventListener('input', (e) => { if (e.target.tagName === 'INPUT') clearError(e.target); });
+            document.getElementById('workerUrl').addEventListener('input', () => { clearError(document.getElementById('workerUrl')); checkWorkerUrl(); });
+            document.getElementById('workerToken').addEventListener('input', () => { clearError(document.getElementById('workerToken')); checkWorkerUrl(); });
+            document.getElementById('reset-button').addEventListener('click', resetForm);
+            document.getElementById('databaseSearch').addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
                 const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
                 const filtered = databases.filter(db => db.title?.[0]?.plain_text.toLowerCase().includes(searchTerm));
                 populateDropdowns(filtered);
             });
 
-            elements.form.addEventListener('submit', async (e) => {
+            document.getElementById('diagram-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (isProcessing) return;
 
-                const databaseId = elements.databaseSelect.value;
-                if (!databaseId) { showError(elements.databaseSelect, 'Database is required'); return; }
+                const databaseId = document.getElementById('databaseSelect').value;
+                if (!databaseId) { showError(document.getElementById('databaseSelect'), 'Database is required'); return; }
                 if (!isWorkerConfigComplete()) {
-                    showError(elements.workerUrlInput, "Worker URL is required");
-                    showError(elements.workerTokenInput, "Worker Token is required");
+                    showError(document.getElementById('workerUrl'), "Worker URL is required");
+                    showError(document.getElementById('workerToken'), "Worker Token is required");
                     return;
                 }
 
                 isProcessing = true;
-                elements.submitButton.disabled = true;
-                elements.submitButtonText.classList.add('opacity-0');
-                elements.loadingSpinner.classList.remove('hidden');
-                elements.form.classList.add('hidden');
-                elements.outputSection.classList.remove('hidden');
-                elements.diagramOutput.value = '';
+                document.getElementById('submit-button').disabled = true;
+                document.getElementById('submit-button-text').classList.add('opacity-0');
+                document.getElementById('loading-spinner').classList.remove('hidden');
+                document.getElementById('diagram-form').classList.add('hidden');
+                document.getElementById('output-section').classList.remove('hidden');
+                document.getElementById('diagramOutput').value = '';
 
                 try {
                     const { allDatabases, allRelations } = await extractDatabaseRelationships(databaseId);
                     const diagramType = document.querySelector('input[name="diagramType"]:checked').value;
                     const generateDiagram = diagramType === "mermaid" ? generateMermaidER : generateDBML;
-                    elements.diagramOutput.value = generateDiagram(allDatabases, allRelations);
+                    document.getElementById('diagramOutput').value = generateDiagram(allDatabases, allRelations);
 
                     addLog(`${diagramType === "mermaid" ? "Mermaid ER Diagram" : "DBML"} Generated!`);
-                    elements.pasteMessage.innerHTML = diagramType === "mermaid"
+                    document.getElementById('pasteMessage').innerHTML = diagramType === "mermaid"
                         ? 'Paste your Mermaid diagram at <a href="https://mermaid.live/" target="_blank">mermaid.live</a> or a notion mermaid code block.'
                         : 'Paste your DBML diagram at <a href="https://dbdiagram.io/home" target="_blank">dbdiagram.io/home</a> or <a href="https://databasediagram.com/app" target="_blank">databasediagram.com/app</a> (select DBML).';
-                    elements.pasteMessage.classList.add('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
-                    elements.copyButton.disabled = false;
+                    document.getElementById('pasteMessage').classList.add('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
+                    document.getElementById('copy-button').disabled = false;
 
                 } catch (error) {
-                    elements.diagramOutput.value = `Error: ${error.message}`;
+                    document.getElementById('diagramOutput').value = `Error: ${error.message}`;
                     addLog(`Error generating diagram: ${error.message}`);
                 } finally {
                     isProcessing = false;
-                    elements.submitButton.disabled = false;
-                    elements.submitButtonText.classList.remove("opacity-0");
-                    elements.loadingSpinner.classList.add("hidden");
-                    elements.resetButton.classList.remove('hidden');
+                    document.getElementById('submit-button').disabled = false;
+                    document.getElementById('submit-button-text').classList.remove("opacity-0");
+                    document.getElementById('loading-spinner').classList.add("hidden");
+                    document.getElementById('reset-button').classList.remove('hidden');
                 }
             });
 
-            elements.copyButton.addEventListener('click', () => {
-                elements.diagramOutput.select();
+            document.getElementById('copy-button').addEventListener('click', () => {
+                document.getElementById('diagramOutput').select();
                 document.execCommand('copy');
-                elements.copyButton.textContent = "Copied!";
+                document.getElementById('copy-button').textContent = "Copied!";
                 setTimeout(() => {
-                    elements.copyButton.innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    document.getElementById('copy-button').innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -685,10 +665,10 @@
                 }, 2000);
             });
 
-            elements.refreshDatabases.addEventListener('click', async () => {
+            document.getElementById('refreshDatabases').addEventListener('click', async () => {
                 if (!isWorkerConfigComplete()) {
-                    showError(elements.workerUrlInput, 'Worker URL and Token are required');
-                    showError(elements.workerTokenInput, 'Worker URL and Token are required');
+                    showError(document.getElementById('workerUrl'), 'Worker URL and Token are required');
+                    showError(document.getElementById('workerToken'), 'Worker URL and Token are required');
                     return;
                 }
                 try {
@@ -705,7 +685,7 @@
             const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
             if (databases.length) populateDropdowns(databases);
             await checkAuthStatus();
-            updateUI(elements.userInfoContainer);
+            updateUI(document.getElementById('user-info'));
         });
     </script>
     <script src="./js/loadKofi.js"></script>
