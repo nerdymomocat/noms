@@ -797,7 +797,32 @@
       }
     } //end Notion Enhancer Class
 
-    // Modify fetchDatabases to throw if config is incomplete
+    // Move helper functions to top
+    function populateDropdowns(databases) {
+      const databaseSelect = document.getElementById('databaseSelect');
+      databaseSelect.innerHTML = '<option value="">Select a database</option>';
+
+      databases.forEach(db => {
+        const option = document.createElement('option');
+        option.value = db.id;
+        option.textContent = db.title[0]?.plain_text || 'Untitled';
+        databaseSelect.appendChild(option);
+      });
+    }
+
+    function populatePropertyDropdown(selectId, properties) {
+      const select = document.getElementById(selectId);
+      select.innerHTML = `<option value="">Select ${selectId.replace('PropertySelect', '')} property</option>`;
+
+      properties.forEach(([name]) => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+    }
+
+    // Modify fetchDatabases to use the already defined populateDropdowns
     async function fetchDatabases() {
       if (!isWorkerConfigComplete()) {
         throw new Error('Worker URL and Token are required');
@@ -828,6 +853,40 @@
         return data.results;
       } catch (error) {
         console.error('Error fetching databases:', error);
+        throw error;
+      }
+    }
+
+    // Update loadDatabaseProperties to use workerUrl and token from inputs not constants
+    async function loadDatabaseProperties(databaseId) {
+      if (!isWorkerConfigComplete()) {
+        throw new Error('Worker URL and Token are required');
+      }
+
+      try {
+        const workerUrl = workerUrlInput.value.trim();
+        const workerToken = workerTokenInput.value.trim();
+
+        const response = await fetch(`${workerUrl}/databases/${databaseId}?token=${encodeURIComponent(workerToken)}`, {
+          headers: {
+            'Authorization': `Bearer ${notionToken}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch database properties');
+
+        const data = await response.json();
+        const properties = data.properties;
+
+        const urlProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'url');
+        const fileProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'files');
+        const checkboxProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'checkbox');
+
+        populatePropertyDropdown('urlPropertySelect', urlProperties);
+        populatePropertyDropdown('ogImagePropertySelect', fileProperties);
+        populatePropertyDropdown('checkedPropertySelect', checkboxProperties);
+      } catch (error) {
+        console.error('Error loading database properties:', error);
         throw error;
       }
     }
@@ -874,45 +933,6 @@
         populateDropdowns(filtered);
       });
     });
-
-    async function loadDatabaseProperties(databaseId) {
-      try {
-        const response = await fetch(`${WORKER_URL}/databases/${databaseId}?token=${encodeURIComponent(WORKER_TOKEN)}`, {
-          headers: {
-            'Authorization': `Bearer ${notionToken}`
-          }
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch database properties');
-
-        const data = await response.json();
-        const properties = data.properties;
-
-        // Populate property dropdowns
-        const urlProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'url');
-        const fileProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'files');
-        const checkboxProperties = Object.entries(properties).filter(([, prop]) => prop.type === 'checkbox');
-
-        populatePropertyDropdown('urlPropertySelect', urlProperties);
-        populatePropertyDropdown('ogImagePropertySelect', fileProperties);
-        populatePropertyDropdown('checkedPropertySelect', checkboxProperties);
-      } catch (error) {
-        console.error('Error loading database properties:', error);
-      }
-    }
-
-    function populatePropertyDropdown(selectId, properties) {
-      const select = document.getElementById(selectId);
-      select.innerHTML = `<option value="">Select ${selectId.replace('PropertySelect', '')} property</option>`;
-
-      properties.forEach(([name]) => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        select.appendChild(option);
-      });
-    }
-
     // Initialize database selection
     document.addEventListener('DOMContentLoaded', async () => { // Now async
       await initializeAuth(); // Call and AWAIT initializeAuth
