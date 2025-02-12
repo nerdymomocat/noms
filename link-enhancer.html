@@ -841,7 +841,7 @@
         if (!response.ok) throw new Error('Failed to fetch databases');
 
         const data = await response.json();
-        localStorage.setItem('nomsDataDatabases', JSON.stringify(data.results));
+        localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
         return data.results;
       } catch (error) {
         console.error('Error fetching databases:', error);
@@ -890,7 +890,7 @@
       updateUI(userInfoContainer);
 
       // Only populate from cache, don't fetch
-      const databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
+      const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
       if (databases.length) {
         populateDropdowns(databases);
       }
@@ -919,7 +919,7 @@
 
       document.getElementById('databaseSearch').addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
-        const databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
+        const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
         const filtered = databases.filter(db =>
           db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
         );

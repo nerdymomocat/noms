@@ -62,10 +62,12 @@ async function initializeAuth() {
     const botId = urlParams.get('botId');
     const workspaceName = urlParams.get('workspaceName') || '';
     const workspaceIcon = urlParams.get('workspaceIcon') || '';
-    // If you also passed accessToken in the query (optional)
     const accessToken = urlParams.get('accessToken') || '';
 
     if (botId) {
+        // Clear any existing database cache when setting new login data
+        localStorage.removeItem('nomsDatabases');
+        
         // The user just arrived from the Worker’s OAuth callback
         // Save the data in localStorage for 1 hour
         setLocalStorageWithExpiry('nomsData', {
