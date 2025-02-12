@@ -46,27 +46,26 @@ function getLocalStorageWithExpiry(key) {
  * appended on the `/auth/callback` redirect. If present, it stores them in localStorage
  * and removes them from the URL.
  *
- * @returns {Promise<boolean>} - whether the user is considered "logged in" after this step
+ * @returns {Promise<boolean>} - whether the user is considered "logged in"
  */
-export async function initializeAuth() {
+async function initializeAuth() {
     const urlParams = new URLSearchParams(window.location.search);
 
     // If your Worker appended these fields, parse them here.
     const botId = urlParams.get('botId');
     const workspaceName = urlParams.get('workspaceName') || '';
     const workspaceIcon = urlParams.get('workspaceIcon') || '';
-    // If you also passed an accessToken in the query (be mindful of security),
-    // parse it here; otherwise you can omit it if you prefer not to show tokens in URLs.
+    // If you also passed accessToken in the query (optional)
     const accessToken = urlParams.get('accessToken') || '';
 
     if (botId) {
         // The user just arrived from the Worker’s OAuth callback
-        // Save the data in localStorage for 1 hour (3600 * 1000 ms)
+        // Save the data in localStorage for 1 hour
         setLocalStorageWithExpiry('nomsData', {
             botId,
             workspaceName,
             workspaceIcon,
-            accessToken, // optional
+            accessToken,
         }, 3600 * 1000);
 
         // Clean up the URL so these sensitive query params don’t stay in the address bar
@@ -85,11 +84,11 @@ export async function initializeAuth() {
 /**
  * Updates a container (e.g., a <div id="user-info">) to display either:
  * - A "Login with Notion" link if not logged in.
- * - Or "Logged in as (workspaceName)" plus [Logout] and [Disconnect] buttons if logged in.
+ * - Or "Logged in as (workspaceName)" plus [Logout] / [Disconnect] if logged in.
  *
- * @param {HTMLElement} userInfoContainer - The DOM element to fill with login/logout UI
+ * @param {HTMLElement} userInfoContainer
  */
-export async function updateUI(userInfoContainer) {
+async function updateUI(userInfoContainer) {
     const nomsData = getLocalStorageWithExpiry('nomsData');
 
     if (nomsData) {
@@ -105,13 +104,12 @@ export async function updateUI(userInfoContainer) {
         Disconnect from Notion
       </button>
     `;
-        // Hook up buttons
+        // Hook up the buttons
         document.getElementById('logout-button').addEventListener('click', logout);
         document.getElementById('disconnect-button').addEventListener('click', disconnect);
 
     } else {
         // Not logged in UI
-        // Build the URL for /auth/login in the Worker
         const loginUrl = new URL('/auth/login', OAUTH_HANDLER_URL);
         userInfoContainer.innerHTML = `
       <a href="${loginUrl.href}"
@@ -124,9 +122,9 @@ export async function updateUI(userInfoContainer) {
 
 /**
  * "Logout" simply removes localStorage so the user appears logged out locally.
- * It does NOT remove any stored token in your Worker’s KV. 
+ * It does NOT remove anything in your Worker’s KV.
  */
-export async function logout() {
+async function logout() {
     localStorage.removeItem('nomsData');
     const userInfoContainer = document.getElementById('user-info');
     if (userInfoContainer) {
@@ -138,19 +136,18 @@ export async function logout() {
 
 /**
  * "Disconnect" calls your Worker’s /auth/logout to remove the KV entry
- * and then clears localStorage. This fully disconnects the user’s integration.
+ * for the user, then clears localStorage. This fully disconnects the integration.
  */
-export async function disconnect() {
+async function disconnect() {
     const nomsData = getLocalStorageWithExpiry('nomsData');
     if (!nomsData || !nomsData.botId) {
         alert('You are not logged in!');
         return;
     }
 
-    // Build the /auth/logout URL on your Worker
+    // Build the /auth/logout URL
     const logoutUrl = new URL('/auth/logout', OAUTH_HANDLER_URL);
-
-    // Pass the botId via Authorization header
+    // Pass botId via Authorization
     await fetch(logoutUrl, {
         method: 'POST',
         headers: {
@@ -158,7 +155,7 @@ export async function disconnect() {
         },
     });
 
-    // Regardless of Worker response, clear localStorage 
+    // Clear localStorage
     localStorage.removeItem('nomsData');
 
     const userInfoContainer = document.getElementById('user-info');
@@ -168,3 +165,13 @@ export async function disconnect() {
         window.location.href = './index.html';
     }
 }
+
+// Export all needed functions:
+export {
+    initializeAuth,
+    updateUI,
+    logout,
+    disconnect,
+    getLocalStorageWithExpiry,     // <--- important
+    setLocalStorageWithExpiry,     // <--- also if needed
+};
