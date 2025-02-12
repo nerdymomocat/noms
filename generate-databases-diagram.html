@@ -245,7 +245,7 @@
             const submitButtonText = document.getElementById('submit-button-text');
             const loadingSpinner = document.getElementById('loading-spinner');
             const outputSection = document.getElementById('output-section');
-            const dbmlOutput = document.getElementById('diagramOutput');
+            const diagramOutput = document.getElementById('diagramOutput');
             const copyButton = document.getElementById('copy-button');
             const resetButton = document.getElementById('reset-button');
             const authBanner = document.getElementById('auth-banner');
@@ -415,6 +415,15 @@
                         //Sanitize property names
                         let sanitizedPropName = sanitizeColumnName(propName);
                         tableDBML += `  ${sanitizedPropName} ${dbmlType}\n`;
+
+                        // Rollup auto-correlation
+                        if (prop.type === "rollup") {
+                            const relationPropName = prop.rollup.relation_property_name;
+                            if (relationPropName) {
+                                const sanitizedRelationPropName = sanitizeColumnName(relationPropName);
+                                dbml += `  Ref: ${tableName}.${sanitizedPropName} > ${tableName}.${sanitizedRelationPropName}\n`;
+                            }
+                        }
                     }
                     tableDBML += "}\n\n";
                     addLog(`Generated table DBML for: ${tableName}`);
@@ -463,10 +472,24 @@
                     mermaid += `        text id\n`;
                     for (const propName in db.properties) {
                         const prop = db.properties[propName];
-                        // Skip relation properties in attributes list
+
+                        // Skip relation properties in attributes list, but handle rollups
                         if (prop.type === "relation") continue;
+
                         const sanitizedPropName = sanitizeColumnName(propName);
                         mermaid += `        ${prop.type} ${sanitizedPropName}\n`;
+
+                        // Rollup auto-correlation
+                        if (prop.type === "rollup") {
+                            const relationPropName = prop.rollup.relation_property_name;
+                            if (relationPropName) {
+                                const relatedDb = allDatabases.find(related => related.id === db.id); //stays in the table
+                                if (relatedDb) {
+                                    const sanitizedRelationPropName = sanitizeColumnName(relationPropName);
+                                    mermaid += `    ${tableName} ||--|| ${tableName} : "${sanitizedPropName} rolls up ${sanitizedRelationPropName}"\n`;
+                                }
+                            }
+                        }
                     }
                     mermaid += "    }\n\n";
                 });
@@ -494,6 +517,64 @@
                 return mermaid;
             }
 
+
+            async function getAllRelatedDatabases(startingDatabaseId, visited = new Set(), allDatabases = []) {
+                if (visited.has(startingDatabaseId)) {
+                    addLog(`Cycle detected, skipping database ID: ${startingDatabaseId}`);
+                    return [];
+                }
+                visited.add(startingDatabaseId);
+
+                addLog(`Fetching related databases for: ${startingDatabaseId}`);
+                const currentDb = await getDatabaseInfo(startingDatabaseId);
+                allDatabases.push(currentDb); // Keep track of all databases fetched.
+
+                for (const propName in currentDb.properties) {
+                    const prop = currentDb.properties[propName];
+
+                    if (prop.type === "relation") {
+                        const relatedDbId = prop.relation.database_id;
+                        addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
+                        await getAllRelatedDatabases(relatedDbId, visited, allDatabases);  // Pass allDatabases
+                    } else if (prop.type === "rollup") {
+                        addLog(`Checking rollup property: ${propName}`);
+                        if (currentDb.properties[prop.rollup.relation_property_name]?.type === "relation") {
+                            const relatedDbId = currentDb.properties[prop.rollup.relation_property_name].relation.database_id;
+                            addLog(`Found rollup relation: ${propName} -> Database ID: ${relatedDbId}`);
+                            await getAllRelatedDatabases(relatedDbId, visited, allDatabases);
+                        }
+                    } else if (prop.type === "formula") {
+                        addLog(`Checking formula property: ${propName}`);
+                        const formulaExpression = prop.formula.expression;
+
+                        // Extract property names from the formula using a more robust regex
+                        const propRegex = /prop\("([^"]+)"\)/g;
+                        let match;
+                        while ((match = propRegex.exec(formulaExpression)) !== null) {
+                            const referencedPropName = match[1];
+                            addLog(`Found referenced property in formula: ${referencedPropName}`);
+                            const referencedProp = currentDb.properties[referencedPropName];
+
+                            if (referencedProp?.type === "relation") {
+                                const relatedDbId = referencedProp.relation.database_id;
+                                addLog(`Found formula relation via prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
+                                await getAllRelatedDatabases(relatedDbId, visited, allDatabases);
+                            } else if (referencedProp?.type === "rollup") {
+                                //handle rollups referenced in formulas, the same way we handle rollups
+                                if (currentDb.properties[referencedProp.rollup.relation_property_name]?.type === "relation") {
+                                    const relatedDbId = currentDb.properties[referencedProp.rollup.relation_property_name].relation.database_id;
+                                    addLog(`Found formula relation via rollup of prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
+                                    await getAllRelatedDatabases(relatedDbId, visited, allDatabases);
+                                }
+                            }
+                        }
+                    }
+                }
+                return allDatabases; // Return the complete list
+            }
+
+
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (isProcessing) return;
@@ -517,67 +598,9 @@
                 diagramOutput.value = '';
 
                 try {
-                    async function getAllRelatedDatabases(startingDatabaseId, visited = new Set()) {
-                        if (visited.has(startingDatabaseId)) {
-                            addLog(`Cycle detected, skipping database ID: ${startingDatabaseId}`);
-                            return [];
-                        }
-                        visited.add(startingDatabaseId);
-
-                        addLog(`Fetching related databases for: ${startingDatabaseId}`);
-                        const relatedDatabases = [await getDatabaseInfo(startingDatabaseId)];
-                        const currentDb = relatedDatabases[0];
-
-                        for (const propName in currentDb.properties) {
-                            const prop = currentDb.properties[propName];
-
-                            if (prop.type === "relation") {
-                                const relatedDbId = prop.relation.database_id;
-                                addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
-                                const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
-
-                                for (const relatedDb of relatedSubDatabases) {
-                                    if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
-                                        relatedDatabases.push(relatedDb);
-                                    }
-                                }
-                            } else if (prop.type === "rollup") {
-                                addLog(`Checking rollup property: ${propName}`);
-                                if (currentDb.properties[prop.rollup.relation_property_name]?.type === "relation") {
-                                    const relatedDbId = currentDb.properties[prop.rollup.relation_property_name].relation.database_id;
-                                    addLog(`Found rollup relation: ${propName} -> Database ID: ${relatedDbId}`);
-                                    const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
-                                    for (const relatedDb of relatedSubDatabases) {
-                                        if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
-                                            relatedDatabases.push(relatedDb);
-                                        }
-                                    }
-                                }
-                            } else if (prop.type === "formula") {
-                                addLog(`Checking formula property: ${propName}`);
-                                const formulaExpression = prop.formula.expression;
-                                const relationRegex = /\.relation/g;
-                                if (relationRegex.test(formulaExpression)) {
-                                    for (const innerPropName in currentDb.properties) {
-                                        const innerProp = currentDb.properties[innerPropName];
-                                        if (innerProp.type === "relation") {
-                                            const relatedDbId = innerProp.relation.database_id;
-                                            addLog(`Found formula relation: ${propName} -> Database ID: ${relatedDbId}`);
-                                            const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
-                                            for (const relatedDb of relatedSubDatabases) {
-                                                if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
-                                                    relatedDatabases.push(relatedDb);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return relatedDatabases;
-                    }
 
                     const allRelatedDatabases = await getAllRelatedDatabases(databaseId);
+
                     // Check selected diagram type
                     const diagramType = document.querySelector('input[name="diagramType"]:checked').value;
                     let outputCode = "";
