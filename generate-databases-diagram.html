@@ -410,26 +410,30 @@
                     if (parentDatabaseId && relationPropName) {
                         const parentDb = allDatabases.find(db => db.id === parentDatabaseId);
 
-                        if (parentDb) { //added this condition since it might not be there yet
+                        if (parentDb) {
                             const parentDbName = sanitizeTableName(parentDb.title[0]?.plain_text || 'Untitled');
                             const sanitizedRelationPropName = sanitizeColumnName(relationPropName);
                             let refType = "<"; // Default to one-to-many
-                            if (currentDb.properties[relationPropName].relation.type === "single_property") {
-                                refType = '>'; // many-to-one
-                            } else if (currentDb.properties[relationPropName].relation.type === "dual_property") {
-                                refType = '-'; // one-to-one
+
+                            // Check if currentDb and its properties exist before accessing
+                            if (currentDb && currentDb.properties && currentDb.properties[relationPropName] && currentDb.properties[relationPropName].relation) {
+                                if (currentDb.properties[relationPropName].relation.type === "single_property") {
+                                    refType = '>'; // many-to-one
+                                } else if (currentDb.properties[relationPropName].relation.type === "dual_property") {
+                                    refType = '-'; // one-to-one
+                                }
                             }
+
                             allRelations.push({
                                 type: 'db_relation',
                                 from: parentDbName,
                                 to: currentDbName,
                                 fromCol: sanitizedRelationPropName,
                                 toCol: 'id',
-                                refType: refType //for dbml
+                                refType: refType
                             });
                         }
                     }
-
 
                     for (const propName in currentDb.properties) {
                         const prop = currentDb.properties[propName];
@@ -446,25 +450,35 @@
                             const relationPropName = prop.rollup.relation_property_name;
                             const rolledUpPropName = prop.rollup.rollup_property_name;
 
-                            if (currentDb.properties[relationPropName]?.type === "relation") {
+                            // ---  Improved Rollup Handling ---
+                            if (relationPropName && currentDb.properties[relationPropName]?.type === "relation") {
                                 const relatedDbId = currentDb.properties[relationPropName].relation.database_id;
-                                const relatedDb = await getDatabaseInfo(relatedDbId); // Fetch related DB for rollup property
-                                allDatabases.push(relatedDb);
-                                const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
 
-                                // Sanitize rolled-up property name
-                                const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
+                                // Fetch related DB *only* if the relation exists
+                                if (relatedDbId) {
+                                    const relatedDb = await getDatabaseInfo(relatedDbId);
+                                    allDatabases.push(relatedDb);  // Add to allDatabases
+                                    const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
+                                    const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
 
-                                allRelations.push({
-                                    type: 'rollup_relation',
-                                    from: currentDbName,
-                                    to: relatedDbName,
-                                    fromCol: sanitizedPropName,
-                                    toCol: sanitizedRolledUpPropName,
-                                    relationProp: sanitizeColumnName(relationPropName) // For self-referencing if needed
-                                });
+                                    if (relatedDb.properties && relatedDb.properties[rolledUpPropName]) { //check if property exists
+                                        allRelations.push({
+                                            type: 'rollup_relation',
+                                            from: currentDbName,
+                                            to: relatedDbName,
+                                            fromCol: sanitizedPropName,
+                                            toCol: sanitizedRolledUpPropName,
+                                            relationProp: sanitizeColumnName(relationPropName)
+                                        });
+                                    } else {
+                                        addLog(`Rollup property ${rolledUpPropName} not found in related database ${relatedDbId}`);
+                                    }
+                                } else {
+                                    addLog(`Rollup points to invalid relatedDbId for relation property ${relationPropName}`);
+                                }
+                            } else {
+                                addLog(`Rollup ${propName} is missing relation_property_name or points to a non-relation property.`);
                             }
-
                         } else if (prop.type === "formula") {
                             addLog(`Checking formula property: ${propName}`);
                             const formulaExpression = prop.formula.expression;
@@ -476,50 +490,73 @@
                                 addLog(`Found referenced property in formula: ${referencedPropName}`);
                                 const referencedProp = currentDb.properties[referencedPropName];
                                 const sanitizedReferencedPropName = sanitizeColumnName(referencedPropName);
-
+                                // --- Improved Formula Handling ---
                                 if (referencedProp) {
                                     if (referencedProp.type === "relation") {
                                         const relatedDbId = referencedProp.relation.database_id;
                                         addLog(`Found formula relation via prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
-                                        // Recursive call, indicating the parent and the property name
-                                        await processDatabase(relatedDbId, databaseId, referencedPropName);
-                                        const relatedDb = await getDatabaseInfo(relatedDbId); // Fetch related DB for formula property
-                                        const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
-                                        allRelations.push({ //formula referencing relation
-                                            type: 'formula_relation',
-                                            from: currentDbName,
-                                            to: relatedDbName, // Corrected: Use related database name
-                                            fromCol: sanitizedPropName, // Formula property name
-                                            toCol: sanitizedReferencedPropName,   // Referenced property (relation) name
-                                        });
 
+                                        // Recursive call and add relation, only if relatedDbId is valid
+                                        if (relatedDbId) {
+                                            await processDatabase(relatedDbId, databaseId, referencedPropName); //recursive call
+                                            const relatedDb = await getDatabaseInfo(relatedDbId);
+                                            const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
+
+                                            allRelations.push({
+                                                type: 'formula_relation',
+                                                from: currentDbName,
+                                                to: relatedDbName,
+                                                fromCol: sanitizedPropName,
+                                                toCol: sanitizedReferencedPropName,
+                                            });
+                                        } else {
+                                            addLog(`Formula ${propName} references relation property ${referencedPropName} with invalid relatedDbId`);
+                                        }
 
                                     } else if (referencedProp.type === "rollup") {
-                                        if (currentDb.properties[referencedProp.rollup.relation_property_name]?.type === "relation") {
-                                            const relatedDbId = currentDb.properties[referencedProp.rollup.relation_property_name].relation.database_id;
-                                            const relatedDb = await getDatabaseInfo(relatedDbId); // Fetch related DB for formula property
-                                            const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
-                                            addLog(`Found formula relation via rollup of prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
-                                            await processDatabase(relatedDbId, databaseId, referencedPropName);
-                                            allRelations.push({ //formula referencing rollup
-                                                type: 'formula_rollup',
-                                                from: currentDbName,
-                                                to: relatedDbName, // Corrected: Use related database name
-                                                fromCol: sanitizedPropName, // Formula property name
-                                                toCol: sanitizeColumnName(referencedProp.rollup.rollup_property_name),   // Referenced property (relation) name
-                                            });
+                                        // Handle rollup within formula, similar to standalone rollups
+                                        const relationPropName = referencedProp.rollup?.relation_property_name;
+                                        const rolledUpPropName = referencedProp.rollup?.rollup_property_name;
+                                        if (relationPropName && currentDb.properties[relationPropName]?.type === "relation") {
+                                            const relatedDbId = currentDb.properties[relationPropName].relation.database_id;
+
+                                            if (relatedDbId) {
+                                                const relatedDb = await getDatabaseInfo(relatedDbId); //fetch related
+                                                allDatabases.push(relatedDb); // Add to allDatabases
+                                                const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
+                                                const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
+
+                                                // Check if the rolled up property exists in related database.
+                                                if (relatedDb && relatedDb.properties && relatedDb.properties[rolledUpPropName]) {
+                                                    allRelations.push({
+                                                        type: 'formula_rollup',
+                                                        from: currentDbName,
+                                                        to: relatedDbName,
+                                                        fromCol: sanitizedPropName, // The formula property
+                                                        toCol: sanitizedRolledUpPropName,
+                                                    });
+                                                } else {
+                                                    addLog(`Formula ${propName} references rollup ${referencedPropName} which points to a non-existent property in related database.`);
+                                                }
+                                            } else {
+                                                addLog(`Formula ${propName} references rollup ${referencedPropName} which points to invalid relatedDbId`);
+                                            }
+                                        } else {
+                                            addLog(`Formula ${propName} references rollup ${referencedPropName} which is missing relation_property_name or points to a non-relation property.`);
                                         }
-                                    }
-                                    else {
-                                        // Handle other property types if needed (e.g., connecting to other columns)
-                                        allRelations.push({ //formula referencing generic prop
+
+                                    } else {
+                                        // Handle other property types (within the same database)
+                                        allRelations.push({
                                             type: 'formula_prop',
                                             from: currentDbName,
-                                            to: currentDbName, // Self-reference for properties within the same database
-                                            fromCol: sanitizedPropName,  // The formula column
-                                            toCol: sanitizedReferencedPropName,  // The referenced column
+                                            to: currentDbName,
+                                            fromCol: sanitizedPropName,
+                                            toCol: sanitizedReferencedPropName,
                                         });
                                     }
+                                } else {
+                                    addLog(`Formula ${propName} references non-existent property: ${referencedPropName}`);
                                 }
                             }
                         }
@@ -656,12 +693,9 @@
                 document.execCommand('copy');
                 document.getElementById('copy-button').textContent = "Copied!";
                 setTimeout(() => {
-                    document.getElementById('copy-button').innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                <span>Copy to Clipboard</span>`;
+                    document.getElementById('copy-button').innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg> <span>Copy to Clipboard</span>`;
                 }, 2000);
             });
 
