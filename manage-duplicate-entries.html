@@ -1059,24 +1059,17 @@
                     });
                     break;
                 case 'relation':
-                    // Fetch current relations, then add the new one.
-                    const pageInfo = await makeNotionRequest(`/pages/${pageId}`);
-                    const currentRelations = pageInfo.properties[conditionalProperty]?.relation || [];
-
-                    // Create a new array with the new relation and existing ones
-                    const updatedRelations = [...currentRelations, { id: main_pageid_for_relation }];
-
+                    // Directly set the new relation without another request
                     await makeNotionRequest(`/pages/${pageId}`, {
                         method: 'PATCH',
                         body: JSON.stringify({
                             properties: {
                                 [conditionalProperty]: {
-                                    relation: updatedRelations
+                                    relation: [{ id: main_pageid_for_relation }]
                                 }
-                            },
+                            }
                         }),
                     });
-
                     break;
             }
         }
