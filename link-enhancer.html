@@ -268,7 +268,7 @@
   </div>
 
   <script type="module">
-    import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
+    import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
     import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
     import { createHeader } from './js/header.js'; // Import createHeader
 
@@ -294,18 +294,6 @@
 
     let notionToken = null; // Store notion token
 
-    // Prefill the workerUrl input
-    const workerUrlInput = document.getElementById('workerUrl');
-    if (WORKER_URL) {
-      workerUrlInput.value = WORKER_URL;
-    }
-
-    // Prefill the workerToken input
-    const workerTokenInput = document.getElementById('workerToken');
-    if (WORKER_TOKEN) {
-      workerTokenInput.value = WORKER_TOKEN;
-    }
-
     // --- Insert the header here ---
     const headerContainer = document.getElementById('header-container');
     headerContainer.innerHTML = createHeader();
@@ -314,6 +302,9 @@
 
     // Load worker config from localStorage or constants
     function loadWorkerConfig() {
+      const workerUrlInput = document.getElementById('workerUrl');
+      const workerTokenInput = document.getElementById('workerToken');
+
       const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
       if (savedConfig) {
         const config = JSON.parse(savedConfig);
@@ -325,6 +316,7 @@
           workerTokenInput.value = WORKER_TOKEN;
         }
       }
+
       checkWorkerUrl(); // Check URL state after loading config
     }
 
@@ -347,7 +339,7 @@
 
       // Logged in:
       notionToken = nomsData.accessToken;
-      updateUI(userInfoContainer); // Update header (logout/disconnect)
+      updateUIHeader(userInfoContainer); // Update header (logout/disconnect)
       submitButton.disabled = false; // Enable the button
       authBanner.classList.add('hidden'); // Hide the banner
       loadWorkerConfig();
@@ -900,7 +892,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       await initializeAuth();
       checkAuthStatus();
-      updateUI(userInfoContainer);
+      updateUIHeader(userInfoContainer);
 
       // Only populate from cache, don't fetch
       const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');

@@ -389,7 +389,7 @@
         </div>
     </div>
     <script type="module">
-        import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
+        import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
         import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
         import { createHeader } from './js/header.js';
 
@@ -491,15 +491,6 @@
         }
 
         // --- Utility Functions ---
-        // Prefill the workerUrl input
-        if (WORKER_URL) {
-            workerUrlInput.value = WORKER_URL;
-        }
-
-        // Prefill the workerToken input
-        if (WORKER_TOKEN) {
-            workerTokenInput.value = WORKER_TOKEN;
-        }
 
         // --- Insert the header here ---
         const headerContainer = document.getElementById('header-container');
@@ -520,7 +511,6 @@
                     workerTokenInput.value = WORKER_TOKEN;
                 }
             }
-            checkWorkerUrl(); // Check URL state after loading config
         }
 
         // Save worker config to localStorage
@@ -541,11 +531,8 @@
 
             // Logged in:
             notionToken = nomsData.accessToken;
-            updateUI(userInfoContainer); // Update header (logout/disconnect)
             submitButton.disabled = false; // Enable the button
             authBanner.classList.add('hidden'); // Hide the banner
-            loadWorkerConfig();
-            checkWorkerUrl(); // Check initial state
         }
 
         // Add function to check if worker config is complete
@@ -1192,7 +1179,9 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeAuth();
             checkAuthStatus();
-            updateUI(userInfoContainer);
+            loadWorkerConfig();
+            checkWorkerUrl(); // Check initial state
+            updateUIHeader(userInfoContainer);
 
             // Populate databases from cache, don't fetch initially
             const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');

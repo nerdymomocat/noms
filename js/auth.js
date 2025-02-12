@@ -97,7 +97,7 @@ async function initializeAuth() {
  *
  * @param {HTMLElement} userInfoContainer
  */
-async function updateUI(userInfoContainer) {
+async function updateUIHeader(userInfoContainer) {
     const nomsData = getLocalStorageWithExpiry('nomsData');
 
     if (nomsData) {
@@ -139,7 +139,7 @@ async function logout() {
     localStorage.removeItem('nomsDatabases');
     const userInfoContainer = document.getElementById('user-info');
     if (userInfoContainer) {
-        updateUI(userInfoContainer);
+        updateUIHeader(userInfoContainer);
     } else {
         window.location.href = './index.html';
     }
@@ -178,7 +178,7 @@ async function disconnect() {
 // Export all needed functions:
 export {
     initializeAuth,
-    updateUI,
+    updateUIHeader,
     logout,
     disconnect,
     getLocalStorageWithExpiry,     // <--- important

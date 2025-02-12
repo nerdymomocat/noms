@@ -233,7 +233,7 @@
     </div>
 
     <script type="module">
-        import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
+        import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
         import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js';
         import { createHeader } from './js/header.js';
 
@@ -244,25 +244,27 @@
             let isProcessing = false;
             let notionToken = null;
 
-            // Initialize Worker URL and Token
-            if (WORKER_URL) document.getElementById('workerUrl').value = WORKER_URL;
-            if (WORKER_TOKEN) document.getElementById('workerToken').value = WORKER_TOKEN;
-
             document.getElementById('header-container').innerHTML = createHeader();
 
             // Helper Functions
-            const loadWorkerConfig = () => {
+            function loadWorkerConfig() {
+                const workerUrlInput = document.getElementById('workerUrl');
+                const workerTokenInput = document.getElementById('workerToken');
+
                 const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
                 if (savedConfig) {
                     const config = JSON.parse(savedConfig);
-                    document.getElementById('workerUrl').value = config.url;
-                    document.getElementById('workerToken').value = config.token;
+                    workerUrlInput.value = config.url;
+                    workerTokenInput.value = config.token;
                 } else if (WORKER_URL) {
-                    document.getElementById('workerUrl').value = WORKER_URL;
-                    if (WORKER_TOKEN) document.getElementById('workerToken').value = WORKER_TOKEN;
+                    workerUrlInput.value = WORKER_URL;
+                    if (WORKER_TOKEN) {
+                        workerTokenInput.value = WORKER_TOKEN;
+                    }
                 }
-                checkWorkerUrl();
-            };
+
+                checkWorkerUrl(); // Check URL state after loading config
+            }
 
             const saveWorkerConfig = (url, token) => {
                 localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
@@ -276,7 +278,7 @@
                     return;
                 }
                 notionToken = nomsData.accessToken;
-                updateUI(document.getElementById('user-info'));
+                updateUIHeader(document.getElementById('user-info'));
                 document.getElementById('submit-button').disabled = false;
                 document.getElementById('auth-banner').classList.add('hidden');
                 loadWorkerConfig();
@@ -731,7 +733,7 @@
             const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
             if (databases.length) populateDropdowns(databases);
             await checkAuthStatus();
-            updateUI(document.getElementById('user-info'));
+            updateUIHeader(document.getElementById('user-info'));
         });
     </script>
     <script src="./js/loadKofi.js"></script>
