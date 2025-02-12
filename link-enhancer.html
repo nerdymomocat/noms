@@ -363,16 +363,7 @@
       submitButton.disabled = !url || !token;
 
       if (url && token) {
-        // Save configuration whenever both fields are filled
         saveWorkerConfig(url, token);
-        // Try to fetch databases
-        fetchDatabases()
-          .then(databases => {
-            populateDropdowns(databases);
-          })
-          .catch(error => {
-            console.error('Failed to load databases:', error);
-          });
       }
     }
 
@@ -806,10 +797,17 @@
       }
     } //end Notion Enhancer Class
 
+    // Modify fetchDatabases to throw if config is incomplete
     async function fetchDatabases() {
+      if (!isWorkerConfigComplete()) {
+        throw new Error('Worker URL and Token are required');
+      }
+
       try {
-        // Use the worker URL and add the token parameter
-        const response = await fetch(`${WORKER_URL}/search?token=${encodeURIComponent(WORKER_TOKEN)}`, {
+        const workerUrl = workerUrlInput.value.trim();
+        const workerToken = workerTokenInput.value.trim();
+
+        const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${notionToken}`,
@@ -834,16 +832,59 @@
       }
     }
 
-    function populateDropdowns(databases) {
-      const databaseSelect = document.getElementById('databaseSelect');
-      databaseSelect.innerHTML = '<option value="">Select a database</option>';
+    // Update initialization to not auto-fetch
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeAuth();
+      checkAuthStatus();
 
-      databases.forEach(db => {
-        const option = document.createElement('option');
-        option.value = db.id;
-        option.textContent = db.title[0]?.plain_text || 'Untitled';
-        databaseSelect.appendChild(option);
+      // Only populate from cache, don't fetch
+      const databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
+      if (databases.length) {
+        populateDropdowns(databases);
+      }
+
+      // Add event listeners
+      document.getElementById('refreshDatabases').addEventListener('click', async () => {
+        if (!isWorkerConfigComplete()) {
+          showError(workerUrlInput, 'Worker URL and Token are required');
+          showError(workerTokenInput, 'Worker URL and Token are required');
+          return;
+        }
+
+        try {
+          const databases = await fetchDatabases();
+          populateDropdowns(databases);
+        } catch (error) {
+          console.error('Failed to refresh databases:', error);
+        }
       });
+
+      document.getElementById('databaseSelect').addEventListener('change', (e) => {
+        if (e.target.value) {
+          loadDatabaseProperties(e.target.value);
+        }
+      });
+
+      document.getElementById('databaseSearch').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
+        const filtered = databases.filter(db =>
+          db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+        );
+        populateDropdowns(filtered);
+      });
+    });
+
+    // Update checkWorkerUrl to not auto-fetch on every change
+    function checkWorkerUrl() {
+      const url = workerUrlInput.value.trim();
+      const token = workerTokenInput.value.trim();
+      submitButton.disabled = !url || !token;
+
+      if (url && token) {
+        // Just save configuration
+        saveWorkerConfig(url, token);
+      }
     }
 
     async function loadDatabaseProperties(databaseId) {
@@ -885,53 +926,6 @@
     }
 
     // Initialize database selection
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initializeAuth();
-      checkAuthStatus();
-
-      // Load saved databases or fetch new ones
-      let databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
-      if (!databases.length) {
-        try {
-          databases = await fetchDatabases();
-        } catch (error) {
-          console.error('Failed to load databases:', error);
-        }
-      }
-      populateDropdowns(databases);
-
-      // Add event listeners
-      document.getElementById('refreshDatabases').addEventListener('click', async () => {
-        if (!isWorkerConfigComplete()) {
-          showError(workerUrlInput, 'Worker URL and Token are required');
-          showError(workerTokenInput, 'Worker URL and Token are required');
-          return;
-        }
-
-        try {
-          const databases = await fetchDatabases();
-          populateDropdowns(databases);
-        } catch (error) {
-          console.error('Failed to refresh databases:', error);
-        }
-      });
-
-      document.getElementById('databaseSelect').addEventListener('change', (e) => {
-        if (e.target.value) {
-          loadDatabaseProperties(e.target.value);
-        }
-      });
-
-      document.getElementById('databaseSearch').addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
-        const filtered = databases.filter(db =>
-          db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
-        );
-        populateDropdowns(filtered);
-      });
-    });
-
     document.addEventListener('DOMContentLoaded', async () => { // Now async
       await initializeAuth(); // Call and AWAIT initializeAuth
       checkAuthStatus();
