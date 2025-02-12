@@ -230,27 +230,20 @@
             const databaseSelect = document.getElementById('databaseSelect');
             const databaseSearch = document.getElementById('databaseSearch');
 
-
-
-            // Form Data and State
             let isProcessing = false;
             let notionToken = null;
 
-            // Prefill the workerUrl input
             if (WORKER_URL) {
                 workerUrlInput.value = WORKER_URL;
             }
 
-            // Prefill the workerToken input
             if (WORKER_TOKEN) {
                 workerTokenInput.value = WORKER_TOKEN;
             }
 
-            // --- Insert the header here ---
             const headerContainer = document.getElementById('header-container');
             headerContainer.innerHTML = createHeader();
-            const userInfoContainer = document.getElementById('user-info'); // NOW it will find it
-
+            const userInfoContainer = document.getElementById('user-info');
 
             function loadWorkerConfig() {
                 const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
@@ -319,7 +312,6 @@
                 checkWorkerUrl();
             });
 
-            // --- Notion API Request Helpers ---
             async function makeNotionRequest(endpoint, options = {}) {
                 if (!isWorkerConfigComplete()) {
                     throw new Error('Worker URL and Token are required');
@@ -355,22 +347,28 @@
                 return makeNotionRequest(`/databases/${databaseId}`);
             }
 
-            // --- DBML Generation ---
+            function sanitizeTableName(name) {
+                // Replace spaces and special characters with underscores
+                return name.replace(/[^a-zA-Z0-9_]+/g, '_');
+            }
+
             function generateDBML(databaseInfo, allDatabases) {
                 let dbml = "";
 
                 function generateTable(dbInfo) {
-                    let tableDBML = `Table ${dbInfo.title[0]?.plain_text || 'Untitled'} {\n`;
+                    let tableName = sanitizeTableName(dbInfo.title[0]?.plain_text || 'Untitled');
+                    let tableDBML = `Table ${tableName} {\n`;
                     tableDBML += `  id text [primary key]\n`; // Assume all databases have an 'id'
 
                     for (const propName in dbInfo.properties) {
                         const prop = dbInfo.properties[propName];
                         let dbmlType = "";
 
+                        //Sanitize property names
+                        const sanitizedPropName = propName.replace(/[^a-zA-Z0-9_]+/g, '_');
+
                         switch (prop.type) {
                             case "title":
-                                dbmlType = "text";
-                                break;
                             case "rich_text":
                             case "url":
                             case "email":
@@ -381,76 +379,63 @@
                                 dbmlType = "number";
                                 break;
                             case "select":
-                                dbmlType = "text"; // Treat select as text, since it's an option
-                                break;
                             case "multi_select":
-                                dbmlType = "text[]";
+                            case "status": // Treat status like select/multi_select
+                                dbmlType = "text";
                                 break;
                             case "date":
-                                dbmlType = "timestamp"; // Or date, depending on how you want to represent
+                                dbmlType = "timestamp";
                                 break;
                             case "checkbox":
                                 dbmlType = "boolean";
                                 break;
                             case "files":
-                                dbmlType = "text[]"; // Store file URLs (probably)
+                                dbmlType = "text[]";
                                 break;
                             case "created_by":
                             case "last_edited_by":
-                                dbmlType = "text"; //  User IDs
-                                break;
-                            case "created_time":
-                            case "last_edited_time":
-                                dbmlType = "timestamp";
-                                break;
                             case "formula":
-                                dbmlType = "text";  // Store the formula expression as text
-                                break;
-                            case "relation":
-                                // We'll handle relations separately below.
-                                continue; // Skip for now
                             case "rollup":
                                 dbmlType = "text";
                                 break;
-                            case "status":
-                                dbmlType = "text";
+                            case "relation":
+                                dbmlType = "text"; // Just use text; the Ref will handle the link.
                                 break;
                             case "unique_id":
                                 dbmlType = "text";
                                 break;
-                            default:
-                                dbmlType = "text"; // Default to text
-                        }
 
-                        tableDBML += `  "${propName}" ${dbmlType}\n`;
+                            default:
+                                dbmlType = "text";
+                        }
+                        tableDBML += `  "${sanitizedPropName}" ${dbmlType}\n`;
                     }
                     tableDBML += "}\n\n";
                     return tableDBML;
                 }
 
-                // Create tables for all databases
                 allDatabases.forEach(db => {
                     dbml += generateTable(db);
                 });
 
-                // Handle relations AFTER tables are defined.
-                for (const dbInfo of allDatabases) { // Iterate through all, not only starting
-                    const tableName = dbInfo.title[0]?.plain_text || 'Untitled';
-
+                for (const dbInfo of allDatabases) {
+                    const tableName = sanitizeTableName(dbInfo.title[0]?.plain_text || 'Untitled');
                     for (const propName in dbInfo.properties) {
                         const prop = dbInfo.properties[propName];
                         if (prop.type === "relation") {
                             const relatedDbId = prop.relation.database_id;
 
-                            // Find the related database (by ID) in our array.
                             const relatedDb = allDatabases.find(db => db.id === relatedDbId);
                             if (relatedDb) {
-                                const relatedTableName = relatedDb.title[0]?.plain_text || 'Untitled';
-                                let refType = "-"; // default to many-to-many
-                                if (prop.relation.type === "single_property")
+                                const relatedTableName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
+                                let refType = "-";
+                                if (prop.relation.type === "single_property") {
                                     refType = '>';
+                                }
+                                const sanitizedPropName = propName.replace(/[^a-zA-Z0-9_]+/g, '_');
 
-                                dbml += `Ref: ${tableName}."${propName}" ${refType} ${relatedTableName}.id\n`;
+                                dbml += `Ref: ${tableName}."${sanitizedPropName}" ${refType} ${relatedTableName}.id\n`;
+
                             }
                         }
                     }
@@ -466,20 +451,13 @@
                 if (isProcessing) return;
 
                 const databaseId = databaseSelect.value;
+                let isValid = Boolean(databaseId && isWorkerConfigComplete());
 
-                let isValid = true;
-                if (!databaseId) {
-                    showError(databaseSelect, 'Database is required');
-                    isValid = false;
-                }
-
+                if (!databaseId) showError(databaseSelect, 'Database is required');
                 if (!isWorkerConfigComplete()) {
                     showError(workerUrlInput, "Worker URL is required");
                     showError(workerTokenInput, "Worker Token is required");
-                    isValid = false;
                 }
-
-
                 if (!isValid) return;
 
                 isProcessing = true;
@@ -490,13 +468,9 @@
                 outputSection.classList.remove('hidden');
                 dbmlOutput.value = '';
 
-
                 try {
-
                     async function getAllRelatedDatabases(startingDatabaseId, visited = new Set()) {
-                        if (visited.has(startingDatabaseId)) {
-                            return []; // Avoid infinite loops
-                        }
+                        if (visited.has(startingDatabaseId)) return [];
                         visited.add(startingDatabaseId);
 
                         const relatedDatabases = [await getDatabaseInfo(startingDatabaseId)];
@@ -508,7 +482,7 @@
                             if (prop.type === "relation") {
                                 const relatedDbId = prop.relation.database_id;
                                 const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
-                                // Merge results, avoiding duplicates
+
                                 for (const relatedDb of relatedSubDatabases) {
                                     if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
                                         relatedDatabases.push(relatedDb);
@@ -516,9 +490,7 @@
                                 }
 
                             } else if (prop.type === "rollup") {
-                                // Check rollup's relation property.
-                                const relationPropId = prop.rollup.relation_property_id
-                                if (currentDb.properties[prop.rollup.relation_property_name].type == "relation") {
+                                if (currentDb.properties[prop.rollup.relation_property_name]?.type === "relation") {
                                     const relatedDbId = currentDb.properties[prop.rollup.relation_property_name].relation.database_id;
                                     const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
                                     for (const relatedDb of relatedSubDatabases) {
@@ -528,17 +500,14 @@
                                     }
                                 }
                             } else if (prop.type === "formula") {
-                                //basic regex to find relation
                                 const formulaExpression = prop.formula.expression;
-                                const relationRegex = /\.relation/g;
+                                const relationRegex = /\.relation/g;  // Look for .relation
                                 if (relationRegex.test(formulaExpression)) {
-                                    //check which properties have a relation
                                     for (const innerPropName in currentDb.properties) {
                                         const innerProp = currentDb.properties[innerPropName];
                                         if (innerProp.type === "relation") {
                                             const relatedDbId = innerProp.relation.database_id;
                                             const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
-
                                             for (const relatedDb of relatedSubDatabases) {
                                                 if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
                                                     relatedDatabases.push(relatedDb);
@@ -553,7 +522,6 @@
                     }
 
                     const allRelatedDatabases = await getAllRelatedDatabases(databaseId);
-
                     const dbml = generateDBML(allRelatedDatabases[0], allRelatedDatabases);
                     dbmlOutput.value = dbml;
                     addLog("DBML Generated!"); // Add this line
@@ -574,7 +542,6 @@
                 logElement.textContent = message;
                 logElement.className = 'whitespace-pre-wrap';
             }
-
 
             function showError(inputElement, message) {
                 const errorElement = document.getElementById(`${inputElement.name}-error`);
@@ -610,9 +577,11 @@
                 databaseSelect.innerHTML = '<option value="">-</option>';
 
                 databases.forEach(db => {
+                    // Use optional chaining and nullish coalescing operator
+                    const title = db.title?.[0]?.plain_text ?? 'Untitled';
                     const option = document.createElement('option');
                     option.value = db.id;
-                    option.textContent = db.title[0]?.plain_text || 'Untitled';
+                    option.textContent = title;
                     databaseSelect.appendChild(option);
                 });
             }
@@ -643,7 +612,6 @@
                 localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
                 return data.results;
             }
-
 
             document.getElementById('copy-button').addEventListener('click', () => {
                 dbmlOutput.select();
@@ -678,12 +646,13 @@
                 const searchTerm = e.target.value.toLowerCase();
                 const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
                 const filtered = databases.filter(db =>
-                    db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+                    db.title?.[0]?.plain_text.toLowerCase().includes(searchTerm)
                 );
                 populateDropdowns(filtered);
             });
 
             await checkAuthStatus();
+            updateUI(userInfoContainer);
         });
     </script>
     <script src="./js/loadKofi.js"></script>
