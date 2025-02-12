@@ -1,6 +1,6 @@
 function createHeader() {
     const headerHTML = `
-    <header view-transition-name="shared-header">
+    <header>
         <div class="header-container">
             <h1>
                 <a href="./index.html">
