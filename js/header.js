@@ -43,15 +43,17 @@ function createHeader() {
             font-size: 3rem;
             font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 1rem;
+            margin: 0; /* Remove margin */
             text-align: center;
+            line-height: 1; /* Add this to control height */
         }
 
         /* Logo specific styles - removing button styling */
         h1 a {
             color: #000;
             text-decoration: none;
-            display: inline-block;
+            display: flex; /* Change to flex for better alignment */
+            align-items: center;
             padding: 0.5rem;
             background: none;
             border: none;
@@ -66,6 +68,7 @@ function createHeader() {
         .logo-image {
             height: 3rem;
             width: auto;
+            display: block; /* Add this */
             vertical-align: middle;
             transition: filter 0.2s ease;
         }
