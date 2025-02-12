@@ -87,13 +87,13 @@
               </div>
               <button type="button" id="workerConfig-submit"
                 class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
-                Save & Connect
+                Connect Worker
               </button>
             </div>
           </details>
 
-          <!-- Hide database section initially -->
-          <div id="database-section" class="hidden space-y-6">
+          <!-- Show database section but keep submit disabled -->
+          <div id="database-section" class="space-y-6">
             <div class="w-full">
               <div class="flex items-center justify-between mb-2">
                 <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Database</label>
@@ -201,7 +201,8 @@
               </div>
             </div>
             <div class="w-full">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertyName">URL Property Name</label>
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertyName">URL Property
+                Name</label>
               <input
                 class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
                 type="text" id="urlPropertyName" name="urlPropertyName" placeholder="Enter the name of the URL property"
@@ -219,7 +220,8 @@
             </div>
 
             <div class="w-full">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertyName">Checked Property Name
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertyName">Checked Property
+                Name
                 (Optional)</label>
               <input
                 class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
@@ -324,6 +326,7 @@
           workerTokenInput.value = WORKER_TOKEN;
         }
       }
+      checkWorkerUrl(); // Check URL state after loading config
     }
 
     // Save worker config to localStorage
@@ -354,16 +357,7 @@
 
       // Save configuration
       saveWorkerConfig(url, token);
-      
-      // Show database section and fetch databases
-      databaseSection.classList.remove('hidden');
-      try {
-        const databases = await fetchDatabases();
-        populateDropdowns(databases);
-      } catch (error) {
-        console.error('Failed to load databases:', error);
-        showError(workerUrlInput, 'Failed to connect to worker');
-      }
+      checkWorkerUrl(); // This will fetch databases
     });
 
     // Function to check login status, show banner if needed, and update header.
@@ -386,8 +380,31 @@
       workerConfigSubmit.disabled = false; // Enable worker config submit
       authBanner.classList.add('hidden'); // Hide the banner
       loadWorkerConfig();
+      checkWorkerUrl(); // Check initial state
     }
 
+    // Add function to check worker URL and update UI
+    function checkWorkerUrl() {
+      const url = workerUrlInput.value.trim();
+      submitButton.disabled = !url; // Disable submit if no URL
+
+      if (url) {
+        // Try to fetch databases only if we have a URL
+        fetchDatabases()
+          .then(databases => {
+            populateDropdowns(databases);
+          })
+          .catch(error => {
+            console.error('Failed to load databases:', error);
+          });
+      }
+    }
+
+    // Listen for worker URL changes
+    workerUrlInput.addEventListener('input', () => {
+      clearError(workerUrlInput);
+      checkWorkerUrl();
+    });
 
     // --- Event Handlers ---
     form.addEventListener('input', (e) => {
