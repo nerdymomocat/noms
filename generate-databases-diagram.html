@@ -262,8 +262,6 @@
                         workerTokenInput.value = WORKER_TOKEN;
                     }
                 }
-
-                checkWorkerUrl(); // Check URL state after loading config
             }
 
             const saveWorkerConfig = (url, token) => {
@@ -278,18 +276,16 @@
                     return;
                 }
                 notionToken = nomsData.accessToken;
-                updateUIHeader(document.getElementById('user-info'));
                 document.getElementById('submit-button').disabled = false;
                 document.getElementById('auth-banner').classList.add('hidden');
-                loadWorkerConfig();
-                checkWorkerUrl();
             };
 
             const isWorkerConfigComplete = () => document.getElementById('workerUrl').value.trim() && document.getElementById('workerToken').value.trim();
 
             const checkWorkerUrl = () => {
-                document.getElementById('submit-button').disabled = !isWorkerConfigComplete();
-                if (isWorkerConfigComplete()) {
+                const isComplete = isWorkerConfigComplete();
+                document.getElementById('submit-button').disabled = !isComplete;
+                if (isComplete) {
                     saveWorkerConfig(document.getElementById('workerUrl').value.trim(), document.getElementById('workerToken').value.trim());
                 }
             };
@@ -733,6 +729,8 @@
             const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
             if (databases.length) populateDropdowns(databases);
             await checkAuthStatus();
+            loadWorkerConfig();
+            checkWorkerUrl();
             updateUIHeader(document.getElementById('user-info'));
         });
     </script>
