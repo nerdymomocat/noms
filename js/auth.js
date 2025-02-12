@@ -101,31 +101,30 @@ async function updateUIHeader(userInfoContainer) {
     const nomsData = getLocalStorageWithExpiry('nomsData');
 
     if (nomsData) {
-        // Logged in UI
+        // Logged in UI remains unchanged.
         userInfoContainer.innerHTML = `
       <span>You are: ${nomsData.workspaceName}</span>
-      <button id="logout-button"
-        class="px-4 py-2 ml-4 text-white bg-black border-4 border-black rounded-md">
+      <button id="logout-button" class="px-4 py-2 ml-4 text-white bg-black border-4 border-black rounded-md">
         Logout
       </button>
-      <button id="disconnect-button"
-        class="px-4 py-2 ml-4 text-white bg-red-500 border-4 border-black rounded-md">
+      <button id="disconnect-button" class="px-4 py-2 ml-4 text-white bg-red-500 border-4 border-black rounded-md">
         Disconnect from Notion
       </button>
     `;
-        // Hook up the buttons
         document.getElementById('logout-button').addEventListener('click', logout);
         document.getElementById('disconnect-button').addEventListener('click', disconnect);
-
     } else {
-        // Not logged in UI
-        const loginUrl = new URL('/auth/login', OAUTH_HANDLER_URL);
+        // Not logged in UI – now rendered as a button so the OAuth URL isn't exposed at load.
         userInfoContainer.innerHTML = `
-      <a href="${loginUrl.href}"
-        class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">
+      <button id="login-button" class="px-4 py-2 text-white bg-black border-4 border-black rounded-md">
         Login with Notion
-      </a>
+      </button>
     `;
+        // When the button is clicked, construct the login URL and navigate.
+        document.getElementById('login-button').addEventListener('click', () => {
+          const loginUrl = new URL('/auth/login', OAUTH_HANDLER_URL);
+          window.location.href = loginUrl.href;
+        });
     }
 }
 
