@@ -198,6 +198,7 @@
                     <textarea id="diagramOutput" readonly placeholder="Diagram output will appear here..."></textarea>
                     <textarea id="logOutput" readonly placeholder="Logs will appear here..."
                         class="mt-4 w-full h-32 border-4 border-black bg-white p-2 text-black font-mono text-sm"></textarea>
+                    <div id="pasteMessage" class="text-sm p-2 border-2 border-dashed border-gray-500"></div>
                     <button id="copy-button"
                         class="w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
                         <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -577,6 +578,13 @@
                         outputCode = generateDBML(allRelatedDatabases[0], allRelatedDatabases);
                     }
                     diagramOutput.value = outputCode;
+                    // Set paste instructions based on diagram type
+                    const pasteMessage = document.getElementById('pasteMessage');
+                    if (diagramType === "mermaid") {
+                        pasteMessage.innerHTML = 'Paste your Mermaid diagram at <a href="https://mermaid.live/" target="_blank">mermaid.live</a>.';
+                    } else {
+                        pasteMessage.innerHTML = 'Paste your DBML diagram at <a href="https://dbdiagram.io/home" target="_blank">dbdiagram.io/home</a> or <a href="https://databasediagram.com/app" target="_blank">databasediagram.com/app</a> (select DBML).';
+                    }
                     addLog(diagramType === "mermaid" ? "Mermaid ER Diagram Generated!" : "DBML Generated!");
 
                 } catch (error) {
