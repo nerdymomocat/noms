@@ -244,13 +244,13 @@
             let isProcessing = false;
             let notionToken = null;
 
-            // Initialize Worker URL and Token if constants are defined
+            // Initialize Worker URL and Token
             if (WORKER_URL) document.getElementById('workerUrl').value = WORKER_URL;
             if (WORKER_TOKEN) document.getElementById('workerToken').value = WORKER_TOKEN;
 
             document.getElementById('header-container').innerHTML = createHeader();
 
-            // Helper Functions (Utility and Validation)
+            // Helper Functions
             const loadWorkerConfig = () => {
                 const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
                 if (savedConfig) {
@@ -339,7 +339,7 @@
                 });
             };
 
-            // API Interaction Functions
+            // API Interaction
             const makeNotionRequest = async (endpoint, options = {}) => {
                 if (!isWorkerConfigComplete()) throw new Error('Worker URL and Token are required');
                 const url = `${document.getElementById('workerUrl').value.trim()}${endpoint}?token=${encodeURIComponent(document.getElementById('workerToken').value.trim())}`;
@@ -380,7 +380,7 @@
                 return response.results;
             };
 
-            // Sanitization Functions
+            // Sanitization
             const sanitizeTableName = (name) => (name.replace(/[^a-zA-Z0-9_]+/g, '_')).replace(/^[^a-zA-Z_]/, '_$&');
             const reservedKeywords = new Set(['note', 'table', 'ref', 'enum', 'index', 'indices']);
             const sanitizeColumnName = (name) => {
@@ -397,16 +397,21 @@
 
                 const processDatabase = async (databaseId, parentDatabaseId = null, relationPropName = null) => {
                     if (visited.has(databaseId)) {
-                        addLog(`Cycle detected, skipping database ID: ${databaseId}`);
+                        addLog(`Cycle detected or already processed, skipping database ID: ${databaseId}`);
                         return;
                     }
                     visited.add(databaseId);
 
                     const currentDb = await getDatabaseInfo(databaseId);
-                    allDatabases.push(currentDb);
+
+                    // --- CHECK IF DATABASE ALREADY ADDED ---
+                    if (!allDatabases.some(db => db.id === currentDb.id)) {
+                        allDatabases.push(currentDb);
+                    }
+
                     const currentDbName = sanitizeTableName(currentDb.title[0]?.plain_text || 'Untitled');
 
-                    // If this database is related to another, add the database-level relation
+                    // Database-level relation
                     if (parentDatabaseId && relationPropName) {
                         const parentDb = allDatabases.find(db => db.id === parentDatabaseId);
 
@@ -415,12 +420,11 @@
                             const sanitizedRelationPropName = sanitizeColumnName(relationPropName);
                             let refType = "<"; // Default to one-to-many
 
-                            // Check if currentDb and its properties exist before accessing
                             if (currentDb && currentDb.properties && currentDb.properties[relationPropName] && currentDb.properties[relationPropName].relation) {
                                 if (currentDb.properties[relationPropName].relation.type === "single_property") {
-                                    refType = '>'; // many-to-one
+                                    refType = '>';
                                 } else if (currentDb.properties[relationPropName].relation.type === "dual_property") {
-                                    refType = '-'; // one-to-one
+                                    refType = '-';
                                 }
                             }
 
@@ -442,7 +446,6 @@
                         if (prop.type === "relation") {
                             const relatedDbId = prop.relation.database_id;
                             addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
-                            // Recursive call, indicating the parent and the property name
                             await processDatabase(relatedDbId, databaseId, propName);
 
                         } else if (prop.type === "rollup") {
@@ -450,18 +453,21 @@
                             const relationPropName = prop.rollup.relation_property_name;
                             const rolledUpPropName = prop.rollup.rollup_property_name;
 
-                            // ---  Improved Rollup Handling ---
                             if (relationPropName && currentDb.properties[relationPropName]?.type === "relation") {
                                 const relatedDbId = currentDb.properties[relationPropName].relation.database_id;
 
-                                // Fetch related DB *only* if the relation exists
                                 if (relatedDbId) {
                                     const relatedDb = await getDatabaseInfo(relatedDbId);
-                                    allDatabases.push(relatedDb);  // Add to allDatabases
+
+                                    // --- CHECK IF RELATED DATABASE ALREADY ADDED ---
+                                    if (!allDatabases.some(db => db.id === relatedDb.id)) {
+                                        allDatabases.push(relatedDb);
+                                    }
+
                                     const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
                                     const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
 
-                                    if (relatedDb.properties && relatedDb.properties[rolledUpPropName]) { //check if property exists
+                                    if (relatedDb.properties && relatedDb.properties[rolledUpPropName]) {
                                         allRelations.push({
                                             type: 'rollup_relation',
                                             from: currentDbName,
@@ -490,16 +496,21 @@
                                 addLog(`Found referenced property in formula: ${referencedPropName}`);
                                 const referencedProp = currentDb.properties[referencedPropName];
                                 const sanitizedReferencedPropName = sanitizeColumnName(referencedPropName);
-                                // --- Improved Formula Handling ---
+
                                 if (referencedProp) {
                                     if (referencedProp.type === "relation") {
                                         const relatedDbId = referencedProp.relation.database_id;
                                         addLog(`Found formula relation via prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
 
-                                        // Recursive call and add relation, only if relatedDbId is valid
                                         if (relatedDbId) {
-                                            await processDatabase(relatedDbId, databaseId, referencedPropName); //recursive call
+                                            await processDatabase(relatedDbId, databaseId, referencedPropName);
                                             const relatedDb = await getDatabaseInfo(relatedDbId);
+
+                                            // --- CHECK IF RELATED DATABASE ALREADY ADDED ---
+                                            if (!allDatabases.some(db => db.id === relatedDb.id)) {
+                                                allDatabases.push(relatedDb);
+                                            }
+
                                             const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
 
                                             allRelations.push({
@@ -514,25 +525,28 @@
                                         }
 
                                     } else if (referencedProp.type === "rollup") {
-                                        // Handle rollup within formula, similar to standalone rollups
                                         const relationPropName = referencedProp.rollup?.relation_property_name;
                                         const rolledUpPropName = referencedProp.rollup?.rollup_property_name;
                                         if (relationPropName && currentDb.properties[relationPropName]?.type === "relation") {
                                             const relatedDbId = currentDb.properties[relationPropName].relation.database_id;
 
                                             if (relatedDbId) {
-                                                const relatedDb = await getDatabaseInfo(relatedDbId); //fetch related
-                                                allDatabases.push(relatedDb); // Add to allDatabases
+                                                const relatedDb = await getDatabaseInfo(relatedDbId);
+
+                                                // --- CHECK IF RELATED DATABASE ALREADY ADDED ---
+                                                if (!allDatabases.some(db => db.id === relatedDb.id)) {
+                                                    allDatabases.push(relatedDb);
+                                                }
+
                                                 const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
                                                 const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
 
-                                                // Check if the rolled up property exists in related database.
                                                 if (relatedDb && relatedDb.properties && relatedDb.properties[rolledUpPropName]) {
                                                     allRelations.push({
                                                         type: 'formula_rollup',
                                                         from: currentDbName,
                                                         to: relatedDbName,
-                                                        fromCol: sanitizedPropName, // The formula property
+                                                        fromCol: sanitizedPropName,
                                                         toCol: sanitizedRolledUpPropName,
                                                     });
                                                 } else {
@@ -546,7 +560,6 @@
                                         }
 
                                     } else {
-                                        // Handle other property types (within the same database)
                                         allRelations.push({
                                             type: 'formula_prop',
                                             from: currentDbName,
@@ -575,7 +588,7 @@
                 allDatabases.forEach(dbInfo => {
                     const tableName = sanitizeTableName(dbInfo.title[0]?.plain_text || 'Untitled');
                     dbml += `Table ${tableName} {\n`;
-                    dbml += `  id text [primary key]\n`; // Assume all databases have an 'id'
+                    dbml += `  id text [primary key]\n`;
                     for (const propName in dbInfo.properties) {
                         const prop = dbInfo.properties[propName];
                         dbml += `  ${sanitizeColumnName(propName)} ${prop.type}\n`;
@@ -613,7 +626,7 @@
 
                 allRelations.forEach(relation => {
                     if (relation.type === 'db_relation') {
-                        let connector = "||--o{"; // default: one-to-many
+                        let connector = "||--o{";
                         if (relation.refType === "-")
                             connector = "||--||";
                         mermaid += `    ${relation.from} ${connector} ${relation.to} : ${relation.fromCol}\n`;
@@ -630,8 +643,7 @@
             };
 
 
-            // Event Listeners and Form Submission
-
+            // Event Listeners
             document.getElementById('diagram-form').addEventListener('input', (e) => { if (e.target.tagName === 'INPUT') clearError(e.target); });
             document.getElementById('workerUrl').addEventListener('input', () => { clearError(document.getElementById('workerUrl')); checkWorkerUrl(); });
             document.getElementById('workerToken').addEventListener('input', () => { clearError(document.getElementById('workerToken')); checkWorkerUrl(); });
@@ -683,7 +695,7 @@
                     isProcessing = false;
                     document.getElementById('submit-button').disabled = false;
                     document.getElementById('submit-button-text').classList.remove("opacity-0");
-                    document.getElementById('loading-spinner').classList.add("hidden");
+                    document.getElementById('loading-spinner').classList.add('hidden');
                     document.getElementById('reset-button').classList.remove('hidden');
                 }
             });
