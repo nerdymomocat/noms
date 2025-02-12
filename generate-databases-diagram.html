@@ -182,6 +182,8 @@
                 <div id="output-section" class="hidden space-y-6">
                     <h2 class="font-bold uppercase tracking-wide">DBML Output</h2>
                     <textarea id="dbmlOutput" readonly placeholder="DBML output will appear here..."></textarea>
+                    <textarea id="logOutput" readonly placeholder="Logs will appear here..."
+                        class="mt-4 w-full h-32 border-4 border-black bg-white p-2 text-black font-mono text-sm"></textarea>
                     <button id="copy-button"
                         class="w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
                         <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -229,11 +231,7 @@
             const workerTokenInput = document.getElementById('workerToken');
             const databaseSelect = document.getElementById('databaseSelect');
             const databaseSearch = document.getElementById('databaseSearch');
-            const logOutput = document.createElement('textarea'); // Create a new textarea for logs
-            logOutput.id = 'logOutput';
-            logOutput.readOnly = true;
-            logOutput.placeholder = 'Logs will appear here...';
-            logOutput.className = 'mt-4 w-full h-32 border-4 border-black bg-white p-2 text-black font-mono text-sm'; // Tailwind classes
+            const logOutput = document.getElementById('logOutput');
 
             let isProcessing = false;
             let notionToken = null;
@@ -684,10 +682,6 @@
                 );
                 populateDropdowns(filtered);
             });
-
-
-            // Add the logOutput textarea just after the dbmlOutput textarea
-            dbmlOutput.after(logOutput);
 
             await checkAuthStatus();
             updateUI(userInfoContainer);
