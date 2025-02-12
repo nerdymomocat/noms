@@ -240,114 +240,130 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeAuth();
 
-            const form = document.getElementById('diagram-form');
-            const submitButton = document.getElementById('submit-button');
-            const submitButtonText = document.getElementById('submit-button-text');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const outputSection = document.getElementById('output-section');
-            const diagramOutput = document.getElementById('diagramOutput');
-            const copyButton = document.getElementById('copy-button');
-            const resetButton = document.getElementById('reset-button');
-            const authBanner = document.getElementById('auth-banner');
-            const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
-            const databaseSection = document.getElementById('database-section');
-            const workerUrlInput = document.getElementById('workerUrl');
-            const workerTokenInput = document.getElementById('workerToken');
-            const databaseSelect = document.getElementById('databaseSelect');
-            const databaseSearch = document.getElementById('databaseSearch');
-            const logOutput = document.getElementById('logOutput');
+            // DOM Element Variables (Reduced repetition)
+            const elements = {
+                form: document.getElementById('diagram-form'),
+                submitButton: document.getElementById('submit-button'),
+                submitButtonText: document.getElementById('submit-button-text'),
+                loadingSpinner: document.getElementById('loading-spinner'),
+                outputSection: document.getElementById('output-section'),
+                diagramOutput: document.getElementById('diagramOutput'),
+                copyButton: document.getElementById('copy-button'),
+                resetButton: document.getElementById('reset-button'),
+                authBanner: document.getElementById('auth-banner'),
+                workerUrlInput: document.getElementById('workerUrl'),
+                workerTokenInput: document.getElementById('workerToken'),
+                databaseSelect: document.getElementById('databaseSelect'),
+                databaseSearch: document.getElementById('databaseSearch'),
+                logOutput: document.getElementById('logOutput'),
+                headerContainer: document.getElementById('header-container'),
+                userInfoContainer: document.getElementById('user-info'),
+                pasteMessage: document.getElementById('pasteMessage')
+            };
 
+            const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
             let isProcessing = false;
             let notionToken = null;
 
-            if (WORKER_URL) {
-                workerUrlInput.value = WORKER_URL;
-            }
+            // Initialize Worker URL and Token if constants are defined
+            if (WORKER_URL) elements.workerUrlInput.value = WORKER_URL;
+            if (WORKER_TOKEN) elements.workerTokenInput.value = WORKER_TOKEN;
 
-            if (WORKER_TOKEN) {
-                workerTokenInput.value = WORKER_TOKEN;
-            }
+            elements.headerContainer.innerHTML = createHeader();
 
-            const headerContainer = document.getElementById('header-container');
-            headerContainer.innerHTML = createHeader();
-            const userInfoContainer = document.getElementById('user-info');
-
-            function loadWorkerConfig() {
+            // Helper Functions (Utility and Validation)
+            const loadWorkerConfig = () => {
                 const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
                 if (savedConfig) {
                     const config = JSON.parse(savedConfig);
-                    workerUrlInput.value = config.url;
-                    workerTokenInput.value = config.token;
+                    elements.workerUrlInput.value = config.url;
+                    elements.workerTokenInput.value = config.token;
                 } else if (WORKER_URL) {
-                    workerUrlInput.value = WORKER_URL;
-                    if (WORKER_TOKEN) {
-                        workerTokenInput.value = WORKER_TOKEN;
-                    }
+                    elements.workerUrlInput.value = WORKER_URL;
+                    if (WORKER_TOKEN) elements.workerTokenInput.value = WORKER_TOKEN;
                 }
                 checkWorkerUrl();
-            }
+            };
 
-            function saveWorkerConfig(url, token) {
+            const saveWorkerConfig = (url, token) => {
                 localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
-            }
+            };
 
-            async function checkAuthStatus() {
+            const checkAuthStatus = async () => {
                 const nomsData = getLocalStorageWithExpiry("nomsData");
-
                 if (!nomsData) {
-                    authBanner.classList.remove('hidden');
-                    submitButton.disabled = true;
+                    elements.authBanner.classList.remove('hidden');
+                    elements.submitButton.disabled = true;
                     return;
                 }
-
                 notionToken = nomsData.accessToken;
-                updateUI(userInfoContainer);
-                submitButton.disabled = false;
-                authBanner.classList.add('hidden');
+                updateUI(elements.userInfoContainer);
+                elements.submitButton.disabled = false;
+                elements.authBanner.classList.add('hidden');
                 loadWorkerConfig();
                 checkWorkerUrl();
-            }
+            };
 
-            function isWorkerConfigComplete() {
-                const url = workerUrlInput.value.trim();
-                const token = workerTokenInput.value.trim();
-                return url && token;
-            }
+            const isWorkerConfigComplete = () => elements.workerUrlInput.value.trim() && elements.workerTokenInput.value.trim();
 
-            function checkWorkerUrl() {
-                const url = workerUrlInput.value.trim();
-                const token = workerTokenInput.value.trim();
-                submitButton.disabled = !url || !token;
-                if (url && token) {
-                    saveWorkerConfig(url, token);
+            const checkWorkerUrl = () => {
+                elements.submitButton.disabled = !isWorkerConfigComplete();
+                if (isWorkerConfigComplete()) {
+                    saveWorkerConfig(elements.workerUrlInput.value.trim(), elements.workerTokenInput.value.trim());
                 }
-            }
+            };
 
-            form.addEventListener('input', (e) => {
-                if (e.target.tagName === 'INPUT') {
-                    clearError(e.target);
+            const addLog = (message) => {
+                const timestamp = new Date().toLocaleTimeString();
+                elements.logOutput.value += `[${timestamp}] ${message}\n`;
+                elements.logOutput.scrollTop = elements.logOutput.scrollHeight;
+            };
+
+            const showError = (inputElement, message) => {
+                const errorElement = document.getElementById(`${inputElement.name}-error`);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.classList.remove('hidden');
+                    inputElement.classList.add('border-red-500');
                 }
-            });
+            };
 
-            workerUrlInput.addEventListener('input', () => {
-                clearError(workerUrlInput);
-                checkWorkerUrl();
-            });
-
-            workerTokenInput.addEventListener('input', () => {
-                clearError(workerTokenInput);
-                checkWorkerUrl();
-            });
-
-            async function makeNotionRequest(endpoint, options = {}) {
-                if (!isWorkerConfigComplete()) {
-                    throw new Error('Worker URL and Token are required');
+            const clearError = (inputElement) => {
+                const errorElement = document.getElementById(`${inputElement.name}-error`);
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.classList.add('hidden');
+                    inputElement.classList.remove('border-red-500');
                 }
+            };
 
-                const workerUrl = workerUrlInput.value.trim();
-                const workerToken = workerTokenInput.value.trim();
+            const resetForm = () => {
+                isProcessing = false;
+                elements.outputSection.classList.add('hidden');
+                elements.form.classList.remove('hidden');
+                elements.resetButton.classList.add('hidden');
+                elements.diagramOutput.value = '';
+                elements.logOutput.value = '';
+                elements.pasteMessage.innerHTML = '';
+                elements.pasteMessage.classList.remove('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
+                elements.copyButton.disabled = true;
+            };
 
-                const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+            const populateDropdowns = (databases) => {
+                elements.databaseSelect.innerHTML = '<option value="">-</option>';
+                databases.forEach(db => {
+                    const title = db.title?.[0]?.plain_text ?? 'Untitled';
+                    const option = document.createElement('option');
+                    option.value = db.id;
+                    option.textContent = title;
+                    elements.databaseSelect.appendChild(option);
+                });
+            };
+
+            // API Interaction Functions
+            const makeNotionRequest = async (endpoint, options = {}) => {
+                if (!isWorkerConfigComplete()) throw new Error('Worker URL and Token are required');
+                const url = `${elements.workerUrlInput.value.trim()}${endpoint}?token=${encodeURIComponent(elements.workerTokenInput.value.trim())}`;
                 try {
                     const response = await fetch(url, {
                         ...options,
@@ -357,378 +373,310 @@
                             ...options.headers,
                         },
                     });
-
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => null);
                         const errorMessage = errorData?.message || `API request failed: ${response.status}`;
                         throw new Error(errorMessage);
                     }
-
                     return await response.json();
                 } catch (error) {
                     throw error;
                 }
-            }
+            };
 
-            async function getDatabaseInfo(databaseId) {
+            const getDatabaseInfo = async (databaseId) => {
                 addLog(`Fetching database info for ID: ${databaseId}`);
                 return makeNotionRequest(`/databases/${databaseId}`);
-            }
+            };
 
-            function sanitizeTableName(name) {
-                // Replace spaces and special characters with underscores
-                const sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_');
-                // Ensure it starts with a letter or underscore
-                return /^[a-zA-Z_]/.test(sanitized) ? sanitized : `_${sanitized}`;
-            }
+            const fetchDatabases = async () => {
+                if (!isWorkerConfigComplete()) throw new Error('Worker URL and Token are required');
+                addLog('Fetching databases...');
+                const response = await makeNotionRequest('/search', {
+                    method: 'POST',
+                    body: JSON.stringify({ filter: { value: "database", property: "object" } })
+                });
+                localStorage.setItem('nomsDatabases', JSON.stringify(response.results));
+                addLog(`Fetched ${response.results.length} databases.`);
+                return response.results;
+            };
 
-            // List reserved keywords in lower-case.
-            const reservedKeywords = new Set(['note', 'table', 'ref', 'enum', 'index', 'indices']); // Add other DBML reserved keywords as needed.
-
-            function sanitizeColumnName(name) {
-                // Replace any non-alphanumeric characters (excluding underscores) with underscores.
-                let sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_');
-
-                // Ensure the column name starts with a letter or underscore.
-                sanitized = /^[a-zA-Z_]/.test(sanitized) ? sanitized : `_${sanitized}`;
-
-                // If the lower-case version of the sanitized name is a reserved keyword, prefix it.
-                if (reservedKeywords.has(sanitized.toLowerCase())) {
-                    sanitized = `safe_${sanitized}`;
-                }
-
-                return sanitized;
-            }
+            // Sanitization Functions
+            const sanitizeTableName = (name) => (name.replace(/[^a-zA-Z0-9_]+/g, '_')).replace(/^[^a-zA-Z_]/, '_$&');
+            const reservedKeywords = new Set(['note', 'table', 'ref', 'enum', 'index', 'indices']);
+            const sanitizeColumnName = (name) => {
+                let sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_').replace(/^[^a-zA-Z_]/, '_$&');
+                return reservedKeywords.has(sanitized.toLowerCase()) ? `safe_${sanitized}` : sanitized;
+            };
 
 
-            function generateDBML(databaseInfo, allDatabases) {
-                let dbml = "";
+            // Core Logic: Database and Property Relationship Extraction
+            const extractDatabaseRelationships = async (startingDatabaseId) => {
+                const visited = new Set();
+                const allDatabases = [];
+                const allRelations = [];
 
-                function generateTable(dbInfo) {
-                    let tableName = sanitizeTableName(dbInfo.title[0]?.plain_text || 'Untitled');
-                    let tableDBML = `Table ${tableName} {\n`;
-                    tableDBML += `  id text [primary key]\n`; // Assume all databases have an 'id'
+                const processDatabase = async (databaseId, parentDatabaseId = null, relationPropName = null) => {
+                    if (visited.has(databaseId)) {
+                        addLog(`Cycle detected, skipping database ID: ${databaseId}`);
+                        return;
+                    }
+                    visited.add(databaseId);
 
-                    for (const propName in dbInfo.properties) {
-                        const prop = dbInfo.properties[propName];
-                        let dbmlType = prop.type;
-                        //Sanitize property names
-                        let sanitizedPropName = sanitizeColumnName(propName);
-                        tableDBML += `  ${sanitizedPropName} ${dbmlType}\n`;
+                    const currentDb = await getDatabaseInfo(databaseId);
+                    allDatabases.push(currentDb);
+                    const currentDbName = sanitizeTableName(currentDb.title[0]?.plain_text || 'Untitled');
 
-                        // Rollup auto-correlation
-                        if (prop.type === "rollup") {
-                            const relationPropName = prop.rollup.relation_property_name;
-                            if (relationPropName) {
-                                const sanitizedRelationPropName = sanitizeColumnName(relationPropName);
-                                dbml += `  Ref: ${tableName}.${sanitizedPropName} > ${tableName}.${sanitizedRelationPropName}\n`;
+                    // If this database is related to another, add the database-level relation
+                    if (parentDatabaseId && relationPropName) {
+                        const parentDb = allDatabases.find(db => db.id === parentDatabaseId);
+
+                        if (parentDb) { //added this condition since it might not be there yet
+                            const parentDbName = sanitizeTableName(parentDb.title[0]?.plain_text || 'Untitled');
+                            const sanitizedRelationPropName = sanitizeColumnName(relationPropName);
+                            let refType = "<"; // Default to one-to-many
+                            if (currentDb.properties[relationPropName].relation.type === "single_property") {
+                                refType = '>'; // many-to-one
+                            } else if (currentDb.properties[relationPropName].relation.type === "dual_property") {
+                                refType = '-'; // one-to-one
                             }
+                            allRelations.push({
+                                type: 'db_relation',
+                                from: parentDbName,
+                                to: currentDbName,
+                                fromCol: sanitizedRelationPropName,
+                                toCol: 'id',
+                                refType: refType //for dbml
+                            });
                         }
                     }
-                    tableDBML += "}\n\n";
-                    addLog(`Generated table DBML for: ${tableName}`);
-                    return tableDBML;
-                }
 
-                allDatabases.forEach(db => {
-                    dbml += generateTable(db);
-                });
 
-                for (const dbInfo of allDatabases) {
-                    const tableName = sanitizeTableName(dbInfo.title[0]?.plain_text || 'Untitled');
-                    for (const propName in dbInfo.properties) {
-                        const prop = dbInfo.properties[propName];
+                    for (const propName in currentDb.properties) {
+                        const prop = currentDb.properties[propName];
                         const sanitizedPropName = sanitizeColumnName(propName);
+
                         if (prop.type === "relation") {
                             const relatedDbId = prop.relation.database_id;
+                            addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
+                            // Recursive call, indicating the parent and the property name
+                            await processDatabase(relatedDbId, databaseId, propName);
 
-                            const relatedDb = allDatabases.find(db => db.id === relatedDbId);
-                            if (relatedDb) {
-                                const relatedTableName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
-                                let refType = "<"; // Default to one-to-many
-                                if (prop.relation.type === "single_property") {
-                                    refType = '>'; // many-to-one
-                                } else if (prop.relation.type === "dual_property") {
-                                    refType = '-'; // one-to-one
+                        } else if (prop.type === "rollup") {
+                            addLog(`Checking rollup property: ${propName}`);
+                            const relationPropName = prop.rollup.relation_property_name;
+                            const rolledUpPropName = prop.rollup.rollup_property_name;
+
+                            if (currentDb.properties[relationPropName]?.type === "relation") {
+                                const relatedDbId = currentDb.properties[relationPropName].relation.database_id;
+                                const relatedDb = await getDatabaseInfo(relatedDbId); // Fetch related DB for rollup property
+                                allDatabases.push(relatedDb);
+                                const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
+
+                                // Sanitize rolled-up property name
+                                const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
+
+                                allRelations.push({
+                                    type: 'rollup_relation',
+                                    from: currentDbName,
+                                    to: relatedDbName,
+                                    fromCol: sanitizedPropName,
+                                    toCol: sanitizedRolledUpPropName,
+                                    relationProp: sanitizeColumnName(relationPropName) // For self-referencing if needed
+                                });
+                            }
+
+                        } else if (prop.type === "formula") {
+                            addLog(`Checking formula property: ${propName}`);
+                            const formulaExpression = prop.formula.expression;
+                            const propRegex = /prop\("([^"]+)"\)/g;
+                            let match;
+
+                            while ((match = propRegex.exec(formulaExpression)) !== null) {
+                                const referencedPropName = match[1];
+                                addLog(`Found referenced property in formula: ${referencedPropName}`);
+                                const referencedProp = currentDb.properties[referencedPropName];
+                                const sanitizedReferencedPropName = sanitizeColumnName(referencedPropName);
+
+                                if (referencedProp) {
+                                    if (referencedProp.type === "relation") {
+                                        const relatedDbId = referencedProp.relation.database_id;
+                                        addLog(`Found formula relation via prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
+                                        // Recursive call, indicating the parent and the property name
+                                        await processDatabase(relatedDbId, databaseId, referencedPropName);
+                                        const relatedDb = await getDatabaseInfo(relatedDbId); // Fetch related DB for formula property
+                                        const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
+                                        allRelations.push({ //formula referencing relation
+                                            type: 'formula_relation',
+                                            from: currentDbName,
+                                            to: relatedDbName, // Corrected: Use related database name
+                                            fromCol: sanitizedPropName, // Formula property name
+                                            toCol: sanitizedReferencedPropName,   // Referenced property (relation) name
+                                        });
+
+
+                                    } else if (referencedProp.type === "rollup") {
+                                        if (currentDb.properties[referencedProp.rollup.relation_property_name]?.type === "relation") {
+                                            const relatedDbId = currentDb.properties[referencedProp.rollup.relation_property_name].relation.database_id;
+                                            const relatedDb = await getDatabaseInfo(relatedDbId); // Fetch related DB for formula property
+                                            const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
+                                            addLog(`Found formula relation via rollup of prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
+                                            await processDatabase(relatedDbId, databaseId, referencedPropName);
+                                            allRelations.push({ //formula referencing rollup
+                                                type: 'formula_rollup',
+                                                from: currentDbName,
+                                                to: relatedDbName, // Corrected: Use related database name
+                                                fromCol: sanitizedPropName, // Formula property name
+                                                toCol: sanitizeColumnName(referencedProp.rollup.rollup_property_name),   // Referenced property (relation) name
+                                            });
+                                        }
+                                    }
+                                    else {
+                                        // Handle other property types if needed (e.g., connecting to other columns)
+                                        allRelations.push({ //formula referencing generic prop
+                                            type: 'formula_prop',
+                                            from: currentDbName,
+                                            to: currentDbName, // Self-reference for properties within the same database
+                                            fromCol: sanitizedPropName,  // The formula column
+                                            toCol: sanitizedReferencedPropName,  // The referenced column
+                                        });
+                                    }
                                 }
-                                dbml += `Ref: ${tableName}.${sanitizedPropName} ${refType} ${relatedTableName}.id\n`;
-                                addLog(`Generated Ref: ${tableName}.${sanitizedPropName} ${refType} ${relatedTableName}.id`);
-
                             }
                         }
                     }
-                }
+                };
 
+                await processDatabase(startingDatabaseId);
+                return { allDatabases, allRelations };
+            };
+
+
+            // DBML Generation
+            const generateDBML = (allDatabases, allRelations) => {
+                let dbml = "";
+
+                allDatabases.forEach(dbInfo => {
+                    const tableName = sanitizeTableName(dbInfo.title[0]?.plain_text || 'Untitled');
+                    dbml += `Table ${tableName} {\n`;
+                    dbml += `  id text [primary key]\n`; // Assume all databases have an 'id'
+                    for (const propName in dbInfo.properties) {
+                        const prop = dbInfo.properties[propName];
+                        dbml += `  ${sanitizeColumnName(propName)} ${prop.type}\n`;
+                    }
+                    dbml += "}\n\n";
+                });
+
+                allRelations.forEach(relation => {
+                    if (relation.type === 'db_relation') {
+                        dbml += `Ref: ${relation.from}.${relation.fromCol} ${relation.refType} ${relation.to}.id\n`;
+                    } else if (relation.type === 'rollup_relation') {
+                        dbml += `Ref: ${relation.from}.${relation.fromCol} > ${relation.to}.${relation.toCol}\n`;
+                    }
+                    else if (relation.type === 'formula_relation' || relation.type === 'formula_rollup' || relation.type === 'formula_prop') {
+                        dbml += `Ref: ${relation.from}.${relation.fromCol} > ${relation.to}.${relation.toCol}\n`;
+                    }
+                });
                 return dbml;
-            }
+            };
 
-            // New function to generate a Mermaid ER diagram
-            function generateMermaidER(allDatabases) {
+            // Mermaid ER Generation
+            const generateMermaidER = (allDatabases, allRelations) => {
                 let mermaid = "erDiagram\n";
-                // Generate entity blocks with attributes (excluding relation properties)
+
                 allDatabases.forEach(db => {
                     const tableName = sanitizeTableName(db.title[0]?.plain_text || 'Untitled');
                     mermaid += `    ${tableName} {\n`;
                     mermaid += `        text id\n`;
                     for (const propName in db.properties) {
-                        const prop = db.properties[propName];
-
-                        // Skip relation properties in attributes list, but handle rollups
-                        if (prop.type === "relation") continue;
-
-                        const sanitizedPropName = sanitizeColumnName(propName);
-                        mermaid += `        ${prop.type} ${sanitizedPropName}\n`;
-
-                        // Rollup auto-correlation
-                        if (prop.type === "rollup") {
-                            const relationPropName = prop.rollup.relation_property_name;
-                            if (relationPropName) {
-                                const relatedDb = allDatabases.find(related => related.id === db.id); //stays in the table
-                                if (relatedDb) {
-                                    const sanitizedRelationPropName = sanitizeColumnName(relationPropName);
-                                    mermaid += `    ${tableName} ||--|| ${tableName} : "${sanitizedPropName} rolls up ${sanitizedRelationPropName}"\n`;
-                                }
-                            }
-                        }
+                        if (db.properties[propName].type === "relation") continue;
+                        mermaid += `        ${db.properties[propName].type} ${sanitizeColumnName(propName)}\n`;
                     }
                     mermaid += "    }\n\n";
                 });
-                // Generate relationships for relation properties
-                allDatabases.forEach(db => {
-                    const tableName = sanitizeTableName(db.title[0]?.plain_text || 'Untitled');
-                    for (const propName in db.properties) {
-                        const prop = db.properties[propName];
-                        if (prop.type === "relation") {
-                            const relatedDbId = prop.relation.database_id;
-                            const relatedDb = allDatabases.find(d => d.id === relatedDbId);
-                            if (relatedDb) {
-                                const relatedTableName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
-                                // Mapping cardinality based on relation type
-                                let connector = "||--o{"; // default: one-to-many
-                                if (prop.relation.type === "single_property")
-                                    connector = "||--o{";
-                                else if (prop.relation.type === "dual_property")
-                                    connector = "||--||";
-                                mermaid += `    ${tableName} ${connector} ${relatedTableName} : ${sanitizeColumnName(propName)}\n`;
-                            }
-                        }
+
+                allRelations.forEach(relation => {
+                    if (relation.type === 'db_relation') {
+                        let connector = "||--o{"; // default: one-to-many
+                        if (relation.refType === "-")
+                            connector = "||--||";
+                        mermaid += `    ${relation.from} ${connector} ${relation.to} : ${relation.fromCol}\n`;
+                    }
+                    else if (relation.type === 'rollup_relation') {
+                        mermaid += `    ${relation.from} ||--|| ${relation.to} : "${relation.fromCol} rolls up ${relation.toCol}"\n`;
+
+                    } else if (relation.type === 'formula_relation' || relation.type === 'formula_rollup' || relation.type === 'formula_prop') {
+                        mermaid += `    ${relation.from} ||--|| ${relation.to} : "${relation.fromCol} uses ${relation.toCol}"\n`;
                     }
                 });
+
                 return mermaid;
-            }
+            };
 
 
-            async function getAllRelatedDatabases(startingDatabaseId, visited = new Set(), allDatabases = []) {
-                if (visited.has(startingDatabaseId)) {
-                    addLog(`Cycle detected, skipping database ID: ${startingDatabaseId}`);
-                    return [];
-                }
-                visited.add(startingDatabaseId);
+            // Event Listeners and Form Submission
+            elements.form.addEventListener('input', (e) => { if (e.target.tagName === 'INPUT') clearError(e.target); });
+            elements.workerUrlInput.addEventListener('input', () => { clearError(elements.workerUrlInput); checkWorkerUrl(); });
+            elements.workerTokenInput.addEventListener('input', () => { clearError(elements.workerTokenInput); checkWorkerUrl(); });
+            elements.resetButton.addEventListener('click', resetForm);
+            elements.databaseSearch.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                const filtered = databases.filter(db => db.title?.[0]?.plain_text.toLowerCase().includes(searchTerm));
+                populateDropdowns(filtered);
+            });
 
-                addLog(`Fetching related databases for: ${startingDatabaseId}`);
-                const currentDb = await getDatabaseInfo(startingDatabaseId);
-                allDatabases.push(currentDb); // Keep track of all databases fetched.
-
-                for (const propName in currentDb.properties) {
-                    const prop = currentDb.properties[propName];
-
-                    if (prop.type === "relation") {
-                        const relatedDbId = prop.relation.database_id;
-                        addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
-                        await getAllRelatedDatabases(relatedDbId, visited, allDatabases);  // Pass allDatabases
-                    } else if (prop.type === "rollup") {
-                        addLog(`Checking rollup property: ${propName}`);
-                        if (currentDb.properties[prop.rollup.relation_property_name]?.type === "relation") {
-                            const relatedDbId = currentDb.properties[prop.rollup.relation_property_name].relation.database_id;
-                            addLog(`Found rollup relation: ${propName} -> Database ID: ${relatedDbId}`);
-                            await getAllRelatedDatabases(relatedDbId, visited, allDatabases);
-                        }
-                    } else if (prop.type === "formula") {
-                        addLog(`Checking formula property: ${propName}`);
-                        const formulaExpression = prop.formula.expression;
-
-                        // Extract property names from the formula using a more robust regex
-                        const propRegex = /prop\("([^"]+)"\)/g;
-                        let match;
-                        while ((match = propRegex.exec(formulaExpression)) !== null) {
-                            const referencedPropName = match[1];
-                            addLog(`Found referenced property in formula: ${referencedPropName}`);
-                            const referencedProp = currentDb.properties[referencedPropName];
-
-                            if (referencedProp?.type === "relation") {
-                                const relatedDbId = referencedProp.relation.database_id;
-                                addLog(`Found formula relation via prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
-                                await getAllRelatedDatabases(relatedDbId, visited, allDatabases);
-                            } else if (referencedProp?.type === "rollup") {
-                                //handle rollups referenced in formulas, the same way we handle rollups
-                                if (currentDb.properties[referencedProp.rollup.relation_property_name]?.type === "relation") {
-                                    const relatedDbId = currentDb.properties[referencedProp.rollup.relation_property_name].relation.database_id;
-                                    addLog(`Found formula relation via rollup of prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
-                                    await getAllRelatedDatabases(relatedDbId, visited, allDatabases);
-                                }
-                            }
-                        }
-                    }
-                }
-                return allDatabases; // Return the complete list
-            }
-
-
-
-            form.addEventListener('submit', async (e) => {
+            elements.form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (isProcessing) return;
 
-                const databaseId = databaseSelect.value;
-                let isValid = Boolean(databaseId && isWorkerConfigComplete());
-
-                if (!databaseId) showError(databaseSelect, 'Database is required');
+                const databaseId = elements.databaseSelect.value;
+                if (!databaseId) { showError(elements.databaseSelect, 'Database is required'); return; }
                 if (!isWorkerConfigComplete()) {
-                    showError(workerUrlInput, "Worker URL is required");
-                    showError(workerTokenInput, "Worker Token is required");
+                    showError(elements.workerUrlInput, "Worker URL is required");
+                    showError(elements.workerTokenInput, "Worker Token is required");
+                    return;
                 }
-                if (!isValid) return;
 
                 isProcessing = true;
-                submitButton.disabled = true;
-                submitButtonText.classList.add('opacity-0');
-                loadingSpinner.classList.remove('hidden');
-                form.classList.add('hidden');
-                outputSection.classList.remove('hidden');
-                diagramOutput.value = '';
+                elements.submitButton.disabled = true;
+                elements.submitButtonText.classList.add('opacity-0');
+                elements.loadingSpinner.classList.remove('hidden');
+                elements.form.classList.add('hidden');
+                elements.outputSection.classList.remove('hidden');
+                elements.diagramOutput.value = '';
 
                 try {
-
-                    const allRelatedDatabases = await getAllRelatedDatabases(databaseId);
-
-                    // Check selected diagram type
+                    const { allDatabases, allRelations } = await extractDatabaseRelationships(databaseId);
                     const diagramType = document.querySelector('input[name="diagramType"]:checked').value;
-                    let outputCode = "";
-                    if (diagramType === "mermaid") {
-                        outputCode = generateMermaidER(allRelatedDatabases);
-                    } else {
-                        outputCode = generateDBML(allRelatedDatabases[0], allRelatedDatabases);
-                    }
-                    diagramOutput.value = outputCode;
+                    const generateDiagram = diagramType === "mermaid" ? generateMermaidER : generateDBML;
+                    elements.diagramOutput.value = generateDiagram(allDatabases, allRelations);
 
-                    addLog(diagramType === "mermaid" ? "Mermaid ER Diagram Generated!" : "DBML Generated!");
-                    // Update pasteMessage and copy button only if outputCode is not empty
-                    const pasteMessage = document.getElementById('pasteMessage');
-                    if (outputCode.trim()) {
-                        if (diagramType === "mermaid") {
-                            pasteMessage.innerHTML = 'Paste your Mermaid diagram at <a href="https://mermaid.live/" target="_blank">mermaid.live</a> or a notion mermaid code block.';
-                        } else {
-                            pasteMessage.innerHTML = 'Paste your DBML diagram at <a href="https://dbdiagram.io/home" target="_blank">dbdiagram.io/home</a> or <a href="https://databasediagram.com/app" target="_blank">databasediagram.com/app</a> (select DBML).';
-                        }
-                        // Add border and padding classes when there is content
-                        pasteMessage.classList.add('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
-                        copyButton.disabled = false;
-                    } else {
-                        pasteMessage.innerHTML = '';
-                        pasteMessage.classList.remove('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
-                        copyButton.disabled = true;
-                    }
+                    addLog(`${diagramType === "mermaid" ? "Mermaid ER Diagram" : "DBML"} Generated!`);
+                    elements.pasteMessage.innerHTML = diagramType === "mermaid"
+                        ? 'Paste your Mermaid diagram at <a href="https://mermaid.live/" target="_blank">mermaid.live</a> or a notion mermaid code block.'
+                        : 'Paste your DBML diagram at <a href="https://dbdiagram.io/home" target="_blank">dbdiagram.io/home</a> or <a href="https://databasediagram.com/app" target="_blank">databasediagram.com/app</a> (select DBML).';
+                    elements.pasteMessage.classList.add('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
+                    elements.copyButton.disabled = false;
 
                 } catch (error) {
-                    diagramOutput.value = `Error: ${error.message}`;
+                    elements.diagramOutput.value = `Error: ${error.message}`;
                     addLog(`Error generating diagram: ${error.message}`);
                 } finally {
                     isProcessing = false;
-                    submitButton.disabled = false;
-                    submitButtonText.classList.remove("opacity-0");
-                    loadingSpinner.classList.add("hidden");
-                    resetButton.classList.remove('hidden');
+                    elements.submitButton.disabled = false;
+                    elements.submitButtonText.classList.remove("opacity-0");
+                    elements.loadingSpinner.classList.add("hidden");
+                    elements.resetButton.classList.remove('hidden');
                 }
             });
 
-            function addLog(message) {
-                const timestamp = new Date().toLocaleTimeString();
-                logOutput.value += `[${timestamp}] ${message}\n`;
-                logOutput.scrollTop = logOutput.scrollHeight; // Auto-scroll to the bottom
-            }
-
-            function showError(inputElement, message) {
-                const errorElement = document.getElementById(`${inputElement.name}-error`);
-                if (errorElement) {
-                    errorElement.textContent = message;
-                    errorElement.classList.remove('hidden');
-                    inputElement.classList.add('border-red-500');
-                }
-            }
-
-            function clearError(inputElement) {
-                const errorElement = document.getElementById(`${inputElement.name}-error`);
-                if (errorElement) {
-                    errorElement.textContent = '';
-                    errorElement.classList.add('hidden');
-                    inputElement.classList.remove('border-red-500');
-                }
-            }
-
-            resetButton.addEventListener('click', () => {
-                resetForm();
-            });
-
-            function resetForm() {
-                isProcessing = false;
-                outputSection.classList.add('hidden');
-                form.classList.remove('hidden');
-                resetButton.classList.add('hidden');
-                diagramOutput.value = '';
-                logOutput.value = ''; //clear logs
-                document.getElementById('pasteMessage').innerHTML = '';
-                document.getElementById('pasteMessage').classList.remove('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
-                copyButton.disabled = true;
-            }
-
-            function populateDropdowns(databases) {
-                databaseSelect.innerHTML = '<option value="">-</option>';
-
-                databases.forEach(db => {
-                    // Use optional chaining and nullish coalescing operator
-                    const title = db.title?.[0]?.plain_text ?? 'Untitled';
-                    const option = document.createElement('option');
-                    option.value = db.id;
-                    option.textContent = title;
-                    databaseSelect.appendChild(option);
-                });
-            }
-
-            async function fetchDatabases() {
-                if (!isWorkerConfigComplete()) {
-                    throw new Error('Worker URL and Token are required');
-                }
-                addLog('Fetching databases...');
-                const workerUrl = workerUrlInput.value.trim();
-                const workerToken = workerTokenInput.value.trim();
-
-                const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${notionToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        filter: {
-                            value: "database",
-                            property: "object"
-                        }
-                    })
-                });
-
-                if (!response.ok) throw new Error('Failed to fetch databases');
-                const data = await response.json();
-                localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
-                addLog(`Fetched ${data.results.length} databases.`);
-                return data.results;
-            }
-
-            document.getElementById('copy-button').addEventListener('click', () => {
-                diagramOutput.select();
+            elements.copyButton.addEventListener('click', () => {
+                elements.diagramOutput.select();
                 document.execCommand('copy');
-                copyButton.textContent = "Copied!";
+                elements.copyButton.textContent = "Copied!";
                 setTimeout(() => {
-                    copyButton.innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    elements.copyButton.innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -737,10 +685,10 @@
                 }, 2000);
             });
 
-            document.getElementById('refreshDatabases').addEventListener('click', async () => {
+            elements.refreshDatabases.addEventListener('click', async () => {
                 if (!isWorkerConfigComplete()) {
-                    showError(workerUrlInput, 'Worker URL and Token are required');
-                    showError(workerTokenInput, 'Worker URL and Token are required');
+                    showError(elements.workerUrlInput, 'Worker URL and Token are required');
+                    showError(elements.workerTokenInput, 'Worker URL and Token are required');
                     return;
                 }
                 try {
@@ -752,23 +700,12 @@
                 }
             });
 
-            // Populate databases from cache, don't fetch initially
+
+            // Initialization
             const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
-            if (databases.length) {
-                populateDropdowns(databases);
-            }
-
-            databaseSearch.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
-                const filtered = databases.filter(db =>
-                    db.title?.[0]?.plain_text.toLowerCase().includes(searchTerm)
-                );
-                populateDropdowns(filtered);
-            });
-
+            if (databases.length) populateDropdowns(databases);
             await checkAuthStatus();
-            updateUI(userInfoContainer);
+            updateUI(elements.userInfoContainer);
         });
     </script>
     <script src="./js/loadKofi.js"></script>
