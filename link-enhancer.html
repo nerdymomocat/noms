@@ -696,6 +696,7 @@
     document.addEventListener('DOMContentLoaded', async () => { // Now async
       await initializeAuth(); // Call and AWAIT initializeAuth
       checkAuthStatus();
+      updateUI(userInfoContainer); 
     });
   </script>
 </body>
