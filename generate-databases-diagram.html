@@ -207,7 +207,6 @@
     </div>
 
     <script type="module">
-
         import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
         import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js';
         import { createHeader } from './js/header.js';
@@ -421,6 +420,7 @@
                         tableDBML += `  ${sanitizedPropName} ${dbmlType}\n`;
                     }
                     tableDBML += "}\n\n";
+                    addLog(`Generated table DBML for: ${tableName}`);
                     return tableDBML;
                 }
 
@@ -438,13 +438,17 @@
                             const relatedDb = allDatabases.find(db => db.id === relatedDbId);
                             if (relatedDb) {
                                 const relatedTableName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
-                                let refType = "-";
+                                let refType = "<"; // Default to one-to-many
                                 if (prop.relation.type === "single_property") {
-                                    refType = '>';
+                                    refType = '>'; // many-to-one
+                                } else if (prop.relation.type === "dual_property") {
+                                    refType = '-'; // one-to-one
                                 }
+
                                 const sanitizedPropName = sanitizeTableName(propName);
 
                                 dbml += `Ref: ${tableName}.${sanitizedPropName} ${refType} ${relatedTableName}.id\n`;
+                                addLog(`Generated Ref: ${tableName}.${sanitizedPropName} ${refType} ${relatedTableName}.id`);
 
                             }
                         }
@@ -666,6 +670,12 @@
                 }
             });
 
+            // Populate databases from cache, don't fetch initially
+            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+            if (databases.length) {
+                populateDropdowns(databases);
+            }
+
             databaseSearch.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
                 const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
@@ -674,6 +684,7 @@
                 );
                 populateDropdowns(filtered);
             });
+
 
             // Add the logOutput textarea just after the dbmlOutput textarea
             dbmlOutput.after(logOutput);
