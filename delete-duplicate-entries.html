@@ -695,10 +695,12 @@
 
             try {
                 addLog('Starting duplicate removal process...');
-                const [timestampType, direction] = retainCriteria.split('_');
+                // Map raw value to proper timestamp value.
+                const [rawTimestamp, direction] = retainCriteria.split('_');
+                const timestampType = rawTimestamp === 'created' ? 'created_time' : rawTimestamp === 'last_edited' ? 'last_edited_time' : 'created_time';
 
                 // 1. Get initial set of pages (with optional date filter)
-                let initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null, timestampType));
+                let initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null));
 
                 addLog(`Found ${initialPages.length} initial pages.`);
 
@@ -719,23 +721,15 @@
 
 
                     // 5. Apply the outcome
-                    if (potentialDuplicates.length > 0) {
-                        const allDuplicates = [page, ...potentialDuplicates];
+                    if (potentialDuplicates.length > 1) { // Check for > 1
+                        const pagesToProcess = potentialDuplicates.slice(1); // remove the first element
 
-                        //Sort to retain one and apply outcome to the rest
-                        allDuplicates.sort((a, b) => {
-                            const aTime = new Date(a[timestampType]).getTime();
-                            const bTime = new Date(b[timestampType]).getTime();
-                            return direction === 'ascending' ? aTime - bTime : bTime - aTime;
-                        });
-
-                        const pagesToProcess = allDuplicates.slice(1); // Exclude the "original"
                         for (const duplicatePage of pagesToProcess) {
                             await withExponentialBackoff(() => applyOutcome(duplicatePage.id, outcome, conditionalProperty));
                             addLog(`Applied outcome to page ${duplicatePage.id}.`);
                         }
-
                     }
+
                     //Mark the page as processed.
                     processedPageIds.add(page.id);
 
@@ -744,7 +738,7 @@
                     progressBar.style.width = `${progressPercentage}%`;
 
                     // Fetch pages again (or filter) to avoid reprocessing.  Simpler to re-fetch.
-                    initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null, timestampType));
+                    initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null));
                 }
 
 
@@ -767,7 +761,7 @@
 
         // --- Helper Functions for Duplicate Removal ---
 
-        async function fetchPages(databaseId, lastCheckedDate = null, timestampType) {
+        async function fetchPages(databaseId, lastCheckedDate = null) {
             const filters = [];
             if (lastCheckedDate) {
                 const filterDate = new Date(lastCheckedDate);
@@ -775,9 +769,9 @@
                 const formattedDate = filterDate.toISOString();
 
                 filters.push({
-                    timestamp: timestampType,
-                    [timestampType]: {
-                        on_or_after: formattedDate,
+                    timestamp: "last_edited_time", // Always last_edited_time for the date filter
+                    last_edited_time: {        // No computed property name needed
+                        on_or_after: formattedDate
                     }
                 });
             }
@@ -974,12 +968,6 @@
                 filter: {
                     and: [
                         ...comparisonFilters,
-                        {
-                            property: 'id', // Notion's internal ID property
-                            text: {
-                                does_not_equal: originalPageId, // Exclude the original page itself
-                            },
-                        },
                     ],
                 },
                 sorts: [ // Add sorting
