@@ -304,10 +304,10 @@
                             <select id="retainCriteriaSelect"
                                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
                                 <option value="" class="text-gray-400">-</option>
-                                <option value="created_time|ascending">Earliest Created</option>
-                                <option value="created_time|descending">Latest Created</option>
-                                <option value="last_edited_time|ascending">Earliest Edited</option>
-                                <option value="last_edited_time|descending">Latest Edited</option>
+                                <option value="created_time|ascending">Created: Oldest First</option>
+                                <option value="created_time|descending">Created: Newest First</option>
+                                <option value="last_edited_time|ascending">Last Edited: Oldest First</option>
+                                <option value="last_edited_time|descending">Last Edited: Newest First</option>
                             </select>
                             <p id="retainCriteriaSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
                         </div>
@@ -344,6 +344,10 @@
                             <input type="date" id="lastCheckedDate" name="lastCheckedDate"
                                 class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
                             <p id="lastCheckedDate-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Note: The code uses entries on or after this date (instead of just after) to avoid
+                                time-based issues.
+                            </p>
                         </div>
 
 
@@ -724,8 +728,9 @@
                         const pagesToProcess = potentialDuplicates.slice(1); // remove the first element
 
                         for (const duplicatePage of pagesToProcess) {
-                            await withExponentialBackoff(() => applyOutcome(duplicatePage.id, outcome, conditionalProperty));
+                            await withExponentialBackoff(() => applyOutcome(duplicatePage.id, outcome, conditionalProperty, potentialDuplicates[0].id));
                             addLog(`Applied outcome to page ${duplicatePage.id}.`);
+                            processedPageIds.add(duplicatePage.id);
                         }
                     }
 
@@ -763,9 +768,10 @@
         async function fetchPages(databaseId, lastCheckedDate = null) {
             const filters = [];
             if (lastCheckedDate) {
-                const filterDate = new Date(lastCheckedDate);
-                filterDate.setDate(filterDate.getDate() - 1); // Subtract one day, as requested.
-                const formattedDate = filterDate.toISOString();
+                // const filterDate = new Date(lastCheckedDate);
+                // filterDate.setDate(filterDate.getDate() - 1);
+                // const formattedDate = filterDate.toISOString();
+                const formattedDate = lastCheckedDate.toISOString();
 
                 filters.push({
                     timestamp: "last_edited_time", // Always last_edited_time for the date filter
@@ -996,7 +1002,7 @@
         }
 
 
-        async function applyOutcome(pageId, outcome, conditionalProperty) {
+        async function applyOutcome(pageId, outcome, conditionalProperty, main_pageid_for_relation) {
             switch (outcome) {
                 case 'delete':
                     await makeNotionRequest(`/pages/${pageId}`, {
@@ -1020,7 +1026,7 @@
                     const currentRelations = pageInfo.properties[conditionalProperty]?.relation || [];
 
                     // Create a new array with the new relation and existing ones
-                    const updatedRelations = [...currentRelations, { id: pageId }];
+                    const updatedRelations = [...currentRelations, { id: main_pageid_for_relations }];
 
                     await makeNotionRequest(`/pages/${pageId}`, {
                         method: 'PATCH',
