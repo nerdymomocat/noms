@@ -172,8 +172,6 @@
             flex-wrap: wrap;
             gap: 0.25rem;
             /* Consistent spacing */
-            margin-bottom: 0.25rem;
-            /* Space below selected options */
         }
 
         .multiselect-selected-option {
@@ -1016,7 +1014,11 @@
                 if (event.target.closest('.multiselect-dropdown')) {
                     oldOptionsContainer.classList.toggle('open');
                 }
-                // Close dropdown when clicking outside
+                // Prevent the following code from running when clicking inside the container
+            });
+
+            /* NEW: Close multi-select dropdown when clicking outside */
+            document.addEventListener('click', (event) => {
                 if (!oldOptionsContainer.contains(event.target)) {
                     oldOptionsContainer.classList.remove('open');
                 }
