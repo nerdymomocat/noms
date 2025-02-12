@@ -25,6 +25,7 @@
         };
     </script>
     <style>
+        /* ... (Same CSS as merge-options.html, including multiselect styles) ... */
         .hidden {
             display: none;
         }
@@ -561,183 +562,6 @@
             }
         }
 
-        import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
-        import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
-        import { createHeader } from './js/header.js';
-
-        // --- DOM Element References ---
-        const form = document.getElementById('duplicate-form');
-        const submitButton = document.getElementById('submit-button');
-        const submitButtonText = document.getElementById('submit-button-text');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const progressDisplay = document.getElementById('progress-display');
-        const progressBar = document.getElementById('progress-bar');
-        const logsContainer = document.getElementById('logs-container');
-        const resetButton = document.getElementById('reset-button');
-        const authBanner = document.getElementById('auth-banner');
-        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
-        const databaseSection = document.getElementById('database-section');
-        const workerUrlInput = document.getElementById('workerUrl');
-        const workerTokenInput = document.getElementById('workerToken');
-        const databaseSelect = document.getElementById('databaseSelect');
-        const comparePropertiesContainer = document.getElementById('comparePropertiesContainer');
-        const comparePropertiesDropdown = comparePropertiesContainer.querySelector('.multiselect-dropdown');
-        const comparePropertiesList = document.getElementById('comparePropertiesList');
-        const comparePropertiesSelected = document.getElementById('comparePropertiesSelected');
-        const retainCriteriaSelect = document.getElementById('retainCriteriaSelect');
-        const outcomeSelect = document.getElementById('outcomeSelect');
-        const conditionalPropertyContainer = document.getElementById('conditionalPropertyContainer');
-        const conditionalPropertyLabel = document.getElementById('conditionalPropertyLabel');
-        const conditionalPropertySelect = document.getElementById('conditionalPropertySelect');
-        const lastCheckedDateInput = document.getElementById('lastCheckedDate');
-
-
-        // --- Form Data and State ---
-        let isProcessing = false;
-        let logs = [];
-        let notionToken = null;
-        let selectedCompareProperties = []; // Store selected property *names*
-        let allProperties = {}; // Store *all* properties (objects) for later use.
-
-        // --- Multi-select Functions (adapted from merge-options) ---
-
-        function createMultiselectOption(propertyName) {
-            const optionDiv = document.createElement('div');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = propertyName;
-            checkbox.id = `checkbox-${propertyName}`;
-            checkbox.checked = selectedCompareProperties.includes(propertyName); // Pre-check
-            const label = document.createElement('label');
-            label.htmlFor = `checkbox-${propertyName}`;
-            label.textContent = propertyName;
-            optionDiv.appendChild(checkbox);
-            optionDiv.appendChild(label);
-
-            checkbox.addEventListener('change', () => {
-                if (checkbox.checked) {
-                    addSelectedProperty(propertyName);
-                } else {
-                    removeSelectedProperty(propertyName);
-                }
-            });
-
-            return optionDiv;
-        }
-
-        function addSelectedProperty(propertyName) {
-            if (!selectedCompareProperties.includes(propertyName)) {
-                selectedCompareProperties.push(propertyName);
-                updateSelectedPropertiesDisplay();
-                updatePropertyCheckboxes();
-            }
-        }
-
-        function removeSelectedProperty(propertyName) {
-            selectedCompareProperties = selectedCompareProperties.filter(name => name !== propertyName);
-            updateSelectedPropertiesDisplay();
-            updatePropertyCheckboxes();
-        }
-
-        function updateSelectedPropertiesDisplay() {
-            comparePropertiesSelected.innerHTML = ''; // Clear
-            selectedCompareProperties.forEach(propertyName => {
-                const selectedOptionSpan = document.createElement('span');
-                selectedOptionSpan.classList.add('multiselect-selected-option');
-                selectedOptionSpan.textContent = propertyName;
-                const removeButton = document.createElement('span');
-                removeButton.classList.add('multiselect-remove-option');
-                removeButton.textContent = 'x';
-                removeButton.addEventListener('click', () => {
-                    removeSelectedProperty(propertyName);
-                });
-                selectedOptionSpan.appendChild(removeButton);
-                comparePropertiesSelected.appendChild(selectedOptionSpan);
-            });
-        }
-
-        function updatePropertyCheckboxes() {
-            comparePropertiesList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = selectedCompareProperties.includes(checkbox.value);
-            });
-        }
-
-        // --- Utility Functions ---
-        // Prefill the workerUrl input
-        if (WORKER_URL) {
-            workerUrlInput.value = WORKER_URL;
-        }
-
-        // Prefill the workerToken input
-        if (WORKER_TOKEN) {
-            workerTokenInput.value = WORKER_TOKEN;
-        }
-
-        // --- Insert the header here ---
-        const headerContainer = document.getElementById('header-container');
-        headerContainer.innerHTML = createHeader();
-        const userInfoContainer = document.getElementById('user-info');
-
-
-        // Load worker config from localStorage or constants
-        function loadWorkerConfig() {
-            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
-            if (savedConfig) {
-                const config = JSON.parse(savedConfig);
-                workerUrlInput.value = config.url;
-                workerTokenInput.value = config.token;
-            } else if (WORKER_URL) {
-                workerUrlInput.value = WORKER_URL;
-                if (WORKER_TOKEN) {
-                    workerTokenInput.value = WORKER_TOKEN;
-                }
-            }
-            checkWorkerUrl(); // Check URL state after loading config
-        }
-
-        // Save worker config to localStorage
-        function saveWorkerConfig(url, token) {
-            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
-        }
-
-        // Function to check login status, show banner if needed, and update header.
-        async function checkAuthStatus() {
-            const nomsData = getLocalStorageWithExpiry("nomsData");
-
-            if (!nomsData) {
-                // Not logged in: Show banner, disable button, don't update header here
-                authBanner.classList.remove('hidden');
-                submitButton.disabled = true;
-                return; // Stop execution.  Don't try to fetch from the worker.
-            }
-
-            // Logged in:
-            notionToken = nomsData.accessToken;
-            updateUI(userInfoContainer); // Update header (logout/disconnect)
-            submitButton.disabled = false; // Enable the button
-            authBanner.classList.add('hidden'); // Hide the banner
-            loadWorkerConfig();
-            checkWorkerUrl(); // Check initial state
-        }
-
-        // Add function to check if worker config is complete
-        function isWorkerConfigComplete() {
-            const url = workerUrlInput.value.trim();
-            const token = workerTokenInput.value.trim();
-            return url && token;
-        }
-
-        // Update checkWorkerUrl to check both fields
-        function checkWorkerUrl() {
-            const url = workerUrlInput.value.trim();
-            const token = workerTokenInput.value.trim();
-            submitButton.disabled = !url || !token;
-
-            if (url && token) {
-                saveWorkerConfig(url, token);
-            }
-        }
-
         // --- Event Handlers for input fields ---
 
         form.addEventListener('input', (e) => {
@@ -987,158 +811,44 @@
 
                 switch (prop.type) {
                     case 'rich_text':
-                        if (prop.rich_text && prop.rich_text.length > 0) {
-                            // Use plain_text for comparison, handle empty rich_text
-                            const textValue = prop.rich_text.map(item => item.plain_text).join('');
-                            if (textValue.trim() !== "") { // check for empty string or string with only spaces.
-                                filter.rich_text = { equals: textValue };
-                            }
-                            else {
-                                continue;
-                            }
-                        } else {
-                            continue; // Skip empty rich_text
-                        }
+                        if (prop.rich_text.length > 0) {
+                            filter.rich_text = { equals: prop.rich_text[0].plain_text };
+                        } else continue; //skip this prop if it is an empty rich_text
                         break;
                     case 'title':
-                        if (prop.title && prop.title.length > 0) {
-                            // Use plain_text for comparison, handle empty title
-                            const textValue = prop.title.map(item => item.plain_text).join('');
-                            if (textValue.trim() !== "") { //check for empty string
-                                filter.title = { equals: textValue };
-                            } else {
-                                continue;
-                            }
-                        } else {
-                            continue; // Skip empty title
-                        }
+                        if (prop.title.length > 0) {
+                            filter.title = { equals: prop.title[0].plain_text };
+                        } else continue; //skip this prop if it is an empty title
                         break;
                     case 'number':
-                        if (prop.number !== null && prop.number !== undefined) { //check for null and undefined
-                            filter.number = { equals: prop.number };
-                        } else {
-                            continue;//skip if number is null
-                        }
+                        filter.number = { equals: prop.number };
                         break;
                     case 'select':
-                        if (prop.select && prop.select.name) {
+                        if (prop.select) {
                             filter.select = { equals: prop.select.name };
-                        } else {
-                            continue; // Skip if select is null or has no name
-                        }
+                        } else continue; //skip this prop if it is an empty select.
                         break;
                     case 'multi_select':
                         if (prop.multi_select && prop.multi_select.length > 0) {
-                            // all should match
+                            // Handle multi_select as "contains any"
                             filter = {
-                                and: prop.multi_select.map(option => ({
+                                or: prop.multi_select.map(option => ({
                                     property: propName,
                                     multi_select: { contains: option.name }
                                 }))
                             };
-                        } else {
-                            continue; // Skip if multi_select is empty or null
-                        }
+                        } else continue; //skip this prop if it is an empty multi select.
                         break;
                     case 'date':
-                        if (prop.date && prop.date.start) {
+                        if (prop.date) {
                             filter.date = { equals: prop.date.start };
                         } else continue;
                         break;
-                    case 'checkbox':
-                        //checkbox can be only true or false.
-                        filter.checkbox = { equals: prop.checkbox };
-                        break;
-                    case 'email':
-                        if (prop.email) { // Check for null/undefined email
-                            filter.email = { equals: prop.email };
-                        } else continue;
-                        break;
-                    case 'phone_number':
-                        if (prop.phone_number) { // Check for null/undefined
-                            filter.phone_number = { equals: prop.phone_number };
-                        } else continue;
-                        break;
-                    case 'url':
-                        if (prop.url) {
-                            filter.url = { equals: prop.url };
-                        } else continue;
-                        break;
-                    case 'files':
-                        //Files are complicated and may not be a good candidate for duplicate detection. we'll skip these, but we may want to notify user that we do so.
-                        continue;
-                    case 'relation':
-                        if (prop.relation && prop.relation.length > 0) {
-                            // all relations should match
-                            filter = {
-                                and: prop.relation.map(relation => ({
-                                    property: propName,
-                                    relation: { contains: relation.id } // Assuming 'id' is the correct property
-                                }))
-                            };
-                        }
-                        else {
-                            continue;
-                        }
-                        break;
-                    case 'created_by':
-                    case 'last_edited_by':
-                        //We could potentially compare user IDs, but let's keep it simpler for now and skip.
-                        continue;
-                    case 'created_time':
-                    case 'last_edited_time':
-                        //Cannot be used in filters according to Notion API.
-                        continue;
-                    case 'formula':
-                        // Handle formula based on its result type
-                        if (prop.formula) {
-                            switch (prop.formula.type) {
-                                case 'string':
-                                    if (prop.formula.string) {
-                                        filter.formula = { string: { equals: prop.formula.string } };
-                                    } else continue;
-                                    break;
-                                case 'number':
-                                    if (prop.formula.number !== null) {
-                                        filter.formula = { number: { equals: prop.formula.number } };
-                                    } else continue;
-                                    break;
-                                case 'boolean':
-                                    filter.formula = { checkbox: { equals: prop.formula.boolean } };
-                                    break;
-                                case 'date':
-                                    if (prop.formula.date && prop.formula.date.start) {
-                                        filter.formula = { date: { equals: prop.formula.date.start } };
-                                    } else continue;
-                                    break;
-                                default:
-                                    continue; // Unsupported formula type
-                            }
-                        } else continue
-                        break;
-                    case 'rollup':
-                        //rollups are also read-only and depend on other properties. we can't compare them.
-                        continue;
-                    case 'unique_id':
-                        //should be unique so never be the same.
-                        continue;
-                    case 'button':
-                        //buttons are action items.
-                        continue;
-                    case 'status':
-                        if (prop.status && prop.status.name) {
-                            filter.status = { equals: prop.status.name };
-                        } else {
-                            continue; // Skip if status is null or has no name
-                        }
-                        break;
+                    // Add other property types as needed
                     default:
-                        console.warn(`Unsupported property type for comparison: ${prop.type}`);
                         continue; // Ignore unsupported property types
                 }
-                if (Object.keys(filter).length > 1) { // Make sure we added a filter condition
-                    filters.push(filter);
-                }
+                filters.push(filter);
             }
             return filters;
         }
@@ -1204,24 +914,19 @@
                     });
                     break;
                 case 'relation':
-                    // Fetch current relations, then add the new one.
-                    const pageInfo = await makeNotionRequest(`/pages/${pageId}`);
-                    const currentRelations = pageInfo.properties[conditionalProperty]?.relation || [];
-
-                    // Create a new array with the new relation and existing ones
-                    const updatedRelations = [...currentRelations, { id: pageId }];
-
+                    // Assuming you have a way to get the current relations, and that the
+                    // relation property is a "relation" type. This is complex and might
+                    // require additional API calls to fetch and update.  Simplified here.
                     await makeNotionRequest(`/pages/${pageId}`, {
                         method: 'PATCH',
                         body: JSON.stringify({
                             properties: {
                                 [conditionalProperty]: {
-                                    relation: updatedRelations
+                                    relation: [{ id: pageId }] //Add itself to the relation
                                 }
                             },
                         }),
                     });
-
                     break;
             }
         }
@@ -1283,34 +988,13 @@
             });
         }
 
-        const supportedPropertyTypes = new Set([
-            "rich_text",
-            "title",
-            "number",
-            "select",
-            "multi_select",
-            "date",
-            "checkbox",
-            "email",
-            "phone_number",
-            "url",
-            "status",
-            "relation", // Added relation
-            "formula" // Added formula
-
-        ]);
         function populateComparePropertiesDropdown(databaseInfo) {
             comparePropertiesList.innerHTML = ''; // Clear existing
             allProperties = databaseInfo.properties; // Store *all* properties
 
             for (const propName in allProperties) {
-                const propType = allProperties[propName].type;
-                // Only include supported property types in dropdown
-                if (supportedPropertyTypes.has(propType)) {
-                    const optionDiv = createMultiselectOption(propName);
-                    comparePropertiesList.appendChild(optionDiv);
-                }
-
+                const optionDiv = createMultiselectOption(propName);
+                comparePropertiesList.appendChild(optionDiv);
             }
             // Reset selected properties.
             selectedCompareProperties = [];
