@@ -158,7 +158,12 @@ function createHeader() {
     </style>
     `;
     //No need to create element.
-    return headerHTML + styleHTML; //Just return string
+    return headerHTML + styleHTML + `
+    <!-- Notice Banner -->
+    <div class="notice-banner" style="max-width: 600px; margin: 1rem auto; padding: 1rem; border-left: 8px solid #000; background-color: #fff; font-family: 'Geist Mono', monospace; text-align: center; font-size: 1rem;">
+      Please note: (a) I cannot ensure this will be free because Notion requires a CORS proxy and to fetch URL information via the browser, proxified requests are needed too. (b) Do not close the tab while processing as it happens in your browser, not on a server.
+    </div>
+    `; //Just return string
 }
 
 export { createHeader };
