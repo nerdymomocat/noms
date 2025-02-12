@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Duplicate Remover</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Geist', 'system-ui', 'sans-serif'],
+                        mono: ['Geist Mono', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        /* ... (Same CSS as merge-options.html, including multiselect styles) ... */
+        .hidden {
+            display: none;
+        }
+
+        /* Custom styles */
+        body {
+            font-family: 'Geist', sans-serif;
+        }
+
+        h1 {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        h2,
+        .font-mono {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        /* Custom select styles */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        select option:first-child {
+            color: #9CA3AF;
+        }
+
+        select.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .tool-description {
+            font-family: 'Geist Mono', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #000;
+            padding: 1rem;
+            margin: 1.5rem auto;
+            max-width: 600px;
+        }
+
+        /* --- MULTI-SELECT STYLES (Copied from merge-options) --- */
+        .multiselect-container {
+            position: relative;
+            /* VERY IMPORTANT for absolute positioning of dropdown */
+            width: 100%;
+        }
+
+        .multiselect-dropdown {
+            width: 100%;
+            display: flex;
+            /* Use Flexbox for easier icon centering */
+            align-items: center;
+            /* Center items vertically */
+            justify-content: space-between;
+            /* Space out text and icon */
+            border: 4px solid #000;
+            background-color: #fff;
+            padding: 0.5rem;
+            /* Simplified padding */
+            cursor: pointer;
+            user-select: none;
+            font-size: 1rem;
+        }
+
+        .multiselect-dropdown.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+
+        .multiselect-dropdown:focus {
+            outline: none;
+            ring: 4px solid #FEA97F;
+        }
+
+
+        .multiselect-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 4px solid #000;
+            background-color: #fff;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: none;
+            /* Hidden by default */
+        }
+
+        .multiselect-dropdown-list div {
+            padding: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+            /* Ensure full width */
+            display: flex;
+            /* Align checkbox and label */
+            align-items: center;
+            /* Vertical align */
+
+        }
+
+        .multiselect-dropdown-list div:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Checkbox Styling */
+
+        .multiselect-dropdown-list input[type="checkbox"] {
+            appearance: none;
+            position: relative;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #000;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        .multiselect-dropdown-list input[type="checkbox"]:checked {
+            background-color: #FEA97F;
+            border-color: #000;
+        }
+
+        .multiselect-dropdown-list input[type="checkbox"]:checked::before {
+            content: '✓';
+            /* Use a checkmark character */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 0.8rem;
+        }
+
+
+        .multiselect-selected-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            /* Consistent spacing */
+        }
+
+        .multiselect-selected-option {
+            background-color: #FEA97F;
+            color: #000;
+            padding: 0.25rem 0.5rem;
+            border: 2px solid #000;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+
+        }
+
+        .multiselect-remove-option {
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+
+        /* Show the dropdown list when the container has the 'open' class */
+        .multiselect-container.open .multiselect-dropdown-list {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-container"></div>
+    <div id="root" class="min-h-screen bg-gray-100 p-8">
+        <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
+            You need to be logged in to use this tool. Please log in above.
+        </div>
+        <div class="mx-auto max-w-2xl">
+            <div class="mb-8 flex items-center justify-center space-x-4">
+                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+                <h1 class="text-3xl font-black uppercase tracking-wider">
+                    Duplicate Remover
+                </h1>
+            </div>
+            <div class="tool-description">Find and remove duplicate entries in your Notion database.</div>
+
+            <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
+                <form id="duplicate-form" class="space-y-6">
+                    <details open class="rounded-lg border-4 border-black p-4">
+                        <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                            Worker Configuration
+                        </summary>
+                        <div class="mt-4 space-y-4">
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker
+                                    URL</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="url" id="workerUrl" name="workerUrl"
+                                    placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)"
+                                    required />
+                                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker
+                                    Token</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="password" id="workerToken" name="workerToken"
+                                    placeholder="Enter your Worker Token" required />
+                                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Show database section but keep submit disabled -->
+                    <div id="database-section" class="space-y-6">
+                        <!-- Database selection -->
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select
+                                    Database</label>
+                                <button type="button" id="refreshDatabases"
+                                    class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="databaseSearch" placeholder="Search databases..."
+                                    class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <select id="databaseSelect"
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                    <option value="" class="text-gray-400">-</option>
+                                </select>
+                            </div>
+                            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Properties to Compare (Multi-select) -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide">Properties to Compare</label>
+                            <div class="multiselect-container" id="comparePropertiesContainer">
+                                <div class="multiselect-dropdown" tabindex="0">
+                                    <div class="multiselect-selected-options" id="comparePropertiesSelected">
+                                        <!-- Selected options will appear here -->
+                                    </div>
+                                    <div class="flex items-center mr-1">
+                                        <!-- Down arrow icon -->
+                                        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'
+                                            stroke='currentColor' class="w-5 h-5">
+                                            <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2'
+                                                d='M19 9l-7 7-7-7' />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="multiselect-dropdown-list" id="comparePropertiesList">
+                                    <!-- Options will be populated here -->
+                                </div>
+                            </div>
+                            <p id="compareProperties-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Retain Direction and Criteria -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide">Retain Direction and
+                                Criteria</label>
+                            <select id="retainCriteriaSelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                                <option value="created_time_ascending">Earliest Created</option>
+                                <option value="created_time_descending">Latest Created</option>
+                                <option value="last_edited_time_ascending">Earliest Edited</option>
+                                <option value="last_edited_time_descending">Latest Edited</option>
+                            </select>
+                            <p id="retainCriteriaSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Outcome Selection -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide">Outcome</label>
+                            <select id="outcomeSelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                                <option value="delete">Delete Duplicate Pages</option>
+                                <option value="checkbox">Mark Checkbox for Duplicates</option>
+                                <option value="relation">Add to Relation for Duplicates</option>
+                            </select>
+                            <p id="outcomeSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Conditional Property Selection (Checkbox or Relation) -->
+                        <div id="conditionalPropertyContainer" class="hidden w-full">
+                            <label id="conditionalPropertyLabel" class="mb-2 block font-bold uppercase tracking-wide"
+                                for="conditionalPropertySelect"></label>
+                            <select id="conditionalPropertySelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                            </select>
+                            <p id="conditionalPropertySelect-error" class="mt-1 hidden text-sm font-bold text-red-500">
+                            </p>
+                        </div>
+
+                        <!-- Last Checked Date -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide" for="lastCheckedDate">Last
+                                Checked Date (Optional)</label>
+                            <input type="date" id="lastCheckedDate" name="lastCheckedDate"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                            <p id="lastCheckedDate-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+
+                        <!-- Submit button -->
+                        <button type="submit" id="submit-button"
+                            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+                            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                            </div>
+                            <span id="submit-button-text">Start Update</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="progress-display" class="hidden space-y-6">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-bold uppercase tracking-wide">Progress</h2>
+                        </div>
+                        <div class="h-4 w-full border-4 border-black bg-white">
+                            <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="logs-container"
+                        class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
+                    </div>
+                    <button id="reset-button"
+                        class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Start New Update</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
+        import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
+        import { createHeader } from './js/header.js';
+
+        // --- DOM Element References ---
+        const form = document.getElementById('duplicate-form');
+        const submitButton = document.getElementById('submit-button');
+        const submitButtonText = document.getElementById('submit-button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const progressDisplay = document.getElementById('progress-display');
+        const progressBar = document.getElementById('progress-bar');
+        const logsContainer = document.getElementById('logs-container');
+        const resetButton = document.getElementById('reset-button');
+        const authBanner = document.getElementById('auth-banner');
+        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+        const databaseSection = document.getElementById('database-section');
+        const workerUrlInput = document.getElementById('workerUrl');
+        const workerTokenInput = document.getElementById('workerToken');
+        const databaseSelect = document.getElementById('databaseSelect');
+        const comparePropertiesContainer = document.getElementById('comparePropertiesContainer');
+        const comparePropertiesDropdown = comparePropertiesContainer.querySelector('.multiselect-dropdown');
+        const comparePropertiesList = document.getElementById('comparePropertiesList');
+        const comparePropertiesSelected = document.getElementById('comparePropertiesSelected');
+        const retainCriteriaSelect = document.getElementById('retainCriteriaSelect');
+        const outcomeSelect = document.getElementById('outcomeSelect');
+        const conditionalPropertyContainer = document.getElementById('conditionalPropertyContainer');
+        const conditionalPropertyLabel = document.getElementById('conditionalPropertyLabel');
+        const conditionalPropertySelect = document.getElementById('conditionalPropertySelect');
+        const lastCheckedDateInput = document.getElementById('lastCheckedDate');
+
+
+        // --- Form Data and State ---
+        let isProcessing = false;
+        let logs = [];
+        let notionToken = null;
+        let selectedCompareProperties = []; // Store selected property *names*
+        let allProperties = {}; // Store *all* properties (objects) for later use.
+
+        // --- Multi-select Functions (adapted from merge-options) ---
+
+        function createMultiselectOption(propertyName) {
+            const optionDiv = document.createElement('div');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = propertyName;
+            checkbox.id = `checkbox-${propertyName}`;
+            checkbox.checked = selectedCompareProperties.includes(propertyName); // Pre-check
+            const label = document.createElement('label');
+            label.htmlFor = `checkbox-${propertyName}`;
+            label.textContent = propertyName;
+            optionDiv.appendChild(checkbox);
+            optionDiv.appendChild(label);
+
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    addSelectedProperty(propertyName);
+                } else {
+                    removeSelectedProperty(propertyName);
+                }
+            });
+
+            return optionDiv;
+        }
+
+        function addSelectedProperty(propertyName) {
+            if (!selectedCompareProperties.includes(propertyName)) {
+                selectedCompareProperties.push(propertyName);
+                updateSelectedPropertiesDisplay();
+                updatePropertyCheckboxes();
+            }
+        }
+
+        function removeSelectedProperty(propertyName) {
+            selectedCompareProperties = selectedCompareProperties.filter(name => name !== propertyName);
+            updateSelectedPropertiesDisplay();
+            updatePropertyCheckboxes();
+        }
+
+        function updateSelectedPropertiesDisplay() {
+            comparePropertiesSelected.innerHTML = ''; // Clear
+            selectedCompareProperties.forEach(propertyName => {
+                const selectedOptionSpan = document.createElement('span');
+                selectedOptionSpan.classList.add('multiselect-selected-option');
+                selectedOptionSpan.textContent = propertyName;
+                const removeButton = document.createElement('span');
+                removeButton.classList.add('multiselect-remove-option');
+                removeButton.textContent = 'x';
+                removeButton.addEventListener('click', () => {
+                    removeSelectedProperty(propertyName);
+                });
+                selectedOptionSpan.appendChild(removeButton);
+                comparePropertiesSelected.appendChild(selectedOptionSpan);
+            });
+        }
+
+        function updatePropertyCheckboxes() {
+            comparePropertiesList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = selectedCompareProperties.includes(checkbox.value);
+            });
+        }
+
+        // --- Utility Functions ---
+        // Prefill the workerUrl input
+        if (WORKER_URL) {
+            workerUrlInput.value = WORKER_URL;
+        }
+
+        // Prefill the workerToken input
+        if (WORKER_TOKEN) {
+            workerTokenInput.value = WORKER_TOKEN;
+        }
+
+        // --- Insert the header here ---
+        const headerContainer = document.getElementById('header-container');
+        headerContainer.innerHTML = createHeader();
+        const userInfoContainer = document.getElementById('user-info');
+
+
+        // Load worker config from localStorage or constants
+        function loadWorkerConfig() {
+            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                workerUrlInput.value = config.url;
+                workerTokenInput.value = config.token;
+            } else if (WORKER_URL) {
+                workerUrlInput.value = WORKER_URL;
+                if (WORKER_TOKEN) {
+                    workerTokenInput.value = WORKER_TOKEN;
+                }
+            }
+            checkWorkerUrl(); // Check URL state after loading config
+        }
+
+        // Save worker config to localStorage
+        function saveWorkerConfig(url, token) {
+            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+        }
+
+        // Function to check login status, show banner if needed, and update header.
+        async function checkAuthStatus() {
+            const nomsData = getLocalStorageWithExpiry("nomsData");
+
+            if (!nomsData) {
+                // Not logged in: Show banner, disable button, don't update header here
+                authBanner.classList.remove('hidden');
+                submitButton.disabled = true;
+                return; // Stop execution.  Don't try to fetch from the worker.
+            }
+
+            // Logged in:
+            notionToken = nomsData.accessToken;
+            updateUI(userInfoContainer); // Update header (logout/disconnect)
+            submitButton.disabled = false; // Enable the button
+            authBanner.classList.add('hidden'); // Hide the banner
+            loadWorkerConfig();
+            checkWorkerUrl(); // Check initial state
+        }
+
+        // Add function to check if worker config is complete
+        function isWorkerConfigComplete() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            return url && token;
+        }
+
+        // Update checkWorkerUrl to check both fields
+        function checkWorkerUrl() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            submitButton.disabled = !url || !token;
+
+            if (url && token) {
+                saveWorkerConfig(url, token);
+            }
+        }
+
+        // --- Event Handlers for input fields ---
+
+        form.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                clearError(e.target);
+            }
+        });
+
+        workerUrlInput.addEventListener('input', () => {
+            clearError(workerUrlInput);
+            checkWorkerUrl();
+        });
+
+        workerTokenInput.addEventListener('input', () => {
+            clearError(workerTokenInput);
+            checkWorkerUrl();
+        });
+
+        // --- Notion API Request Helpers ---
+
+        async function makeNotionRequest(endpoint, options = {}) {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${notionToken}`,
+                        ...options.headers,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    const errorMessage = errorData?.message || `API request failed: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+
+                return await response.json();
+            } catch (error) {
+                throw error;  // Re-throw to be caught by caller
+            }
+        }
+
+        async function getDatabaseInfo(databaseId) {
+            return makeNotionRequest(`/databases/${databaseId}`);
+        }
+
+        // --- Exponential Backoff Function ---
+        async function withExponentialBackoff(apiCall, maxRetries = 5) {
+            let retries = 0;
+            let delay = 1000; // Initial delay of 1 second
+
+            while (retries < maxRetries) {
+                try {
+                    return await apiCall(); // Execute the API call
+                } catch (error) {
+                    if (error.message.includes("429") || error.message.includes("rate limit")) { // Check for rate limit errors
+                        addLog(`Rate limited. Retrying in ${delay / 1000} seconds...`);
+                        await new Promise((resolve) => setTimeout(resolve, delay));
+                        delay *= 2;  // Exponential increase
+                        retries++;
+                    } else {
+                        throw error; // Re-throw other errors
+                    }
+                }
+            }
+            throw new Error(`API call failed after ${maxRetries} retries.`);
+        }
+
+
+        // --- Form Submission and Processing ---
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (isProcessing) return;
+
+            const databaseId = databaseSelect.value;
+            const retainCriteria = retainCriteriaSelect.value;
+            const outcome = outcomeSelect.value;
+            const conditionalProperty = conditionalPropertySelect.value;
+            const lastCheckedDate = lastCheckedDateInput.value;
+
+            // Validation (simplified, relying on previous functions)
+            let isValid = true;
+            if (!databaseId) {
+                showError(databaseSelect, 'Database is required');
+                isValid = false;
+            }
+            if (selectedCompareProperties.length === 0) {
+                showError(comparePropertiesContainer, 'Select at least one property to compare');
+                isValid = false;
+            }
+            if (!retainCriteria) {
+                showError(retainCriteriaSelect, 'Retain criteria is required');
+                isValid = false;
+            }
+            if (!outcome) {
+                showError(outcomeSelect, 'Outcome is required');
+                isValid = false;
+            }
+            if ((outcome === 'checkbox' || outcome === 'relation') && !conditionalProperty) {
+                showError(conditionalPropertySelect, 'Property is required for this outcome');
+                isValid = false;
+            }
+            if (!isWorkerConfigComplete()) {
+                showError(workerUrlInput, "Worker URL is required");
+                showError(workerTokenInput, "Worker Token is required");
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            isProcessing = true;
+            submitButton.disabled = true;
+            submitButtonText.classList.add('opacity-0');
+            loadingSpinner.classList.remove('hidden');
+            form.classList.add('hidden');
+            progressDisplay.classList.remove('hidden');
+            logs = [];
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+
+
+            try {
+                addLog('Starting duplicate removal process...');
+                const [timestampType, direction] = retainCriteria.split('_');
+
+                // 1. Get initial set of pages (with optional date filter)
+                let initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null, timestampType));
+
+                addLog(`Found ${initialPages.length} initial pages.`);
+
+                // 2. Iterate and compare
+                let processedPageIds = new Set();  // Keep track of processed pages
+
+                for (let i = 0; i < initialPages.length; i++) {
+                    const page = initialPages[i];
+                    if (processedPageIds.has(page.id)) continue; // Skip if already processed
+
+                    // 3. Build the comparison filter
+                    const comparisonFilters = buildComparisonFilters(page, selectedCompareProperties);
+                    if (comparisonFilters.length === 0) continue;  // No properties to compare
+
+                    // 4. Query for potential duplicates
+                    const potentialDuplicates = await withExponentialBackoff(() => queryForDuplicates(databaseId, comparisonFilters, page.id, timestampType, direction));
+                    addLog(`Found ${potentialDuplicates.length} potential duplicates for page ${page.id}.`);
+
+
+                    // 5. Apply the outcome
+                    if (potentialDuplicates.length > 0) {
+                        const allDuplicates = [page, ...potentialDuplicates];
+
+                        //Sort to retain one and apply outcome to the rest
+                        allDuplicates.sort((a, b) => {
+                            const aTime = new Date(a[timestampType]).getTime();
+                            const bTime = new Date(b[timestampType]).getTime();
+                            return direction === 'ascending' ? aTime - bTime : bTime - aTime;
+                        });
+
+                        const pagesToProcess = allDuplicates.slice(1); // Exclude the "original"
+                        for (const duplicatePage of pagesToProcess) {
+                            await withExponentialBackoff(() => applyOutcome(duplicatePage.id, outcome, conditionalProperty));
+                            addLog(`Applied outcome to page ${duplicatePage.id}.`);
+                        }
+
+                    }
+                    //Mark the page as processed.
+                    processedPageIds.add(page.id);
+
+                    // Update progress bar
+                    const progressPercentage = ((i + 1) / initialPages.length) * 100;
+                    progressBar.style.width = `${progressPercentage}%`;
+
+                    // Fetch pages again (or filter) to avoid reprocessing.  Simpler to re-fetch.
+                    initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null, timestampType));
+                }
+
+
+                addLog('✨ Duplicate removal process complete!');
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                console.error(error); // Log full error for debugging
+
+            } finally {
+                isProcessing = false;
+                submitButton.disabled = false;
+                submitButtonText.classList.remove('opacity-0');
+                loadingSpinner.classList.add('hidden');
+                resetButton.classList.remove('hidden');
+            }
+        });
+
+
+
+        // --- Helper Functions for Duplicate Removal ---
+
+        async function fetchPages(databaseId, lastCheckedDate = null, timestampType) {
+            const filters = [];
+            if (lastCheckedDate) {
+                const filterDate = new Date(lastCheckedDate);
+                filterDate.setDate(filterDate.getDate() - 1); // Subtract one day, as requested.
+                const formattedDate = filterDate.toISOString();
+
+                filters.push({
+                    timestamp: timestampType,
+                    [timestampType]: {
+                        on_or_after: formattedDate,
+                    }
+                });
+            }
+
+            const data = filters.length > 0 ? { filter: { and: filters } } : {};
+            let allResults = [];
+            let hasMore = true;
+            let startCursor = undefined;
+
+            while (hasMore) {
+                if (startCursor) data.start_cursor = startCursor;
+                const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                allResults.push(...response.results);
+                hasMore = response.has_more;
+                startCursor = response.next_cursor;
+            }
+            return allResults;
+        }
+
+        function buildComparisonFilters(page, selectedProperties) {
+            const filters = [];
+            for (const propName of selectedProperties) {
+                const prop = page.properties[propName];
+
+                if (!prop) continue; // Skip if property doesn't exist on page
+
+                let filter = { property: propName };
+
+                switch (prop.type) {
+                    case 'rich_text':
+                        if (prop.rich_text.length > 0) {
+                            filter.rich_text = { equals: prop.rich_text[0].plain_text };
+                        } else continue; //skip this prop if it is an empty rich_text
+                        break;
+                    case 'title':
+                        if (prop.title.length > 0) {
+                            filter.title = { equals: prop.title[0].plain_text };
+                        } else continue; //skip this prop if it is an empty title
+                        break;
+                    case 'number':
+                        filter.number = { equals: prop.number };
+                        break;
+                    case 'select':
+                        if (prop.select) {
+                            filter.select = { equals: prop.select.name };
+                        } else continue; //skip this prop if it is an empty select.
+                        break;
+                    case 'multi_select':
+                        if (prop.multi_select && prop.multi_select.length > 0) {
+                            // Handle multi_select as "contains any"
+                            filter = {
+                                or: prop.multi_select.map(option => ({
+                                    property: propName,
+                                    multi_select: { contains: option.name }
+                                }))
+                            };
+                        } else continue; //skip this prop if it is an empty multi select.
+                        break;
+                    case 'date':
+                        if (prop.date) {
+                            filter.date = { equals: prop.date.start };
+                        } else continue;
+                        break;
+                    // Add other property types as needed
+                    default:
+                        continue; // Ignore unsupported property types
+                }
+                filters.push(filter);
+            }
+            return filters;
+        }
+
+        async function queryForDuplicates(databaseId, comparisonFilters, originalPageId, timestampType, direction) {
+            if (comparisonFilters.length === 0) return [];
+
+            const data = {
+                filter: {
+                    and: [
+                        ...comparisonFilters,
+                        {
+                            property: 'id', // Notion's internal ID property
+                            text: {
+                                does_not_equal: originalPageId, // Exclude the original page itself
+                            },
+                        },
+                    ],
+                },
+                sorts: [ // Add sorting
+                    {
+                        timestamp: timestampType,
+                        direction: direction
+                    }
+                ]
+            };
+
+            let allResults = [];
+            let hasMore = true;
+            let startCursor = undefined;
+
+            while (hasMore) {
+                if (startCursor) data.start_cursor = startCursor;
+                const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                allResults.push(...response.results);
+                hasMore = response.has_more;
+                startCursor = response.next_cursor;
+            }
+
+            return allResults;
+        }
+
+
+        async function applyOutcome(pageId, outcome, conditionalProperty) {
+            switch (outcome) {
+                case 'delete':
+                    await makeNotionRequest(`/pages/${pageId}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ archived: true }),
+                    });
+                    break;
+                case 'checkbox':
+                    await makeNotionRequest(`/pages/${pageId}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            properties: {
+                                [conditionalProperty]: { checkbox: true },
+                            },
+                        }),
+                    });
+                    break;
+                case 'relation':
+                    // Assuming you have a way to get the current relations, and that the
+                    // relation property is a "relation" type. This is complex and might
+                    // require additional API calls to fetch and update.  Simplified here.
+                    await makeNotionRequest(`/pages/${pageId}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            properties: {
+                                [conditionalProperty]: {
+                                    relation: [{ id: pageId }] //Add itself to the relation
+                                }
+                            },
+                        }),
+                    });
+                    break;
+            }
+        }
+
+        // --- UI Helper Functions ---
+        function addLog(message) {
+            logs.push(message);
+            const logElement = document.createElement('div');
+            logElement.textContent = message;
+            logElement.className = 'whitespace-pre-wrap';
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
+        }
+
+        function showError(inputElement, message) {
+            const errorElement = document.getElementById(`${inputElement.id}-error`); // Corrected: use .id
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                inputElement.classList.add('border-red-500');
+            }
+        }
+
+        function clearError(inputElement) {
+            const errorElement = document.getElementById(`${inputElement.id}-error`); // Corrected: use .id
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+                inputElement.classList.remove('border-red-500');
+            }
+        }
+
+        resetButton.addEventListener('click', () => {
+            resetForm();
+        });
+
+        function resetForm() {
+            isProcessing = false;
+            progressDisplay.classList.add('hidden');
+            form.classList.remove('hidden');
+            resetButton.classList.add('hidden');
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+            selectedCompareProperties = []; // Clear selected properties
+            updateSelectedPropertiesDisplay();
+            updatePropertyCheckboxes();
+        }
+
+
+        // --- Populate Dropdowns ---
+        function populateDropdowns(databases) {
+            databaseSelect.innerHTML = '<option value="">-</option>';
+
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db.id;
+                option.textContent = db.title[0]?.plain_text || 'Untitled';
+                databaseSelect.appendChild(option);
+            });
+        }
+
+        function populateComparePropertiesDropdown(databaseInfo) {
+            comparePropertiesList.innerHTML = ''; // Clear existing
+            allProperties = databaseInfo.properties; // Store *all* properties
+
+            for (const propName in allProperties) {
+                const optionDiv = createMultiselectOption(propName);
+                comparePropertiesList.appendChild(optionDiv);
+            }
+            // Reset selected properties.
+            selectedCompareProperties = [];
+            updateSelectedPropertiesDisplay();
+            updatePropertyCheckboxes();
+        }
+
+        function populateConditionalPropertyDropdown(databaseInfo) {
+            conditionalPropertySelect.innerHTML = `<option value="">-</option>`; // Clear
+
+            if (!databaseInfo || !databaseInfo.properties) return;
+
+            for (const propName in databaseInfo.properties) {
+                const prop = databaseInfo.properties[propName];
+                // Filter based on selected outcome
+                if (outcomeSelect.value === 'checkbox' && prop.type === 'checkbox') {
+                    const option = document.createElement('option');
+                    option.value = propName;
+                    option.textContent = propName;
+                    conditionalPropertySelect.appendChild(option);
+                } else if (outcomeSelect.value === 'relation' && prop.type === 'relation') {
+                    const option = document.createElement('option');
+                    option.value = propName;
+                    option.textContent = propName;
+                    conditionalPropertySelect.appendChild(option);
+                }
+            }
+        }
+
+
+        // --- Fetch Databases/Properties ---
+        async function fetchDatabases() {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filter: {
+                        value: "database",
+                        property: "object"
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch databases');
+
+            const data = await response.json();
+            localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
+            return data.results;
+
+        }
+
+        // --- Event Listeners for UI interactions ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+            checkAuthStatus();
+            updateUI(userInfoContainer);
+
+            // Populate databases from cache, don't fetch initially
+            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+            if (databases.length) {
+                populateDropdowns(databases);
+            }
+
+            // Refresh Databases button
+            document.getElementById('refreshDatabases').addEventListener('click', async () => {
+                if (!isWorkerConfigComplete()) {
+                    showError(workerUrlInput, 'Worker URL and Token are required');
+                    showError(workerTokenInput, 'Worker URL and Token are required');
+                    return;
+                }
+                try {
+                    const databases = await fetchDatabases();
+                    populateDropdowns(databases);
+                } catch (error) {
+                    console.error('Failed to refresh databases:', error);
+                    addLog(`Error refreshing databases: ${error.message}`);
+                }
+            });
+
+            // Database Select change
+            databaseSelect.addEventListener('change', async (e) => {
+                const databaseId = e.target.value;
+                // Clear dependent dropdowns
+                comparePropertiesList.innerHTML = '';
+                conditionalPropertySelect.innerHTML = '<option value="">-</option>';
+
+                if (databaseId) {
+                    try {
+                        const databaseInfo = await getDatabaseInfo(databaseId);
+                        populateComparePropertiesDropdown(databaseInfo);
+                        populateConditionalPropertyDropdown(databaseInfo); // Initial populate
+                    } catch (error) {
+                        console.error('Error loading database properties:', error);
+                        addLog(`Error loading database properties: ${error.message}`);
+                    }
+                }
+            });
+
+            // Outcome Select change
+            outcomeSelect.addEventListener('change', async (e) => {
+                const outcome = e.target.value;
+                conditionalPropertyContainer.classList.toggle('hidden', outcome !== 'checkbox' && outcome !== 'relation');
+
+                if (outcome === 'checkbox') {
+                    conditionalPropertyLabel.textContent = 'Select Checkbox Property';
+                } else if (outcome === 'relation') {
+                    conditionalPropertyLabel.textContent = 'Select Relation Property';
+                }
+
+                // Re-populate the conditional property dropdown
+                const databaseId = databaseSelect.value;
+                if (databaseId) {
+                    try {
+                        const databaseInfo = await getDatabaseInfo(databaseId);
+                        populateConditionalPropertyDropdown(databaseInfo);
+                    } catch (error) {
+                        console.error('Error loading database properties for outcome:', error);
+                        addLog(`Error loading database properties for outcome: ${error.message}`);
+                    }
+                }
+            });
+
+            // Multi-select dropdown toggle (using event delegation)
+            comparePropertiesContainer.addEventListener('click', (event) => {
+                if (event.target.closest('.multiselect-dropdown')) {
+                    comparePropertiesContainer.classList.toggle('open');
+                }
+                // Prevent the following code from running when clicking inside the container
+            });
+
+            /* NEW: Close multi-select dropdown when clicking outside */
+            document.addEventListener('click', (event) => {
+                if (!comparePropertiesContainer.contains(event.target)) {
+                    comparePropertiesContainer.classList.remove('open');
+                }
+            });
+
+            // Prevent clicks inside the dropdown list from closing it
+            comparePropertiesList.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+            // Keyboard navigation for the multiselect dropdown
+            comparePropertiesDropdown.addEventListener('keydown', (event) => {
+                if (event.key === ' ' || event.key === 'Enter' || event.key === 'ArrowDown') { // Space, Enter, Down
+                    event.preventDefault();
+                    comparePropertiesContainer.classList.toggle('open');
+                    if (comparePropertiesContainer.classList.contains('open')) {
+                        const firstCheckbox = comparePropertiesList.querySelector('input[type="checkbox"]');
+                        if (firstCheckbox) firstCheckbox.focus();
+                    }
+                }
+            });
+
+            // Database Search input
+            document.getElementById('databaseSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                const filtered = databases.filter(db =>
+                    db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+                );
+                populateDropdowns(filtered);
+            });
+        });
+    </script>
+</body>
+
+</html>
