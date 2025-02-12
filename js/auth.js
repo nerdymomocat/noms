@@ -168,12 +168,3 @@ export async function disconnect() {
         window.location.href = './index.html';
     }
 }
-// Export for usage in other scripts
-export {
-    setLocalStorageWithExpiry,
-    getLocalStorageWithExpiry,
-    updateUI,
-    logout,
-    disconnect,
-    initializeAuth
-};
