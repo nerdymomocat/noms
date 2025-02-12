@@ -46,7 +46,37 @@ function createHeader() {
             margin-bottom: 1rem;
             text-align: center;
         }
-         a {
+
+        /* Logo specific styles - removing button styling */
+        h1 a {
+            color: #000;
+            text-decoration: none;
+            display: inline-block;
+            padding: 0.5rem;
+            background: none;
+            border: none;
+            box-shadow: none;
+        }
+
+        h1 a:hover {
+            background: none;
+            color: #000;
+        }
+
+        .logo-image {
+            height: 3rem;
+            width: auto;
+            vertical-align: middle;
+            transition: filter 0.2s ease;
+        }
+
+        .logo-image:hover {
+            filter: brightness(0.8) contrast(1.2);
+        }
+
+        /* Button styles (now specifically for user-info buttons) */
+        #user-info button,
+        a:not(h1 a) {
             color: #000;
             text-decoration: none;
             font-weight: 700;
@@ -58,9 +88,11 @@ function createHeader() {
             transition: background-color 0.2s, color 0.2s;
             font-size: 1rem;
         }
-        a:hover{
-          background-color: black;
-          color: white;
+
+        #user-info button:hover,
+        a:not(h1 a):hover {
+            background-color: black;
+            color: white;
         }
 
         /* Responsive header adjustments */
