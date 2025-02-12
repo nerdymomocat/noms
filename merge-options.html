@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merge Notion Property Options</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Geist', 'system-ui', 'sans-serif'],
+                        mono: ['Geist Mono', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        /* Custom styles */
+        body {
+            font-family: 'Geist', sans-serif;
+        }
+
+        h1 {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        h2,
+        .font-mono {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        /* Custom select styles */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        select option:first-child {
+            color: #9CA3AF;
+        }
+
+        select.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .tool-description {
+            font-family: 'Geist Mono', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #000;
+            padding: 1rem;
+            margin: 1.5rem auto;
+            max-width: 600px;
+        }
+
+        /* --- MULTI-SELECT STYLES (Corrected) --- */
+        .multiselect-container {
+            position: relative;
+            /* VERY IMPORTANT for absolute positioning of dropdown */
+            width: 100%;
+        }
+
+        .multiselect-dropdown {
+            width: 100%;
+            display: flex;
+            /* Use Flexbox for easier icon centering */
+            align-items: center;
+            /* Center items vertically */
+            justify-content: space-between;
+            /* Space out text and icon */
+            border: 4px solid #000;
+            background-color: #fff;
+            padding: 0.5rem;
+            /* Simplified padding */
+            cursor: pointer;
+            user-select: none;
+            font-size: 1rem;
+            appearance: none;
+            /* Remove default select styling */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+        }
+
+        .multiselect-dropdown.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+
+        .multiselect-dropdown:focus {
+            outline: none;
+            ring: 4px solid #FEA97F;
+        }
+
+
+        .multiselect-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 4px solid #000;
+            background-color: #fff;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: none;
+            /* Hidden by default */
+        }
+
+        .multiselect-dropdown-list div {
+            padding: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+            /* Ensure full width */
+            display: flex;
+            /* Align checkbox and label */
+            align-items: center;
+            /* Vertical align */
+
+        }
+
+        .multiselect-dropdown-list div:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Checkbox Styling */
+
+        .multiselect-dropdown-list input[type="checkbox"] {
+            appearance: none;
+            position: relative;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #000;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        .multiselect-dropdown-list input[type="checkbox"]:checked {
+            background-color: #FEA97F;
+            border-color: #000;
+        }
+
+        .multiselect-dropdown-list input[type="checkbox"]:checked::before {
+            content: '✓';
+            /* Use a checkmark character */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 0.8rem;
+        }
+
+
+        .multiselect-selected-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            /* Consistent spacing */
+            margin-bottom: 0.25rem;
+            /* Space below selected options */
+        }
+
+        .multiselect-selected-option {
+            background-color: #FEA97F;
+            color: #000;
+            padding: 0.25rem 0.5rem;
+            border: 2px solid #000;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+
+        }
+
+        .multiselect-remove-option {
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+
+        /* Show the dropdown list when the container has the 'open' class */
+        .multiselect-container.open .multiselect-dropdown-list {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-container"></div>
+    <div id="root" class="min-h-screen bg-gray-100 p-8">
+        <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
+            You need to be logged in to use this tool. Please log in above.
+        </div>
+        <div class="mx-auto max-w-2xl">
+            <div class="mb-8 flex items-center justify-center space-x-4">
+                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+                <h1 class="text-3xl font-black uppercase tracking-wider">
+                    Merge Property Options
+                </h1>
+            </div>
+            <div class="tool-description">Merge options in a Notion select or multi-select property.</div>
+
+            <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
+                <form id="options-form" class="space-y-6">
+                    <details open class="rounded-lg border-4 border-black p-4">
+                        <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                            Worker Configuration
+                        </summary>
+                        <div class="mt-4 space-y-4">
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker
+                                    URL</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="url" id="workerUrl" name="workerUrl"
+                                    placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)"
+                                    required />
+                                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker
+                                    Token</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="password" id="workerToken" name="workerToken"
+                                    placeholder="Enter your Worker Token" required />
+                                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Show database section but keep submit disabled -->
+                    <div id="database-section" class="space-y-6">
+                        <!-- Database selection -->
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select
+                                    Database</label>
+                                <button type="button" id="refreshDatabases"
+                                    class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="databaseSearch" placeholder="Search databases..."
+                                    class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <select id="databaseSelect"
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                    <option value="" class="text-gray-400">-</option>
+                                </select>
+                            </div>
+                            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Property selection -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide" for="propertySelect">Select or
+                                Multi-Select Property</label>
+                            <select id="propertySelect" name="propertySelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                            </select>
+                            <p id="propertySelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Old Options Selection (Multi-select) -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide">Old Options (to
+                                merge)</label>
+                            <div class="multiselect-container" id="oldOptionsContainer">
+                                <div class="multiselect-dropdown" tabindex="0">
+                                    <div class="multiselect-selected-options" id="oldOptionsSelected">
+                                        <!-- Selected options will appear here -->
+                                    </div>
+                                    <div class="flex items-center">
+                                        <!-- Down arrow icon -->
+                                        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'
+                                            stroke='currentColor' class="w-6 h-6">
+                                            <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2'
+                                                d='M19 9l-7 7-7-7' />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="multiselect-dropdown-list" id="oldOptionsList">
+                                    <!-- Options will be populated here -->
+                                </div>
+                            </div>
+                            <p id="oldOptions-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- New Option Selection (Single Select) -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide" for="newOptionSelect">New
+                                Option (merged
+                                result)</label>
+                            <select id="newOptionSelect" name="newOptionSelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                            </select>
+                            <p id="newOptionSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+
+                        <!-- Submit button -->
+                        <button type="submit" id="submit-button"
+                            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+                            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                            </div>
+                            <span id="submit-button-text">Start Update</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="progress-display" class="hidden space-y-6">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-bold uppercase tracking-wide">Progress</h2>
+                        </div>
+                        <div class="h-4 w-full border-4 border-black bg-white">
+                            <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="logs-container"
+                        class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
+                    </div>
+                    <button id="reset-button"
+                        class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Start New Update</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
+        import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js';
+        import { createHeader } from './js/header.js';
+
+        const form = document.getElementById('options-form');
+        const submitButton = document.getElementById('submit-button');
+        const submitButtonText = document.getElementById('submit-button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const progressDisplay = document.getElementById('progress-display');
+        const progressBar = document.getElementById('progress-bar');
+        const logsContainer = document.getElementById('logs-container');
+        const resetButton = document.getElementById('reset-button');
+        const authBanner = document.getElementById('auth-banner');
+        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+        const databaseSection = document.getElementById('database-section');
+        const propertySelect = document.getElementById("propertySelect");
+        const oldOptionsContainer = document.getElementById('oldOptionsContainer');
+        const oldOptionsDropdown = oldOptionsContainer.querySelector('.multiselect-dropdown');
+        const oldOptionsList = document.getElementById('oldOptionsList');
+        const oldOptionsSelected = document.getElementById('oldOptionsSelected');
+        const newOptionSelect = document.getElementById('newOptionSelect');
+
+        // Form Data and State
+        let isProcessing = false;
+        let logs = [];
+        let notionToken = null;
+        let propertyType = null;
+        let propertyOptions = []; // Store all available options (names only)
+        let selectedOldOptions = []; // Store selected old options (names only)
+
+        // --- Multi-select Functions ---
+        function createMultiselectOption(optionName) {
+            const optionDiv = document.createElement('div');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = optionName;
+            checkbox.id = `checkbox-${optionName}`;
+            checkbox.checked = selectedOldOptions.includes(optionName); // Pre-check if selected
+            const label = document.createElement('label');
+            label.htmlFor = `checkbox-${optionName}`;
+            label.textContent = optionName;
+            optionDiv.appendChild(checkbox);
+            optionDiv.appendChild(label);
+
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    addSelectedOption(optionName);
+                } else {
+                    removeSelectedOption(optionName);
+                }
+            });
+
+            return optionDiv;
+        }
+
+        function addSelectedOption(optionName) {
+            if (!selectedOldOptions.includes(optionName)) {
+                selectedOldOptions.push(optionName);
+                updateSelectedOptionsDisplay();
+                updateOptionCheckboxes();  // Reflect changes in dropdown
+            }
+        }
+
+        function removeSelectedOption(optionName) {
+            selectedOldOptions = selectedOldOptions.filter(name => name !== optionName);
+            updateSelectedOptionsDisplay();
+            updateOptionCheckboxes();  // Reflect changes in dropdown
+        }
+
+        function updateSelectedOptionsDisplay() {
+            oldOptionsSelected.innerHTML = ''; // Clear existing
+            selectedOldOptions.forEach(optionName => {
+                const selectedOptionSpan = document.createElement('span');
+                selectedOptionSpan.classList.add('multiselect-selected-option');
+                selectedOptionSpan.textContent = optionName;
+                const removeButton = document.createElement('span');
+                removeButton.classList.add('multiselect-remove-option');
+                removeButton.textContent = 'x';
+                removeButton.addEventListener('click', () => {
+                    removeSelectedOption(optionName);
+                });
+                selectedOptionSpan.appendChild(removeButton);
+                oldOptionsSelected.appendChild(selectedOptionSpan);
+            });
+        }
+
+        // Update checkboxes in the dropdown to match the selectedOldOptions array
+        function updateOptionCheckboxes() {
+            oldOptionsList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = selectedOldOptions.includes(checkbox.value);
+            });
+        }
+
+        // --- Utility Functions (like config loading) ---
+
+        // Prefill the workerUrl input
+        const workerUrlInput = document.getElementById('workerUrl');
+        if (WORKER_URL) {
+            workerUrlInput.value = WORKER_URL;
+        }
+
+        // Prefill the workerToken input
+        const workerTokenInput = document.getElementById('workerToken');
+        if (WORKER_TOKEN) {
+            workerTokenInput.value = WORKER_TOKEN;
+        }
+
+        // --- Insert the header here ---
+        const headerContainer = document.getElementById('header-container');
+        headerContainer.innerHTML = createHeader();
+        const userInfoContainer = document.getElementById('user-info'); // NOW it will find it
+        // ---------------------------------
+
+        // Load worker config from localStorage or constants
+        function loadWorkerConfig() {
+            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                workerUrlInput.value = config.url;
+                workerTokenInput.value = config.token;
+            } else if (WORKER_URL) {
+                workerUrlInput.value = WORKER_URL;
+                if (WORKER_TOKEN) {
+                    workerTokenInput.value = WORKER_TOKEN;
+                }
+            }
+            checkWorkerUrl(); // Check URL state after loading config
+        }
+
+        // Save worker config to localStorage
+        function saveWorkerConfig(url, token) {
+            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+        }
+
+        // Function to check login status, show banner if needed, and update header.
+        async function checkAuthStatus() {
+            const nomsData = getLocalStorageWithExpiry("nomsData");
+
+            if (!nomsData) {
+                // Not logged in: Show banner, disable button, don't update header here
+                authBanner.classList.remove('hidden');
+                submitButton.disabled = true;
+                return; // Stop execution.  Don't try to fetch from the worker.
+            }
+
+            // Logged in:
+            notionToken = nomsData.accessToken;
+            updateUI(userInfoContainer); // Update header (logout/disconnect)
+            submitButton.disabled = false; // Enable the button
+            authBanner.classList.add('hidden'); // Hide the banner
+            loadWorkerConfig();
+            checkWorkerUrl(); // Check initial state
+        }
+
+        // Add function to check if worker config is complete
+        function isWorkerConfigComplete() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            return url && token;
+        }
+
+        // Update checkWorkerUrl to check both fields
+        function checkWorkerUrl() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            submitButton.disabled = !url || !token;
+
+            if (url && token) {
+                saveWorkerConfig(url, token);
+            }
+        }
+
+
+        // --- Event Handlers for input fields ---
+
+        form.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                clearError(e.target);
+            }
+        });
+
+        workerUrlInput.addEventListener('input', () => {
+            clearError(workerUrlInput);
+            checkWorkerUrl();
+        });
+
+        workerTokenInput.addEventListener('input', () => {
+            clearError(workerTokenInput);
+            checkWorkerUrl();
+        });
+
+        // --- Notion API Request Helpers ---
+
+        async function makeNotionRequest(endpoint, options = {}) {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${notionToken}`,
+                        ...options.headers,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    const errorMessage = errorData?.message || `API request failed: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+
+                return await response.json();
+            } catch (error) {
+                throw error;  // Re-throw to be caught by caller
+            }
+        }
+
+        async function getDatabaseInfo(databaseId) {
+            return makeNotionRequest(`/databases/${databaseId}`);
+        }
+
+        async function queryDatabaseForOptions(databaseId, propertyName, optionNames, propertyType) {
+            const filters = [];
+            if (propertyType === "select") {
+                filters.push(...optionNames.map(optionName => ({
+                    property: propertyName,
+                    select: { equals: optionName }
+                })));
+            } else if (propertyType === "multi_select") {
+                filters.push(...optionNames.map(optionName => ({
+                    property: propertyName,
+                    multi_select: { contains: optionName }
+                })));
+            }
+
+            if (!filters.length) return [];
+
+            const data = { filter: { or: filters } };
+            let allResults = [];
+            let hasMore = true;
+            let startCursor = undefined;
+
+            while (hasMore) {
+                if (startCursor) data.start_cursor = startCursor;
+                const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                allResults.push(...response.results);
+                hasMore = response.has_more;
+                startCursor = response.next_cursor;
+            }
+            return allResults;
+        }
+
+        function buildUpdatePayload(propertyName, propertyType, currentOptions, newValue, oldValues) {
+            if (propertyType === "select") {
+                return {
+                    properties: {
+                        [propertyName]: {
+                            select: { name: newValue }
+                        }
+                    }
+                };
+            } else if (propertyType === "multi_select") {
+                const filteredOptions = currentOptions
+                    .filter(option => !oldValues.includes(option))
+                    .map(option => ({ name: option }));
+
+                if (newValue && !filteredOptions.some(item => item.name === newValue)) {
+                    filteredOptions.push({ name: newValue });
+                }
+
+                return {
+                    properties: {
+                        [propertyName]: {
+                            multi_select: filteredOptions
+                        }
+                    }
+                };
+            } else {
+                throw new Error(`Unsupported property type: ${propertyType}`);
+            }
+        }
+
+        async function updatePageProperty(pageId, payload) {
+            return makeNotionRequest(`/pages/${pageId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(payload),
+            });
+        }
+
+        async function updateDatabaseOptions(databaseId, propertyName, propertyType, newOptions) {
+            const updateData = {
+                properties: {
+                    [propertyName]: {
+                        [propertyType]: {
+                            options: newOptions,
+                        },
+                    },
+                }
+            };
+            return makeNotionRequest(`/databases/${databaseId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(updateData),
+            });
+        }
+
+
+
+        // --- Form Submission and Processing ---
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (isProcessing) return;
+
+            const databaseId = document.getElementById('databaseSelect').value;
+            const propertyName = document.getElementById('propertySelect').value;
+            const newOption = newOptionSelect.value;
+
+            // Validation
+            let isValid = true;
+            if (!databaseId) {
+                showError(document.getElementById('databaseSelect'), 'Database is required');
+                isValid = false;
+            }
+            if (!propertyName) {
+                showError(document.getElementById('propertySelect'), 'Property is required');
+                isValid = false;
+            }
+            if (selectedOldOptions.length === 0) {
+                showError(oldOptionsContainer, 'Select at least one old option');
+                isValid = false;
+            }
+            if (!newOption) {
+                showError(newOptionSelect, 'New option is required');
+                isValid = false;
+            }
+            if (!isWorkerConfigComplete()) {
+                showError(workerUrlInput, "Worker URL is required");
+                showError(workerTokenInput, "Worker Token is required");
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+
+            isProcessing = true;
+            submitButton.disabled = true;
+            submitButtonText.classList.add('opacity-0');
+            loadingSpinner.classList.remove('hidden');
+            form.classList.add('hidden');
+            progressDisplay.classList.remove('hidden');
+            logs = [];
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+
+            try {
+                addLog(`Retrieving database info...`);
+                const dbInfo = await getDatabaseInfo(databaseId);
+                addLog(`Database info retrieved.`);
+
+
+                if (!(propertyName in dbInfo.properties)) {
+                    throw new Error(`Property '${propertyName}' not found`);
+                }
+
+                const propertyInfo = dbInfo.properties[propertyName];
+                propertyType = propertyInfo.type;
+
+                if (propertyType !== "select" && propertyType !== "multi_select") {
+                    throw new Error(`Property '${propertyName}' is not select or multi_select`);
+                }
+
+                // No need to check option existence here, as they are populated from API.
+
+                addLog(`Querying database for pages with selected options...`);
+                const pagesToUpdate = await queryDatabaseForOptions(databaseId, propertyName, selectedOldOptions, propertyType);
+                addLog(`Found ${pagesToUpdate.length} pages to update.`);
+
+                // Iterate through pages.
+                for (let i = 0; i < pagesToUpdate.length; i++) {
+                    const page = pagesToUpdate[i];
+                    const pageId = page.id;
+                    const currentProperty = page.properties[propertyName];
+                    let currentOptions = [];
+
+                    if (propertyType === "multi_select" && currentProperty) {
+                        currentOptions = currentProperty.multi_select.map(option => option.name);
+                    } else if (propertyType === "select" && currentProperty?.select) {
+                        currentOptions = [currentProperty.select.name];
+                    }
+                    addLog(`Updating options in Page: ${pageId}`);
+
+                    // --- Simplified Skip Logic ---
+                    if (currentOptions.includes(newOption)) {
+                        addLog(`Skipping page ${pageId}: New value '${newOption}' already present.`);
+                        continue;
+                    }
+
+                    const payload = buildUpdatePayload(propertyName, propertyType, currentOptions, newOption, selectedOldOptions);
+                    await updatePageProperty(pageId, payload);
+
+                    // Update progress bar
+                    const progressPercentage = ((i + 1) / pagesToUpdate.length) * 100;
+                    progressBar.style.width = `${progressPercentage}%`;
+                    addLog(`Page updated: ${pageId}`);
+
+                }
+
+                //Update database schema:
+                const existingOptions = propertyInfo[propertyType].options;
+                const updatedOptions = existingOptions.filter(option => !selectedOldOptions.includes(option.name));
+                if (!updatedOptions.some(option => option.name === newOption)) {
+                    updatedOptions.push({ name: newOption, color: "default" }); // Add new value
+                }
+
+                if (updatedOptions.length < existingOptions.length || !updatedOptions.some(o => o.name === newOption)) {
+                    addLog(`Updating database options schema...`);
+                    await updateDatabaseOptions(databaseId, propertyName, propertyType, updatedOptions);
+                    addLog(`Database options schema updated.`);
+                }
+
+                addLog("✨ All Done!");
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+            } finally {
+                isProcessing = false;
+                submitButton.disabled = false;
+                submitButtonText.classList.remove("opacity-0");
+                loadingSpinner.classList.add("hidden");
+                resetButton.classList.remove('hidden');
+            }
+        });
+
+        // --- UI Helper Functions ---
+        function addLog(message) {
+            logs.push(message);
+            const logElement = document.createElement('div');
+            logElement.textContent = message;
+            logElement.className = 'whitespace-pre-wrap';
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
+        }
+
+        function showError(inputElement, message) {
+            const errorElement = document.getElementById(`${inputElement.name}-error`); // Corrected: use .name
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                inputElement.classList.add('border-red-500');
+            }
+        }
+
+        function clearError(inputElement) {
+            const errorElement = document.getElementById(`${inputElement.name}-error`); // Corrected: use .name
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+                inputElement.classList.remove('border-red-500');
+            }
+        }
+
+        resetButton.addEventListener('click', () => {
+            resetForm();
+        });
+
+        function resetForm() {
+            isProcessing = false;
+            progressDisplay.classList.add('hidden');
+            form.classList.remove('hidden');
+            resetButton.classList.add('hidden');
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+            selectedOldOptions = [];         // Clear selected options
+            updateSelectedOptionsDisplay();    // Update the display
+            updateOptionCheckboxes();         // and checkboxes
+        }
+
+        // --- Populate Dropdowns ---
+        function populateDropdowns(databases) {
+            const databaseSelect = document.getElementById('databaseSelect');
+            databaseSelect.innerHTML = '<option value="">-</option>';
+
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db.id;
+                option.textContent = db.title[0]?.plain_text || 'Untitled';
+                databaseSelect.appendChild(option);
+            });
+        }
+
+        function populatePropertyDropdown(databaseInfo) {
+            propertySelect.innerHTML = `<option value="">-</option>`; // Clear existing
+
+            if (!databaseInfo || !databaseInfo.properties) {
+                return; // No properties to populate
+            }
+
+            for (const propName in databaseInfo.properties) {
+                const prop = databaseInfo.properties[propName];
+                if (prop.type === "select" || prop.type === "multi_select") {
+                    const option = document.createElement("option");
+                    option.value = propName;
+                    option.textContent = propName;
+                    propertySelect.appendChild(option);
+                }
+            }
+        }
+
+        function populateOptionsDropdowns(propertyInfo) {
+            const options = propertyInfo[propertyInfo.type].options;
+            propertyOptions = options.map(option => option.name); // Store option names
+
+            // Populate oldOptions multiselect
+            oldOptionsList.innerHTML = ''; // Clear existing options
+            propertyOptions.forEach(optionName => {
+                const optionDiv = createMultiselectOption(optionName);
+                oldOptionsList.appendChild(optionDiv);
+            });
+
+            // Populate newOptionSelect
+            newOptionSelect.innerHTML = '<option value="">-</option>'; // Clear
+            propertyOptions.forEach(optionName => {
+                const option = document.createElement('option');
+                option.value = optionName;
+                option.textContent = optionName;
+                newOptionSelect.appendChild(option);
+            });
+
+            // Reset selected options when the property changes
+            selectedOldOptions = [];
+            updateSelectedOptionsDisplay();
+            updateOptionCheckboxes();
+        }
+
+        // --- Fetch Databases/Properties ---
+        async function fetchDatabases() {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filter: {
+                        value: "database",
+                        property: "object"
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch databases');
+
+            const data = await response.json();
+            localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
+            return data.results;
+
+        }
+
+        // --- Event Listeners for UI interactions ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+            checkAuthStatus();
+            updateUI(userInfoContainer);
+
+            // Populate databases from cache, don't fetch initially
+            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+            if (databases.length) {
+                populateDropdowns(databases);
+            }
+
+            // Refresh Databases button
+            document.getElementById('refreshDatabases').addEventListener('click', async () => {
+                if (!isWorkerConfigComplete()) {
+                    showError(workerUrlInput, 'Worker URL and Token are required');
+                    showError(workerTokenInput, 'Worker URL and Token are required');
+                    return;
+                }
+                try {
+                    const databases = await fetchDatabases();
+                    populateDropdowns(databases);
+                } catch (error) {
+                    console.error('Failed to refresh databases:', error);
+                    addLog(`Error refreshing databases: ${error.message}`);
+                }
+            });
+
+            // Database Select change
+            document.getElementById('databaseSelect').addEventListener('change', async (e) => {
+                const databaseId = e.target.value;
+                propertySelect.innerHTML = `<option value="">-</option>`; // Clear properties
+                oldOptionsList.innerHTML = ''; // Clear old options
+                newOptionSelect.innerHTML = '<option value="">-</option>'; // Clear new option
+                if (databaseId) {
+                    try {
+                        const databaseInfo = await getDatabaseInfo(databaseId);
+                        populatePropertyDropdown(databaseInfo);
+                    } catch (error) {
+                        console.error('Error loading database properties:', error);
+                        addLog(`Error loading database properties: ${error.message}`);
+                    }
+                }
+            });
+
+            // Property Select change
+            document.getElementById('propertySelect').addEventListener('change', async (e) => {
+                const databaseId = document.getElementById('databaseSelect').value;
+                const propertyName = e.target.value;
+                oldOptionsList.innerHTML = ''; // Clear options
+                newOptionSelect.innerHTML = '<option value="">-</option>';
+
+                if (databaseId && propertyName) {
+                    try {
+                        const databaseInfo = await getDatabaseInfo(databaseId);
+                        const propertyInfo = databaseInfo.properties[propertyName];
+                        populateOptionsDropdowns(propertyInfo);
+                    } catch (error) {
+                        console.error('Error loading property options:', error);
+                        addLog(`Error loading property options: ${error.message}`);
+                    }
+                }
+            });
+
+            // Multi-select dropdown toggle (using event delegation)
+            oldOptionsContainer.addEventListener('click', (event) => {
+                if (event.target.closest('.multiselect-dropdown')) {
+                    oldOptionsContainer.classList.toggle('open');
+                }
+                // Close dropdown when clicking outside
+                if (!oldOptionsContainer.contains(event.target)) {
+                    oldOptionsContainer.classList.remove('open');
+                }
+            });
+
+            // Prevent clicks inside the dropdown list from closing it
+            oldOptionsList.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+
+            // Keyboard navigation for the multiselect dropdown
+            oldOptionsDropdown.addEventListener('keydown', (event) => {
+                if (event.key === ' ' || event.key === 'Enter' || event.key === 'ArrowDown') { // Space, Enter, Down
+                    event.preventDefault();
+                    oldOptionsContainer.classList.toggle('open');
+                    if (oldOptionsContainer.classList.contains('open')) {
+                        const firstCheckbox = oldOptionsList.querySelector('input[type="checkbox"]');
+                        if (firstCheckbox) firstCheckbox.focus();
+                    }
+                }
+            });
+
+
+            // Database Search input
+            document.getElementById('databaseSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                const filtered = databases.filter(db =>
+                    db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+                );
+                populateDropdowns(filtered);
+            });
+        });
+    </script>
+</body>
+
+</html>
