@@ -115,7 +115,7 @@
             </div>
 
             <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
-                <form id="erd-form" class="space-y-6">
+                <form id="dbml-form" class="space-y-6">
                     <details open class="rounded-lg border-4 border-black p-4">
                         <summary class="cursor-pointer font-bold uppercase tracking-wide">
                             Worker Configuration
@@ -174,7 +174,7 @@
                             <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
                                 <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
                             </div>
-                            <span id="submit-button-text">Generate ERD</span>
+                            <span id="submit-button-text">Generate DBML</span>
                         </button>
                     </div>
                 </form>
@@ -198,7 +198,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        <span>Generate New ERD</span>
+                        <span>Generate New DBML</span>
                     </button>
                 </div>
 
@@ -214,7 +214,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeAuth();
 
-            const form = document.getElementById('erd-form');
+            const form = document.getElementById('dbml-form');
             const submitButton = document.getElementById('submit-button');
             const submitButtonText = document.getElementById('submit-button-text');
             const loadingSpinner = document.getElementById('loading-spinner');
