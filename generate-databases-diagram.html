@@ -387,69 +387,9 @@
 
                     for (const propName in dbInfo.properties) {
                         const prop = dbInfo.properties[propName];
-                        let dbmlType = "";
-
+                        let dbmlType = prop.type;
                         //Sanitize property names
                         let sanitizedPropName = sanitizeColumnName(propName);
-
-
-                        switch (prop.type) {
-                            case "title":
-                                dbmlType = "text";
-                                break;
-                            case "rich_text":
-                                dbmlType = "text";
-                                break;
-                            case "url":
-                                dbmlType = "text";
-                                break;
-                            case "email":
-                                dbmlType = "text";
-                                break;
-                            case "phone_number":
-                                dbmlType = "text";
-                                break;
-                            case "number":
-                                dbmlType = "number";
-                                break;
-                            case "select":
-                                dbmlType = "text"; // Could be a custom enum type, but text is safer.
-                                break;
-                            case "multi_select":
-                                dbmlType = "text[]"; // Array of text
-                                break;
-                            case "status":
-                                dbmlType = "text";
-                                break;
-                            case "date":
-                                dbmlType = "timestamp";
-                                break;
-                            case "checkbox":
-                                dbmlType = "boolean";
-                                break;
-                            case "files":
-                                dbmlType = "text[]"; // Store as array of URLs (text)
-                                break;
-                            case "created_by":
-                            case "last_edited_by":
-                                dbmlType = "text";  // notion user id
-                                break;
-                            case "formula":
-                                dbmlType = "text"; // formula result
-                                break;
-                            case "rollup":
-                                dbmlType = "text"; // rollup result, could be various types, text covers all.
-                                break;
-                            case "relation":
-                                dbmlType = "text"; //  ID of related database. The Ref will connect them.
-                                break;
-                            case "unique_id":
-                                dbmlType = "text";
-                                break;
-
-                            default:
-                                dbmlType = "text";
-                        }
                         tableDBML += `  ${sanitizedPropName} ${dbmlType}\n`;
                     }
                     tableDBML += "}\n\n";
