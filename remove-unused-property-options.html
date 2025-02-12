@@ -5,7 +5,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Noms · Merge Property Options</title>
+    <title>Noms · Remove Unused Property Options</title>
+    <meta name="description"
+        content="Clean your Notion database by removing unused options from select or multi-select properties." />
+    <meta property="og:title" content="Noms · Remove Unused Select/Multi-Select Options" />
+    <meta property="og:description"
+        content="Clean your Notion database by removing unused options from select or multi-select properties." />
+    <meta property="og:image" content="https://nerdymomocat.github.io/noms/ogImages/remove-unused-property-options.png" />
+    <meta property="og:url" content="https://nerdymomocat.github.io/noms/remove-unused-property-options.html" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Noms · Remove Unused Select/Multi-Select Options" />
+    <meta name="twitter:description"
+        content="Clean your Notion database by removing unused options from select or multi-select properties." />
+    <meta name="twitter:image" content="https://nerdymomocat.github.io/noms/ogImages/remove-unused-property-options.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -32,10 +46,12 @@
         /* Custom styles */
         body {
             font-family: 'Geist', sans-serif;
+            /* Geist for body text */
         }
 
         h1 {
             font-family: 'Geist Mono', monospace;
+            /* Geist Mono for headings */
         }
 
         h2,
@@ -70,130 +86,6 @@
             margin: 1.5rem auto;
             max-width: 600px;
         }
-
-        /* --- MULTI-SELECT STYLES (Corrected) --- */
-        .multiselect-container {
-            position: relative;
-            /* VERY IMPORTANT for absolute positioning of dropdown */
-            width: 100%;
-        }
-
-        .multiselect-dropdown {
-            width: 100%;
-            display: flex;
-            /* Use Flexbox for easier icon centering */
-            align-items: center;
-            /* Center items vertically */
-            justify-content: space-between;
-            /* Space out text and icon */
-            border: 4px solid #000;
-            background-color: #fff;
-            padding: 0.5rem;
-            /* Simplified padding */
-            cursor: pointer;
-            user-select: none;
-            font-size: 1rem;
-        }
-
-        .multiselect-dropdown.border-black {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-        }
-
-
-        .multiselect-dropdown:focus {
-            outline: none;
-            ring: 4px solid #FEA97F;
-        }
-
-
-        .multiselect-dropdown-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            border: 4px solid #000;
-            background-color: #fff;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 10;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: none;
-            /* Hidden by default */
-        }
-
-        .multiselect-dropdown-list div {
-            padding: 0.5rem;
-            cursor: pointer;
-            width: 100%;
-            /* Ensure full width */
-            display: flex;
-            /* Align checkbox and label */
-            align-items: center;
-            /* Vertical align */
-
-        }
-
-        .multiselect-dropdown-list div:hover {
-            background-color: #f0f0f0;
-        }
-
-        /* Checkbox Styling */
-
-        .multiselect-dropdown-list input[type="checkbox"] {
-            appearance: none;
-            position: relative;
-            width: 1.25rem;
-            height: 1.25rem;
-            border: 2px solid #000;
-            border-radius: 4px;
-            margin-right: 0.5rem;
-            cursor: pointer;
-        }
-
-        .multiselect-dropdown-list input[type="checkbox"]:checked {
-            background-color: #FEA97F;
-            border-color: #000;
-        }
-
-        .multiselect-dropdown-list input[type="checkbox"]:checked::before {
-            content: '✓';
-            /* Use a checkmark character */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #000;
-            font-size: 0.8rem;
-        }
-
-
-        .multiselect-selected-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-            /* Consistent spacing */
-        }
-
-        .multiselect-selected-option {
-            background-color: #FEA97F;
-            color: #000;
-            padding: 0.25rem 0.5rem;
-            border: 2px solid #000;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-
-        }
-
-        .multiselect-remove-option {
-            margin-left: 0.5rem;
-            cursor: pointer;
-        }
-
-        /* Show the dropdown list when the container has the 'open' class */
-        .multiselect-container.open .multiselect-dropdown-list {
-            display: block;
-        }
     </style>
 </head>
 
@@ -211,10 +103,12 @@
                         d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                 </svg>
                 <h1 class="text-3xl font-black uppercase tracking-wider">
-                    Merge Property Options
+                    Remove Unused Property Options
                 </h1>
             </div>
-            <div class="tool-description">Merge options in a Notion select or multi-select property.</div>
+            <div class="tool-description">Clean your Notion database by removing unused options from select or
+                multi-select
+                properties.</div>
 
             <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
                 <form id="options-form" class="space-y-6">
@@ -275,51 +169,14 @@
                         <!-- Property selection -->
                         <div class="w-full">
                             <label class="mb-2 block font-bold uppercase tracking-wide" for="propertySelect">Select or
-                                Multi-Select Property</label>
+                                Multi-Select
+                                Property</label>
                             <select id="propertySelect" name="propertySelect"
                                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
                                 <option value="" class="text-gray-400">-</option>
                             </select>
                             <p id="propertySelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
                         </div>
-
-                        <!-- Old Options Selection (Multi-select) -->
-                        <div class="w-full">
-                            <label class="mb-2 block font-bold uppercase tracking-wide">Old Options (to
-                                merge)</label>
-                            <div class="multiselect-container" id="oldOptionsContainer">
-                                <div class="multiselect-dropdown" tabindex="0">
-                                    <div class="multiselect-selected-options" id="oldOptionsSelected">
-                                        <!-- Selected options will appear here -->
-                                    </div>
-                                    <div class="flex items-center mr-1">
-                                        <!-- Down arrow icon -->
-                                        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'
-                                            stroke='currentColor' class="w-5 h-5">
-                                            <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2'
-                                                d='M19 9l-7 7-7-7' />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="multiselect-dropdown-list" id="oldOptionsList">
-                                    <!-- Options will be populated here -->
-                                </div>
-                            </div>
-                            <p id="oldOptions-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-                        </div>
-
-                        <!-- New Option Selection (Single Select) -->
-                        <div class="w-full">
-                            <label class="mb-2 block font-bold uppercase tracking-wide" for="newOptionSelect">New
-                                Option (merged
-                                result)</label>
-                            <select id="newOptionSelect" name="newOptionSelect"
-                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                                <option value="" class="text-gray-400">-</option>
-                            </select>
-                            <p id="newOptionSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-                        </div>
-
 
                         <!-- Submit button -->
                         <button type="submit" id="submit-button"
@@ -362,7 +219,7 @@
     <script type="module">
         import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
         import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
-        import { createHeader } from './js/header.js';
+        import { createHeader } from './js/header.js'; // Import createHeader
 
         const form = document.getElementById('options-form');
         const submitButton = document.getElementById('submit-button');
@@ -372,105 +229,21 @@
         const progressBar = document.getElementById('progress-bar');
         const logsContainer = document.getElementById('logs-container');
         const resetButton = document.getElementById('reset-button');
+        const mainContainer = document.getElementById('main-container');
         const authBanner = document.getElementById('auth-banner');
         const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
         const databaseSection = document.getElementById('database-section');
         const propertySelect = document.getElementById("propertySelect");
-        const oldOptionsContainer = document.getElementById('oldOptionsContainer');
-        const oldOptionsDropdown = oldOptionsContainer.querySelector('.multiselect-dropdown');
-        const oldOptionsList = document.getElementById('oldOptionsList');
-        const oldOptionsSelected = document.getElementById('oldOptionsSelected');
-        const newOptionSelect = document.getElementById('newOptionSelect');
+
         const workerUrlInput = document.getElementById('workerUrl');
         const workerTokenInput = document.getElementById('workerToken');
 
         // Form Data and State
         let isProcessing = false;
+        let progress = { current: 0, total: 0 };
         let logs = [];
-        let notionToken = null;
+        let notionToken = null; // Store notion token
         let propertyType = null;
-        let propertyOptions = []; // Store all available options (names only)
-        let selectedOldOptions = []; // Store selected old options (names only)
-
-        // --- Multi-select Functions ---
-        function createMultiselectOption(optionName) {
-            const optionDiv = document.createElement('div');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = optionName;
-            checkbox.id = `checkbox-${optionName}`;
-            checkbox.checked = selectedOldOptions.includes(optionName); // Pre-check if selected
-            const label = document.createElement('label');
-            label.htmlFor = `checkbox-${optionName}`;
-            label.textContent = optionName;
-            optionDiv.appendChild(checkbox);
-            optionDiv.appendChild(label);
-
-            checkbox.addEventListener('change', () => {
-                if (checkbox.checked) {
-                    addSelectedOption(optionName);
-                } else {
-                    removeSelectedOption(optionName);
-                }
-            });
-
-            return optionDiv;
-        }
-
-        function addSelectedOption(optionName) {
-            if (!selectedOldOptions.includes(optionName)) {
-                selectedOldOptions.push(optionName);
-                updateSelectedOptionsDisplay();
-                updateOptionCheckboxes();  // Reflect changes in dropdown
-            }
-        }
-
-        function removeSelectedOption(optionName) {
-            selectedOldOptions = selectedOldOptions.filter(name => name !== optionName);
-            updateSelectedOptionsDisplay();
-            updateOptionCheckboxes();  // Reflect changes in dropdown
-        }
-
-        function updateSelectedOptionsDisplay() {
-            oldOptionsSelected.innerHTML = ''; // Clear existing
-            selectedOldOptions.forEach(optionName => {
-                const selectedOptionSpan = document.createElement('span');
-                selectedOptionSpan.classList.add('multiselect-selected-option');
-                selectedOptionSpan.textContent = optionName;
-                const removeButton = document.createElement('span');
-                removeButton.classList.add('multiselect-remove-option');
-                removeButton.textContent = 'x';
-                removeButton.addEventListener('click', () => {
-                    removeSelectedOption(optionName);
-                });
-                selectedOptionSpan.appendChild(removeButton);
-                oldOptionsSelected.appendChild(selectedOptionSpan);
-            });
-            updateNewOptionSelect();
-        }
-
-        // Update checkboxes in the dropdown to match the selectedOldOptions array
-        function updateOptionCheckboxes() {
-            oldOptionsList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = selectedOldOptions.includes(checkbox.value);
-            });
-        }
-
-        /* NEW: Update new option select based on selected old options */
-        function updateNewOptionSelect() {
-            newOptionSelect.innerHTML = '<option value="">-</option>';
-            propertyOptions.forEach(optionName => {
-                if (!selectedOldOptions.includes(optionName)) {
-                    const option = document.createElement('option');
-                    option.value = optionName;
-                    option.textContent = optionName;
-                    newOptionSelect.appendChild(option);
-                }
-            });
-            if (selectedOldOptions.includes(newOptionSelect.value)) {
-                newOptionSelect.value = "";
-            }
-        }
 
         // --- Insert the header here ---
         const headerContainer = document.getElementById('header-container');
@@ -501,7 +274,6 @@
         // Function to check login status, show banner if needed, and update header.
         async function checkAuthStatus() {
             const nomsData = getLocalStorageWithExpiry("nomsData");
-
             if (!nomsData) {
                 // Not logged in: Show banner, disable button, don't update header here
                 authBanner.classList.remove('hidden');
@@ -514,6 +286,7 @@
             submitButton.disabled = false; // Enable the button
             authBanner.classList.add('hidden'); // Hide the banner
         }
+
 
         // Add function to check if worker config is complete
         function isWorkerConfigComplete() {
@@ -533,9 +306,7 @@
             }
         }
 
-
-        // --- Event Handlers for input fields ---
-
+        // --- Event Handlers ---
         form.addEventListener('input', (e) => {
             if (e.target.tagName === 'INPUT') {
                 clearError(e.target);
@@ -552,8 +323,7 @@
             checkWorkerUrl();
         });
 
-        // --- Notion API Request Helpers ---
-
+        // --- Notion Request Helpers (reusable) ---
         async function makeNotionRequest(endpoint, options = {}) {
             if (!isWorkerConfigComplete()) {
                 throw new Error('Worker URL and Token are required');
@@ -589,77 +359,22 @@
             return makeNotionRequest(`/databases/${databaseId}`);
         }
 
-        async function queryDatabaseForOptions(databaseId, propertyName, optionNames, propertyType) {
-            const filters = [];
-            if (propertyType === "select") {
-                filters.push(...optionNames.map(optionName => ({
-                    property: propertyName,
-                    select: { equals: optionName }
-                })));
-            } else if (propertyType === "multi_select") {
-                filters.push(...optionNames.map(optionName => ({
-                    property: propertyName,
-                    multi_select: { contains: optionName }
-                })));
-            }
+        // New function to check if an option is used
+        async function isOptionUsed(databaseId, propertyName, optionName, propertyType) {
+            const filter =
+                propertyType === "select"
+                    ? { property: propertyName, select: { equals: optionName } }
+                    : { property: propertyName, multi_select: { contains: optionName } };
 
-            if (!filters.length) return [];
-
-            const data = { filter: { or: filters } };
-            let allResults = [];
-            let hasMore = true;
-            let startCursor = undefined;
-
-            while (hasMore) {
-                if (startCursor) data.start_cursor = startCursor;
-                const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
-                    method: 'POST',
-                    body: JSON.stringify(data),
-                });
-                allResults.push(...response.results);
-                hasMore = response.has_more;
-                startCursor = response.next_cursor;
-            }
-            return allResults;
-        }
-
-        function buildUpdatePayload(propertyName, propertyType, currentOptions, newValue, oldValues) {
-            if (propertyType === "select") {
-                return {
-                    properties: {
-                        [propertyName]: {
-                            select: { name: newValue }
-                        }
-                    }
-                };
-            } else if (propertyType === "multi_select") {
-                const filteredOptions = currentOptions
-                    .filter(option => !oldValues.includes(option))
-                    .map(option => ({ name: option }));
-
-                if (newValue && !filteredOptions.some(item => item.name === newValue)) {
-                    filteredOptions.push({ name: newValue });
-                }
-
-                return {
-                    properties: {
-                        [propertyName]: {
-                            multi_select: filteredOptions
-                        }
-                    }
-                };
-            } else {
-                throw new Error(`Unsupported property type: ${propertyType}`);
-            }
-        }
-
-        async function updatePageProperty(pageId, payload) {
-            return makeNotionRequest(`/pages/${pageId}`, {
-                method: 'PATCH',
-                body: JSON.stringify(payload),
+            const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
+                method: 'POST',
+                body: JSON.stringify({ filter }),
             });
+            return response.results.length > 0;
         }
 
+
+        // New function to update database options
         async function updateDatabaseOptions(databaseId, propertyName, propertyType, newOptions) {
             const updateData = {
                 properties: {
@@ -668,17 +383,14 @@
                             options: newOptions,
                         },
                     },
-                }
+                },
             };
-            return makeNotionRequest(`/databases/${databaseId}`, {
+            await makeNotionRequest(`/databases/${databaseId}`, {
                 method: 'PATCH',
                 body: JSON.stringify(updateData),
             });
         }
 
-
-
-        // --- Form Submission and Processing ---
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -686,24 +398,15 @@
 
             const databaseId = document.getElementById('databaseSelect').value;
             const propertyName = document.getElementById('propertySelect').value;
-            const newOption = newOptionSelect.value;
 
-            // Validation
             let isValid = true;
+
             if (!databaseId) {
                 showError(document.getElementById('databaseSelect'), 'Database is required');
                 isValid = false;
             }
             if (!propertyName) {
                 showError(document.getElementById('propertySelect'), 'Property is required');
-                isValid = false;
-            }
-            if (selectedOldOptions.length === 0) {
-                showError(oldOptionsContainer, 'Select at least one old option');
-                isValid = false;
-            }
-            if (!newOption) {
-                showError(newOptionSelect, 'New option is required');
                 isValid = false;
             }
             if (!isWorkerConfigComplete()) {
@@ -714,7 +417,6 @@
 
             if (!isValid) return;
 
-
             isProcessing = true;
             submitButton.disabled = true;
             submitButtonText.classList.add('opacity-0');
@@ -723,13 +425,13 @@
             progressDisplay.classList.remove('hidden');
             logs = [];
             logsContainer.innerHTML = '';
-            progressBar.style.width = '0%';
+            progressBar.style.width = '0%';  // Initialize progress bar
 
             try {
-                addLog(`Retrieving database info...`);
+                addLog(`Retrieving database info for ID: ${databaseId}`);
                 const dbInfo = await getDatabaseInfo(databaseId);
-                addLog(`Database info retrieved.`);
 
+                addLog("Database info retrieved");
 
                 if (!(propertyName in dbInfo.properties)) {
                     throw new Error(`Property '${propertyName}' not found`);
@@ -742,55 +444,38 @@
                     throw new Error(`Property '${propertyName}' is not select or multi_select`);
                 }
 
-                // No need to check option existence here, as they are populated from API.
+                const options = propertyInfo[propertyType].options;
+                addLog(`Checking ${options.length} options for property '${propertyName}'`);
+                const optionsToKeep = [];
 
-                addLog(`Querying database for pages with selected options...`);
-                const pagesToUpdate = await queryDatabaseForOptions(databaseId, propertyName, selectedOldOptions, propertyType);
-                addLog(`Found ${pagesToUpdate.length} pages to update.`);
+                progress.total = options.length;  // Set total for progress
 
-                // Iterate through pages.
-                for (let i = 0; i < pagesToUpdate.length; i++) {
-                    const page = pagesToUpdate[i];
-                    const pageId = page.id;
-                    const currentProperty = page.properties[propertyName];
-                    let currentOptions = [];
-
-                    if (propertyType === "multi_select" && currentProperty) {
-                        currentOptions = currentProperty.multi_select.map(option => option.name);
-                    } else if (propertyType === "select" && currentProperty?.select) {
-                        currentOptions = [currentProperty.select.name];
+                for (const [index, option] of options.entries()) {
+                    const optionName = option.name;
+                    addLog(`Checking if option '${optionName}' is used...`);
+                    const isUsed = await isOptionUsed(databaseId, propertyName, optionName, propertyType);
+                    if (isUsed) {
+                        optionsToKeep.push(option);
+                        addLog(`Option '${optionName}' is used.`);
+                    } else {
+                        addLog(`Option '${optionName}' is NOT used.`);
                     }
-                    addLog(`Updating options in Page: ${pageId}`);
-
-                    // --- Simplified Skip Logic ---
-                    if (currentOptions.includes(newOption)) {
-                        addLog(`Skipping page ${pageId}: New value '${newOption}' already present.`);
-                        continue;
-                    }
-
-                    const payload = buildUpdatePayload(propertyName, propertyType, currentOptions, newOption, selectedOldOptions);
-                    await updatePageProperty(pageId, payload);
 
                     // Update progress bar
-                    const progressPercentage = ((i + 1) / pagesToUpdate.length) * 100;
+                    progress.current = index + 1;
+                    const progressPercentage = (progress.current / progress.total) * 100;
                     progressBar.style.width = `${progressPercentage}%`;
-                    addLog(`Page updated: ${pageId}`);
-
                 }
 
-                //Update database schema:
-                // Update database schema:
-                const existingOptions = propertyInfo[propertyType].options;
-                const updatedOptions = existingOptions.filter(option => !selectedOldOptions.includes(option.name));
-
-                // Only update the schema if options have been removed.
-                if (updatedOptions.length < existingOptions.length) {
-                    addLog(`Updating database options schema...`);
-                    await updateDatabaseOptions(databaseId, propertyName, propertyType, updatedOptions);
-                    addLog(`Database options schema updated.`);
+                if (optionsToKeep.length < options.length) {
+                    addLog(`Updating options for property '${propertyName}'`);
+                    await updateDatabaseOptions(databaseId, propertyName, propertyType, optionsToKeep);
+                    addLog(`Options for property '${propertyName}' updated in database`);
+                } else {
+                    addLog(`No unused options found for property '${propertyName}'`);
                 }
-
                 addLog("✨ All Done!");
+
             } catch (error) {
                 addLog(`❌ Error: ${error.message}`);
             } finally {
@@ -798,7 +483,7 @@
                 submitButton.disabled = false;
                 submitButtonText.classList.remove("opacity-0");
                 loadingSpinner.classList.add("hidden");
-                resetButton.classList.remove('hidden');
+                resetButton.classList.remove('hidden'); // Show Reset
             }
         });
 
@@ -813,7 +498,7 @@
         }
 
         function showError(inputElement, message) {
-            const errorElement = document.getElementById(`${inputElement.name}-error`); // Corrected: use .name
+            const errorElement = document.getElementById(`${inputElement.name}-error`);
             if (errorElement) {
                 errorElement.textContent = message;
                 errorElement.classList.remove('hidden');
@@ -822,7 +507,7 @@
         }
 
         function clearError(inputElement) {
-            const errorElement = document.getElementById(`${inputElement.name}-error`); // Corrected: use .name
+            const errorElement = document.getElementById(`${inputElement.name}-error`);
             if (errorElement) {
                 errorElement.textContent = '';
                 errorElement.classList.add('hidden');
@@ -840,10 +525,9 @@
             form.classList.remove('hidden');
             resetButton.classList.add('hidden');
             logsContainer.innerHTML = '';
-            progressBar.style.width = '0%';
-            selectedOldOptions = [];         // Clear selected options
-            updateSelectedOptionsDisplay();    // Update the display
-            updateOptionCheckboxes();         // and checkboxes
+            progressBar.style.width = '0%'; // Reset progress
+            progress.current = 0;
+            progress.total = 0;
         }
 
         // --- Populate Dropdowns ---
@@ -877,26 +561,6 @@
             }
         }
 
-        function populateOptionsDropdowns(propertyInfo) {
-            const options = propertyInfo[propertyInfo.type].options;
-            propertyOptions = options.map(option => option.name); // Store option names
-
-            // Populate oldOptions multiselect
-            oldOptionsList.innerHTML = ''; // Clear existing options
-            propertyOptions.forEach(optionName => {
-                const optionDiv = createMultiselectOption(optionName);
-                oldOptionsList.appendChild(optionDiv);
-            });
-
-            // Initially update newOptionSelect
-            updateNewOptionSelect();
-
-            // Reset selected options when the property changes
-            selectedOldOptions = [];
-            updateSelectedOptionsDisplay();
-            updateOptionCheckboxes();
-        }
-
         // --- Fetch Databases/Properties ---
         async function fetchDatabases() {
             if (!isWorkerConfigComplete()) {
@@ -927,7 +591,7 @@
 
         }
 
-        // --- Event Listeners for UI interactions ---
+        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeAuth();
             checkAuthStatus();
@@ -961,8 +625,6 @@
             document.getElementById('databaseSelect').addEventListener('change', async (e) => {
                 const databaseId = e.target.value;
                 propertySelect.innerHTML = `<option value="">-</option>`; // Clear properties
-                oldOptionsList.innerHTML = ''; // Clear old options
-                newOptionSelect.innerHTML = '<option value="">-</option>'; // Clear new option
                 if (databaseId) {
                     try {
                         const databaseInfo = await getDatabaseInfo(databaseId);
@@ -973,59 +635,6 @@
                     }
                 }
             });
-
-            // Property Select change
-            document.getElementById('propertySelect').addEventListener('change', async (e) => {
-                const databaseId = document.getElementById('databaseSelect').value;
-                const propertyName = e.target.value;
-                oldOptionsList.innerHTML = ''; // Clear options
-                newOptionSelect.innerHTML = '<option value="">-</option>';
-
-                if (databaseId && propertyName) {
-                    try {
-                        const databaseInfo = await getDatabaseInfo(databaseId);
-                        const propertyInfo = databaseInfo.properties[propertyName];
-                        populateOptionsDropdowns(propertyInfo);
-                    } catch (error) {
-                        console.error('Error loading property options:', error);
-                        addLog(`Error loading property options: ${error.message}`);
-                    }
-                }
-            });
-
-            // Multi-select dropdown toggle (using event delegation)
-            oldOptionsContainer.addEventListener('click', (event) => {
-                if (event.target.closest('.multiselect-dropdown')) {
-                    oldOptionsContainer.classList.toggle('open');
-                }
-                // Prevent the following code from running when clicking inside the container
-            });
-
-            /* NEW: Close multi-select dropdown when clicking outside */
-            document.addEventListener('click', (event) => {
-                if (!oldOptionsContainer.contains(event.target)) {
-                    oldOptionsContainer.classList.remove('open');
-                }
-            });
-
-            // Prevent clicks inside the dropdown list from closing it
-            oldOptionsList.addEventListener('click', (event) => {
-                event.stopPropagation();
-            });
-
-
-            // Keyboard navigation for the multiselect dropdown
-            oldOptionsDropdown.addEventListener('keydown', (event) => {
-                if (event.key === ' ' || event.key === 'Enter' || event.key === 'ArrowDown') { // Space, Enter, Down
-                    event.preventDefault();
-                    oldOptionsContainer.classList.toggle('open');
-                    if (oldOptionsContainer.classList.contains('open')) {
-                        const firstCheckbox = oldOptionsList.querySelector('input[type="checkbox"]');
-                        if (firstCheckbox) firstCheckbox.focus();
-                    }
-                }
-            });
-
 
             // Database Search input
             document.getElementById('databaseSearch').addEventListener('input', (e) => {

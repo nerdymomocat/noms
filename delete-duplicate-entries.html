@@ -6,6 +6,17 @@
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Noms · Duplicate Entry Remover</title>
+    <meta name="description" content="Find and remove duplicate entries in your Notion database." />
+    <meta property="og:title" content="Noms · Delete Duplicate Entries" />
+    <meta property="og:description" content="Find and remove duplicate entries in your Notion database." />
+    <meta property="og:image" content="https://nerdymomocat.github.io/noms/ogImages/delete-duplicate-entries.png" />
+    <meta property="og:url" content="https://nerdymomocat.github.io/noms/delete-duplicate-entries.html" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Noms · Delete Duplicate Entries" />
+    <meta name="twitter:description" content="Find and remove duplicate entries in your Notion database." />
+    <meta name="twitter:image" content="https://nerdymomocat.github.io/noms/ogImages/delete-duplicate-entries.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -350,7 +361,8 @@
 
                         <!-- Note about duplicate marking -->
                         <p class="text-sm text-gray-600 mt-4 bg-[#FEA97F]/20 p-2">
-                            Items once marked as duplicates (via checkbox or relation properties) are no longer considered
+                            Items once marked as duplicates (via checkbox or relation properties) are no longer
+                            considered
                             for duplicate checking. To include them again, reset the state of the duplicate outcome
                             property (set checkbox to false, or remove relations).
                         </p>
@@ -430,8 +442,6 @@
         let notionToken = null;
         let selectedCompareProperties = []; // Store selected property *names*
         let allProperties = {}; // Store *all* properties (objects) for later use.
-
-        // --- Multi-select Functions (adapted from merge-options) ---
 
         function createMultiselectOption(propertyName) {
             const optionDiv = document.createElement('div');
