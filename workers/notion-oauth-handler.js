@@ -1,4 +1,4 @@
-// notion-oauth-handler.js
+// Cloudfare worker named notion-oauth-handler.js
 
 function buildUrl(base, params) {
     const url = new URL(base);

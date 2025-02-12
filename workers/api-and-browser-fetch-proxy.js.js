@@ -1,3 +1,5 @@
+// Cloudfare worker named api-and-browser-fetch-proxy.js
+
 const NOTION_API_END_POINT = "https://api.notion.com/v1";
 
 export default {
