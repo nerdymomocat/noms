@@ -4,7 +4,11 @@ function createHeader() {
     const headerHTML = `
     <header>
         <div class="header-container">
-            <h1><a href="./index.html">Noms</a></h1>
+                        <h1>
+                <a href="./index.html">
+                    <img src="./assets/noms-icon.svg" alt="Noms" class="logo-image">
+                </a>
+            </h1>
             <div id="user-info">
                 <!-- Login/Logout/Disconnect buttons and user info will go here -->
             </div>
@@ -106,6 +110,19 @@ function createHeader() {
                 box-shadow: 2px 2px 0 0 #000;
                 font-size: 0.9rem;
             }
+        }
+
+        .logo-image {
+            height: 3rem;
+            width: auto;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 768px) {
+            .logo-image {
+                height: 2rem;
+            }
+            /* ...existing media query styles... */
         }
     </style>
     `;
