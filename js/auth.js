@@ -67,7 +67,7 @@ async function initializeAuth() {
     if (botId) {
         // Clear any existing database cache when setting new login data
         localStorage.removeItem('nomsDatabases');
-        
+
         // The user just arrived from the Worker’s OAuth callback
         // Save the data in localStorage for 1 hour
         setLocalStorageWithExpiry('nomsData', {
@@ -135,6 +135,8 @@ async function updateUI(userInfoContainer) {
  */
 async function logout() {
     localStorage.removeItem('nomsData');
+    // Remove nomsDatabases on logout
+    localStorage.removeItem('nomsDatabases');
     const userInfoContainer = document.getElementById('user-info');
     if (userInfoContainer) {
         updateUI(userInfoContainer);
@@ -164,8 +166,10 @@ async function disconnect() {
         },
     });
 
-    // Clear localStorage
+    // Clear localStorage and remove additional keys on disconnect
     localStorage.removeItem('nomsData');
+    localStorage.removeItem('nomsWorkerConfig');
+    localStorage.removeItem('nomsDatabases');
 
     // Reload the current page instead of updating UI or redirecting
     window.location.reload();
