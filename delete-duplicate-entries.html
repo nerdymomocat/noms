@@ -304,10 +304,10 @@
                             <select id="retainCriteriaSelect"
                                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
                                 <option value="" class="text-gray-400">-</option>
-                                <option value="created_time_ascending">Earliest Created</option>
-                                <option value="created_time_descending">Latest Created</option>
-                                <option value="last_edited_time_ascending">Earliest Edited</option>
-                                <option value="last_edited_time_descending">Latest Edited</option>
+                                <option value="created_time|ascending">Earliest Created</option>
+                                <option value="created_time|descending">Latest Created</option>
+                                <option value="last_edited_time|ascending">Earliest Edited</option>
+                                <option value="last_edited_time|descending">Latest Edited</option>
                             </select>
                             <p id="retainCriteriaSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
                         </div>
@@ -695,9 +695,8 @@
 
             try {
                 addLog('Starting duplicate removal process...');
-                // Map raw value to proper timestamp value.
-                const [rawTimestamp, direction] = retainCriteria.split('_');
-                const timestampType = rawTimestamp === 'created' ? 'created_time' : rawTimestamp === 'last_edited' ? 'last_edited_time' : 'created_time';
+                // Use the updated separator to extract timestampType and direction.
+                const [timestampType, direction] = retainCriteria.split('|');
 
                 // 1. Get initial set of pages (with optional date filter)
                 let initialPages = await withExponentialBackoff(() => fetchPages(databaseId, lastCheckedDate ? new Date(lastCheckedDate) : null));
