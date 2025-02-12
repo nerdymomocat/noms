@@ -45,7 +45,9 @@ function createHeader() {
             text-transform: uppercase;
             margin: 0; /* Remove margin */
             text-align: center;
-            line-height: 1; /* Add this to control height */
+            line-height: 0; /* Fix the height issue */
+            display: flex; /* Ensure proper sizing */
+            align-items: center;
         }
 
         /* Logo specific styles - removing button styling */
@@ -54,10 +56,11 @@ function createHeader() {
             text-decoration: none;
             display: flex; /* Change to flex for better alignment */
             align-items: center;
-            padding: 0.5rem;
+            padding: 0;
             background: none;
             border: none;
             box-shadow: none;
+            line-height: 0; /* Fix the height issue */
         }
 
         h1 a:hover {
@@ -147,17 +150,10 @@ function createHeader() {
             }
         }
 
-        .logo-image {
-            height: 3rem;
-            width: auto;
-            vertical-align: middle;
-        }
-
         @media (max-width: 768px) {
             .logo-image {
                 height: 2rem;
             }
-            /* ...existing media query styles... */
         }
     </style>
     `;
