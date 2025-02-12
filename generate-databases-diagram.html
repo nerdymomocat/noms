@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noms · Database Diagram Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Geist', 'system-ui', 'sans-serif'],
+                        mono: ['Geist Mono', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        /* Custom styles */
+        body {
+            font-family: 'Geist', sans-serif;
+            /* Geist for body text */
+        }
+
+        h1 {
+            font-family: 'Geist Mono', monospace;
+            /* Geist Mono for headings */
+        }
+
+        h2,
+        .font-mono {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        /* Custom select styles */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        select option:first-child {
+            color: #9CA3AF;
+        }
+
+        select.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .tool-description {
+            font-family: 'Geist Mono', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #000;
+            padding: 1rem;
+            margin: 1.5rem auto;
+            max-width: 600px;
+        }
+
+        /* Textarea for DBML output */
+        #dbmlOutput {
+            font-family: 'Geist Mono', monospace;
+            width: 100%;
+            height: 300px;
+            /* Adjust as needed */
+            resize: vertical;
+            /* Allow vertical resizing */
+            border: 4px solid #000;
+            padding: 0.5rem;
+            background-color: #fff;
+            color: #000;
+            box-shadow: 4px 4px 0 0 #000;
+            margin-top: 1rem;
+            /* Consistent spacing */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-container" view-transition-group></div>
+    <div id="root" class="min-h-screen bg-gray-100 p-8">
+        <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
+            You need to be logged in to use this tool. Please log in above.
+        </div>
+        <div class="mx-auto max-w-2xl">
+            <div class="mb-8 flex items-center justify-center space-x-4">
+                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+                <h1 class="text-3xl font-black uppercase tracking-wider">
+                    Generate Diagram of Notion Databases
+                </h1>
+            </div>
+            <div class="tool-description">
+                Generate a DBML (Database Markup Language) representation of your Notion database
+                relationships to visualize its structure (ERD).
+            </div>
+
+            <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
+                <form id="erd-form" class="space-y-6">
+                    <details open class="rounded-lg border-4 border-black p-4">
+                        <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                            Worker Configuration
+                        </summary>
+                        <div class="mt-4 space-y-4">
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker
+                                    URL</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="url" id="workerUrl" name="workerUrl"
+                                    placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)"
+                                    required />
+                                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker
+                                    Token</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="password" id="workerToken" name="workerToken"
+                                    placeholder="Enter your Worker Token" required />
+                                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div id="database-section" class="space-y-6">
+                        <!-- Database selection -->
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select
+                                    Database</label>
+                                <button type="button" id="refreshDatabases"
+                                    class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="databaseSearch" placeholder="Search databases..."
+                                    class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <select id="databaseSelect"
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                    <option value="" class="text-gray-400">-</option>
+                                </select>
+                            </div>
+                            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+                        <!-- Submit button -->
+                        <button type="submit" id="submit-button"
+                            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+                            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                            </div>
+                            <span id="submit-button-text">Generate ERD</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="output-section" class="hidden space-y-6">
+                    <h2 class="font-bold uppercase tracking-wide">DBML Output</h2>
+                    <textarea id="dbmlOutput" readonly placeholder="DBML output will appear here..."></textarea>
+                    <button id="copy-button"
+                        class="w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        <span>Copy to Clipboard</span>
+                    </button>
+                    <button id="reset-button"
+                        class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Generate New ERD</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
+        import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
+        import { createHeader } from './js/header.js'; // Import createHeader
+
+        // Get DOM elements
+        const form = document.getElementById('erd-form');
+        const submitButton = document.getElementById('submit-button');
+        const submitButtonText = document.getElementById('submit-button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const outputSection = document.getElementById('output-section');
+        const dbmlOutput = document.getElementById('dbmlOutput');
+        const copyButton = document.getElementById('copy-button');
+        const resetButton = document.getElementById('reset-button');
+        const authBanner = document.getElementById('auth-banner');
+        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+        const databaseSection = document.getElementById('database-section');
+        const propertySelect = document.getElementById("propertySelect");
+
+
+        // Form Data and State
+        let isProcessing = false;
+        let notionToken = null;
+
+        // Prefill the workerUrl input
+        const workerUrlInput = document.getElementById('workerUrl');
+        if (WORKER_URL) {
+            workerUrlInput.value = WORKER_URL;
+        }
+
+        // Prefill the workerToken input
+        const workerTokenInput = document.getElementById('workerToken');
+        if (WORKER_TOKEN) {
+            workerTokenInput.value = WORKER_TOKEN;
+        }
+
+        // --- Insert the header here ---
+        const headerContainer = document.getElementById('header-container');
+        headerContainer.innerHTML = createHeader();
+        const userInfoContainer = document.getElementById('user-info');
+        // ---------------------------------
+
+        // --- Utility Functions (like config loading) ---
+        function loadWorkerConfig() {
+            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                workerUrlInput.value = config.url;
+                workerTokenInput.value = config.token;
+            } else if (WORKER_URL) {
+                workerUrlInput.value = WORKER_URL;
+                if (WORKER_TOKEN) {
+                    workerTokenInput.value = WORKER_TOKEN;
+                }
+            }
+            checkWorkerUrl(); // Check URL state after loading config
+        }
+
+        function saveWorkerConfig(url, token) {
+            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+        }
+
+        async function checkAuthStatus() {
+            const nomsData = getLocalStorageWithExpiry("nomsData");
+            const authBanner = document.getElementById('auth-banner');
+
+            if (!nomsData) {
+                authBanner.classList.remove('hidden');
+                submitButton.disabled = true;
+                return;
+            }
+
+            notionToken = nomsData.accessToken;
+            updateUI(userInfoContainer);
+            submitButton.disabled = false;
+            authBanner.classList.add('hidden');
+            loadWorkerConfig();
+            checkWorkerUrl();
+        }
+
+        function isWorkerConfigComplete() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            return url && token;
+        }
+
+        function checkWorkerUrl() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            submitButton.disabled = !url || !token;
+
+            if (url && token) {
+                saveWorkerConfig(url, token);
+            }
+        }
+
+        // --- Event Handlers for input fields ---
+        form.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                clearError(e.target);
+            }
+        });
+
+        workerUrlInput.addEventListener('input', () => {
+            clearError(workerUrlInput);
+            checkWorkerUrl();
+        });
+
+        workerTokenInput.addEventListener('input', () => {
+            clearError(workerTokenInput);
+            checkWorkerUrl();
+        });
+
+        // --- Notion API Request Helpers ---
+
+        async function makeNotionRequest(endpoint, options = {}) {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${notionToken}`, // Use stored token
+                        ...options.headers,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    const errorMessage = errorData?.message || `API request failed: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+
+                return await response.json();
+            } catch (error) {
+                throw error; // Re-throw to be caught by caller
+            }
+        }
+
+        async function getDatabaseInfo(databaseId) {
+            return makeNotionRequest(`/databases/${databaseId}`);
+        }
+
+
+        // --- Form Submission and Processing ---
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (isProcessing) return;
+
+            const databaseId = document.getElementById('databaseSelect').value;
+
+            let isValid = true;
+            if (!databaseId) {
+                showError(document.getElementById('databaseSelect'), 'Database is required');
+                isValid = false;
+            }
+
+            if (!isWorkerConfigComplete()) {
+                showError(workerUrlInput, "Worker URL is required");
+                showError(workerTokenInput, "Worker Token is required");
+                isValid = false;
+            }
+
+
+            if (!isValid) return;
+
+            isProcessing = true;
+            submitButton.disabled = true;
+            submitButtonText.classList.add('opacity-0');
+            loadingSpinner.classList.remove('hidden');
+            form.classList.add('hidden');
+            outputSection.classList.remove('hidden');
+            dbmlOutput.value = ''; // Initialize/clear textarea
+
+
+            try {
+                // Placeholder for now.  We'll put the generateDBML code *here*.
+                addLog("Generating DBML...");
+                dbmlOutput.value = "Placeholder DBML output.  Full implementation pending."; // Set the textarea
+
+            } catch (error) {
+                dbmlOutput.value = `Error: ${error.message}`; // Display error in textarea
+            } finally {
+                isProcessing = false;
+                submitButton.disabled = false;
+                submitButtonText.classList.remove("opacity-0");
+                loadingSpinner.classList.add("hidden");
+                resetButton.classList.remove('hidden'); // Show reset
+            }
+        });
+
+
+        // --- UI Helper Functions ---
+        function addLog(message) {
+            // Implementation of the addLog function from other files
+            const logElement = document.createElement('div');
+            logElement.textContent = message;
+            logElement.className = 'whitespace-pre-wrap';
+            // You will need to have a logsContainer element in your HTML as well.
+            // Example: <div id="logs-container"></div>
+        }
+
+        function showError(inputElement, message) {
+            const errorElement = document.getElementById(`${inputElement.name}-error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                inputElement.classList.add('border-red-500');
+            }
+        }
+
+        function clearError(inputElement) {
+            const errorElement = document.getElementById(`${inputElement.name}-error`);
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+                inputElement.classList.remove('border-red-500');
+            }
+        }
+
+        resetButton.addEventListener('click', () => {
+            resetForm();
+        });
+
+        function resetForm() {
+            isProcessing = false;
+            outputSection.classList.add('hidden');
+            form.classList.remove('hidden');
+            resetButton.classList.add('hidden');
+            dbmlOutput.value = '';
+        }
+
+        // --- Populate Dropdowns ---
+        function populateDropdowns(databases) {
+            const databaseSelect = document.getElementById('databaseSelect');
+            databaseSelect.innerHTML = '<option value="">-</option>';
+
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db.id;
+                option.textContent = db.title[0]?.plain_text || 'Untitled';
+                databaseSelect.appendChild(option);
+            });
+        }
+
+        // --- Fetch Databases ---
+        async function fetchDatabases() {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filter: {
+                        value: "database",
+                        property: "object"
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch databases');
+
+            const data = await response.json();
+            localStorage.setItem('nomsDatabases', JSON.stringify(data.results)); // Corrected line
+            return data.results;
+
+        }
+
+        // Copy to clipboard functionality:
+        document.getElementById('copy-button').addEventListener('click', () => {
+            dbmlOutput.select(); // Select the text
+            document.execCommand('copy'); // Copy
+            // Optional: Add visual feedback (e.g., change button text)
+            copyButton.textContent = "Copied!";
+            setTimeout(() => {
+                copyButton.innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        <span>Copy to Clipboard</span>`; // Reset
+            }, 2000);
+        });
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+            checkAuthStatus();
+            updateUI(userInfoContainer); // Update UI
+
+            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+            if (databases.length) {
+                populateDropdowns(databases);
+            }
+
+            document.getElementById('refreshDatabases').addEventListener('click', async () => {
+                if (!isWorkerConfigComplete()) {
+                    showError(workerUrlInput, 'Worker URL and Token are required');
+                    showError(workerTokenInput, 'Worker URL and Token are required');
+                    return;
+                }
+
+                try {
+                    const databases = await fetchDatabases();
+                    populateDropdowns(databases);
+                } catch (error) {
+                    console.error('Failed to refresh databases:', error);
+                    addLog(`Error refreshing databases: ${error.message}`); // Consistent logging
+                }
+            });
+
+
+            document.getElementById('databaseSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                const filtered = databases.filter(db =>
+                    db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+                );
+                populateDropdowns(filtered);
+            });
+        });
+    </script>
+    <script src="./js/loadKofi.js"></script>
+</body>
+
+</html>
