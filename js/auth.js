@@ -122,8 +122,8 @@ async function updateUIHeader(userInfoContainer) {
     `;
         // When the button is clicked, construct the login URL and navigate.
         document.getElementById('login-button').addEventListener('click', () => {
-          const loginUrl = new URL('/auth/login', OAUTH_HANDLER_URL);
-          window.location.href = loginUrl.href;
+            const loginUrl = new URL('/auth/login', OAUTH_HANDLER_URL);
+            window.location.href = loginUrl.href;
         });
     }
 }

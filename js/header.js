@@ -1,10 +1,8 @@
-// js/header.js
-
 function createHeader() {
     const headerHTML = `
     <header view-transition-name="shared-header">
         <div class="header-container">
-                        <h1>
+            <h1>
                 <a href="./index.html">
                     <img src="./assets/favicon.svg" alt="Noms" class="logo-image">
                 </a>
@@ -18,7 +16,7 @@ function createHeader() {
 
     const styleHTML = `
     <style>
-        /* Header Styles (copied from your index.html) */
+        /* Header Styles */
         header {
             display: flex;
             justify-content: center;
@@ -28,7 +26,6 @@ function createHeader() {
             background-color: #FEA97F;
             border-bottom: 8px solid #000;
         }
-
         .header-container {
             max-width: 800px;
             width: 100%;
@@ -39,88 +36,43 @@ function createHeader() {
             padding: 0 2rem;
         }
         h1 {
-            font-family: 'Geist Mono', monospace; /* Geist Mono for headings */
+            font-family: 'Geist Mono', monospace;
             font-size: 3rem;
             font-weight: 700;
             text-transform: uppercase;
-            margin: 0; /* Remove margin */
+            margin: 0;
             text-align: center;
-            line-height: 0; /* Fix the height issue */
-            display: flex; /* Ensure proper sizing */
+            line-height: 0;
+            display: flex;
             align-items: center;
         }
-
-        /* Logo specific styles - removing button styling */
+        /* Logo link styles */
         h1 a {
             color: #000;
             text-decoration: none;
-            display: flex; /* Change to flex for better alignment */
+            display: flex;
             align-items: center;
             padding: 0;
             background: none;
             border: none;
             box-shadow: none;
-            line-height: 0; /* Fix the height issue */
+            line-height: 0;
         }
-
         h1 a:hover {
             background: none;
             color: #000;
         }
-
         .logo-image {
             height: 3rem;
             width: auto;
-            display: block; /* Add this */
+            display: block;
             vertical-align: middle;
             transition: filter 0.2s ease;
         }
-
         .logo-image:hover {
             filter: brightness(0.8) contrast(1.2);
         }
-
-        /* Button styles (now specifically for user-info buttons) */
-        #user-info button,
-        a:not(h1 a) {
-            color: #000;
-            text-decoration: none;
-            font-weight: 700;
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border: 4px solid black;
-            background-color: #FEA97F;  /* Accent color on buttons */
-            box-shadow: 4px 4px 0 0 #000;
-            transition: background-color 0.2s, color 0.2s;
-            font-size: 1rem;
-        }
-
-        #user-info button:hover,
-        a:not(h1 a):hover {
-            background-color: black;
-            color: white;
-        }
-
-        /* Responsive header adjustments */
-        @media (max-width: 768px) {
-            header {
-                border-bottom-width: 4px;
-            }
-
-            .header-container {
-                padding: 0 1rem;
-            }
-            h1{
-                font-size: 2rem;
-            }
-            a{
-                padding: 0.3rem 0.75rem;
-                 border-width: 2px;
-                 box-shadow: 2px 2px 0 0 #000;
-                 font-size: 0.9rem;
-               }
-        }
-        /* Style for buttons in user-info (consistent styling) */
+        /* User info buttons styling */
         #user-info button {
             color: #000;
             text-decoration: none;
@@ -128,36 +80,39 @@ function createHeader() {
             display: inline-block;
             padding: 0.5rem 1rem;
             border: 4px solid black;
-            background-color: #FEA97F;  /* Accent color on buttons */
+            background-color: #FEA97F;
             box-shadow: 4px 4px 0 0 #000;
             transition: background-color 0.2s, color 0.2s;
             font-size: 1rem;
-            margin-left: 1rem; /* Add some spacing between buttons */
+            margin-left: 1rem;
         }
-
         #user-info button:hover {
             background-color: black;
             color: white;
         }
-
-          /* Responsive adjustments for header buttons */
+        /* Responsive adjustments */
         @media (max-width: 768px) {
+            header {
+                border-bottom-width: 4px;
+            }
+            .header-container {
+                padding: 0 1rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
             #user-info button {
                 padding: 0.3rem 0.75rem;
                 border-width: 2px;
                 box-shadow: 2px 2px 0 0 #000;
                 font-size: 0.9rem;
             }
-        }
-
-        @media (max-width: 768px) {
             .logo-image {
                 height: 2rem;
             }
         }
     </style>
     `;
-    //No need to create element.
     return headerHTML + styleHTML + `
     <!-- Notice Banner -->
     <div class="notice-banner" style="max-width: 600px; margin: 1rem auto; padding: 1rem; background-color: rgba(254, 169, 127, 0.1); font-family: 'Geist Mono', monospace; text-align: center; font-size: 1rem;">
@@ -165,7 +120,7 @@ function createHeader() {
       (a) I cannot guarantee this will remain free because Notion requires a CORS proxy, and to fetch URL information via the browser, proxified requests are needed as well.<br>
       (b) Do not close the tab while processing, as it happens in your browser, not on a server.
     </div>
-    `; //Just return string
+    `;
 }
 
 export { createHeader };
