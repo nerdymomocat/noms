@@ -716,11 +716,11 @@
 
                     // 4. Query for potential duplicates
                     const potentialDuplicates = await withExponentialBackoff(() => queryForDuplicates(databaseId, comparisonFilters, page.id, timestampType, direction));
-                    addLog(`Found ${potentialDuplicates.length} potential duplicates for page ${page.id}.`);
 
 
                     // 5. Apply the outcome
                     if (potentialDuplicates.length > 1) { // Check for > 1
+                        addLog(`Found ${potentialDuplicates.length - 1} potential duplicates for page ${page.id}.`);
                         const pagesToProcess = potentialDuplicates.slice(1); // remove the first element
 
                         for (const duplicatePage of pagesToProcess) {
