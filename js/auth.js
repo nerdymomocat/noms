@@ -91,7 +91,7 @@ async function initializeAuth() {
 /**
  * Updates a container (e.g., a <div id="user-info">) to display either:
  * - A "Login with Notion" link if not logged in.
- * - Or "Logged in as (workspaceName)" plus [Logout] / [Disconnect] if logged in.
+ * - Or "You are (workspaceName)" plus [Logout] / [Disconnect] if logged in.
  *
  * @param {HTMLElement} userInfoContainer
  */
@@ -101,7 +101,7 @@ async function updateUI(userInfoContainer) {
     if (nomsData) {
         // Logged in UI
         userInfoContainer.innerHTML = `
-      <span>Logged in as: ${nomsData.workspaceName}</span>
+      <span>You are: ${nomsData.workspaceName}</span>
       <button id="logout-button"
         class="px-4 py-2 ml-4 text-white bg-black border-4 border-black rounded-md">
         Logout
