@@ -95,9 +95,9 @@
         <div
             style={{
                 display: 'flex',
-                fontSize: '30px',
+                fontSize: '20px',
                 color: 'rgb(113,135,47)',
-                marginTop: '20px',
+                marginTop: '18px',
                 textAlign: 'center',
                 padding: '0px 20px',
                 margin: '20px 80px',
@@ -107,20 +107,39 @@
             Merge options in a Notion select or multi-select property
         </div>
 
-        {/* Author (right-aligned) */}
+        {/* Combined container for button and author */}
         <div
             style={{
                 display: 'flex',
                 width: '100%',
-                alignItems: 'flex-end',
-                justifyContent: 'flex-end',
-                fontSize: '14px',
-                color: 'rgb(208,83,0)',
-                marginTop: '10px',
-                fontWeight: 'medium'
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '0px',
+                padding: '0 20px',
             }}
         >
-            <span>Nerdy Momo Cat</span>
+            <div
+                style={{
+                    padding: '10px 20px',
+                    backgroundColor: 'rgba(208,83,0,0.1)',
+                    borderRadius: '25px',
+                    border: '2px',
+                    borderColor: 'rgb(208,83,0)',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                }}
+            >
+                Try at nerdymomocat.github.io/noms/
+            </div>
+            <div
+                style={{
+                    fontSize: '14px',
+                    color: 'rgb(208,83,0)',
+                    fontWeight: 'medium',
+                }}
+            >
+                Nerdy Momo Cat
+            </div>
         </div>
     </div>
 </div>
