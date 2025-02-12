@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Notion Link Enhancer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -742,7 +742,8 @@
 
     async function fetchDatabases() {
       try {
-        const response = await fetch(`${WORKER_URL}/search`, {
+        // Use the worker URL and add the token parameter
+        const response = await fetch(`${WORKER_URL}/search?token=${encodeURIComponent(WORKER_TOKEN)}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${notionToken}`,
@@ -781,7 +782,7 @@
 
     async function loadDatabaseProperties(databaseId) {
       try {
-        const response = await fetch(`${WORKER_URL}/databases/${databaseId}`, {
+        const response = await fetch(`${WORKER_URL}/databases/${databaseId}?token=${encodeURIComponent(WORKER_TOKEN)}`, {
           headers: {
             'Authorization': `Bearer ${notionToken}`
           }
