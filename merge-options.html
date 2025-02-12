@@ -361,7 +361,7 @@
 
     <script type="module">
         import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
-        import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js';
+        import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
         import { createHeader } from './js/header.js';
 
         const form = document.getElementById('options-form');
@@ -381,6 +381,8 @@
         const oldOptionsList = document.getElementById('oldOptionsList');
         const oldOptionsSelected = document.getElementById('oldOptionsSelected');
         const newOptionSelect = document.getElementById('newOptionSelect');
+        const workerUrlInput = document.getElementById('workerUrl');
+        const workerTokenInput = document.getElementById('workerToken');
 
         // Form Data and State
         let isProcessing = false;
@@ -478,9 +480,6 @@
 
         // Load worker config from localStorage or constants
         function loadWorkerConfig() {
-            const workerUrlInput = document.getElementById('workerUrl');
-            const workerTokenInput = document.getElementById('workerToken');
-
             const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
             if (savedConfig) {
                 const config = JSON.parse(savedConfig);
@@ -492,8 +491,6 @@
                     workerTokenInput.value = WORKER_TOKEN;
                 }
             }
-
-            checkWorkerUrl(); // Check URL state after loading config
         }
 
         // Save worker config to localStorage
@@ -514,11 +511,8 @@
 
             // Logged in:
             notionToken = nomsData.accessToken;
-            updateUIHeader(userInfoContainer); // Update header (logout/disconnect)
             submitButton.disabled = false; // Enable the button
             authBanner.classList.add('hidden'); // Hide the banner
-            loadWorkerConfig();
-            checkWorkerUrl(); // Check initial state
         }
 
         // Add function to check if worker config is complete
@@ -785,20 +779,18 @@
                 }
 
                 //Update database schema:
+                // Update database schema:
                 const existingOptions = propertyInfo[propertyType].options;
                 const updatedOptions = existingOptions.filter(option => !selectedOldOptions.includes(option.name));
-                if (!updatedOptions.some(option => option.name === newOption)) {
-                    updatedOptions.push({ name: newOption, color: "default" }); // Add new value
-                }
 
-                if (updatedOptions.length < existingOptions.length || !updatedOptions.some(o => o.name === newOption)) {
+                // Only update the schema if options have been removed.
+                if (updatedOptions.length < existingOptions.length) {
                     addLog(`Updating database options schema...`);
                     await updateDatabaseOptions(databaseId, propertyName, propertyType, updatedOptions);
                     addLog(`Database options schema updated.`);
                 }
 
                 addLog("✨ All Done!");
-
             } catch (error) {
                 addLog(`❌ Error: ${error.message}`);
             } finally {
@@ -939,6 +931,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeAuth();
             checkAuthStatus();
+            loadWorkerConfig();
+            checkWorkerUrl(); // Check initial state
             updateUIHeader(userInfoContainer);
 
             // Populate databases from cache, don't fetch initially

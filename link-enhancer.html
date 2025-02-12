@@ -269,7 +269,7 @@
 
   <script type="module">
     import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
-    import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
+    import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
     import { createHeader } from './js/header.js'; // Import createHeader
 
     const form = document.getElementById('notion-form');
@@ -286,6 +286,8 @@
     const authBanner = document.getElementById('auth-banner');
     const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
     const databaseSection = document.getElementById('database-section');
+    const workerUrlInput = document.getElementById('workerUrl');
+    const workerTokenInput = document.getElementById('workerToken');
 
     // Form Data and State
     let isProcessing = false;
@@ -302,9 +304,6 @@
 
     // Load worker config from localStorage or constants
     function loadWorkerConfig() {
-      const workerUrlInput = document.getElementById('workerUrl');
-      const workerTokenInput = document.getElementById('workerToken');
-
       const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
       if (savedConfig) {
         const config = JSON.parse(savedConfig);
@@ -316,8 +315,6 @@
           workerTokenInput.value = WORKER_TOKEN;
         }
       }
-
-      checkWorkerUrl(); // Check URL state after loading config
     }
 
     // Save worker config to localStorage
@@ -328,8 +325,6 @@
     // Function to check login status, show banner if needed, and update header.
     async function checkAuthStatus() {
       const nomsData = getLocalStorageWithExpiry("nomsData");
-      const authBanner = document.getElementById('auth-banner');
-
       if (!nomsData) {
         // Not logged in: Show banner, disable button, don't update header here
         authBanner.classList.remove('hidden');
@@ -339,11 +334,8 @@
 
       // Logged in:
       notionToken = nomsData.accessToken;
-      updateUIHeader(userInfoContainer); // Update header (logout/disconnect)
       submitButton.disabled = false; // Enable the button
-      authBanner.classList.add('hidden'); // Hide the banner
-      loadWorkerConfig();
-      checkWorkerUrl(); // Check initial state
+      authBanner.classList.add('hidden'); // Hide the banner     
     }
 
     // Add function to check if worker config is complete
@@ -892,6 +884,8 @@
     document.addEventListener('DOMContentLoaded', async () => {
       await initializeAuth();
       checkAuthStatus();
+      loadWorkerConfig();
+      checkWorkerUrl(); // Check initial state
       updateUIHeader(userInfoContainer);
 
       // Only populate from cache, don't fetch
