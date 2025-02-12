@@ -75,7 +75,7 @@
         <div
             style={{
                 display: 'flex',
-                fontSize: '40px',
+                fontSize: '30px',
                 fontWeight: '900',
                 textTransform: 'uppercase',
                 letterSpacing: '2px',
@@ -86,6 +86,7 @@
                 marginTop: '30px',
                 lineHeight: 1.2,
                 whiteSpace: 'pre-wrap',
+                textAlign:'center',
             }}
         >
             Merge Property Options
