@@ -2,627 +2,637 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Remove Unused Notion Options</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
-    rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Geist', 'system-ui', 'sans-serif'],
-            mono: ['Geist Mono', 'monospace'],
-          },
-        },
-      },
-    };
-  </script>
-  <style>
-    .hidden {
-      display: none;
-    }
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remove Unused Notion Options</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Geist', 'system-ui', 'sans-serif'],
+                        mono: ['Geist Mono', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .hidden {
+            display: none;
+        }
 
-    /* Custom styles */
-    body {
-      font-family: 'Geist', sans-serif;
-      /* Geist for body text */
-    }
+        /* Custom styles */
+        body {
+            font-family: 'Geist', sans-serif;
+            /* Geist for body text */
+        }
 
-    h1 {
-      font-family: 'Geist Mono', monospace;
-      /* Geist Mono for headings */
-    }
+        h1 {
+            font-family: 'Geist Mono', monospace;
+            /* Geist Mono for headings */
+        }
 
-    h2,
-    .font-mono {
-      font-family: 'Geist Mono', monospace;
-    }
+        h2,
+        .font-mono {
+            font-family: 'Geist Mono', monospace;
+        }
 
-    /* Custom select styles */
-    select {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.75rem center;
-      background-size: 1.25rem;
-      padding-right: 2.5rem;
-    }
+        /* Custom select styles */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
 
-    select option:first-child {
-      color: #9CA3AF;
-    }
+        select option:first-child {
+            color: #9CA3AF;
+        }
 
-    select.border-black {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-    }
-  </style>
+        select.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+    </style>
 </head>
 
 <body>
-  <div id="header-container"></div>
-  <div id="root" class="min-h-screen bg-gray-100 p-8">
-    <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
-      You need to be logged in to use this tool. Please log in above.
-    </div>
-    <div class="mx-auto max-w-2xl">
-      <div class="mb-8 flex items-center justify-center space-x-4">
-        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-        </svg>
-        <h1 class="text-3xl font-black uppercase tracking-wider">
-          Remove Unused Options
-        </h1>
-      </div>
-
-      <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
-        <form id="options-form" class="space-y-6">
-          <details open class="rounded-lg border-4 border-black p-4">
-            <summary class="cursor-pointer font-bold uppercase tracking-wide">
-              Worker Configuration
-            </summary>
-            <div class="mt-4 space-y-4">
-              <div class="w-full">
-                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker URL</label>
-                <input
-                  class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                  type="url" id="workerUrl" name="workerUrl"
-                  placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)" required />
-                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-              </div>
-              <div class="w-full">
-                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker Token</label>
-                <input
-                  class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                  type="password" id="workerToken" name="workerToken" placeholder="Enter your Worker Token" required />
-                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-              </div>
-            </div>
-          </details>
-
-          <!-- Show database section but keep submit disabled -->
-          <div id="database-section" class="space-y-6">
-            <!-- Database selection -->
-            <div class="w-full">
-              <div class="flex items-center justify-between mb-2">
-                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Database</label>
-                <button type="button" id="refreshDatabases"
-                  class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </button>
-              </div>
-              <div class="relative">
-                <input type="text" id="databaseSearch" placeholder="Search databases..."
-                  class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <select id="databaseSelect"
-                  class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                  <option value="" class="text-gray-400">-</option>
-                </select>
-              </div>
-              <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-            </div>
-
-            <!-- Property selection -->
-            <div class="w-full">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="propertySelect">Select or Multi-Select
-                Property</label>
-              <select id="propertySelect" name="propertySelect"
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="" class="text-gray-400">-</option>
-              </select>
-              <p id="propertySelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-            </div>
-
-            <!-- Submit button -->
-            <button type="submit" id="submit-button"
-              class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
-              <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
-                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-              </div>
-              <span id="submit-button-text">Start Update</span>
-            </button>
-          </div>
-        </form>
-
-        <div id="progress-display" class="hidden space-y-6">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <h2 class="font-bold uppercase tracking-wide">Progress</h2>
-            </div>
-            <div class="h-4 w-full border-4 border-black bg-white">
-              <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300" style="width: 0%"></div>
-            </div>
-          </div>
-          <div id="logs-container"
-            class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
-          </div>
-          <button id="reset-button"
-            class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
-            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span>Start New Update</span>
-          </button>
+    <div id="header-container"></div>
+    <div id="root" class="min-h-screen bg-gray-100 p-8">
+        <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
+            You need to be logged in to use this tool. Please log in above.
         </div>
-      </div>
+        <div class="mx-auto max-w-2xl">
+            <div class="mb-8 flex items-center justify-center space-x-4">
+                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+                <h1 class="text-3xl font-black uppercase tracking-wider">
+                    Remove Unused Options
+                </h1>
+            </div>
+
+            <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
+                <form id="options-form" class="space-y-6">
+                    <details open class="rounded-lg border-4 border-black p-4">
+                        <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                            Worker Configuration
+                        </summary>
+                        <div class="mt-4 space-y-4">
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker
+                                    URL</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="url" id="workerUrl" name="workerUrl"
+                                    placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)"
+                                    required />
+                                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker
+                                    Token</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="password" id="workerToken" name="workerToken"
+                                    placeholder="Enter your Worker Token" required />
+                                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Show database section but keep submit disabled -->
+                    <div id="database-section" class="space-y-6">
+                        <!-- Database selection -->
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select
+                                    Database</label>
+                                <button type="button" id="refreshDatabases"
+                                    class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="databaseSearch" placeholder="Search databases..."
+                                    class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <select id="databaseSelect"
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                    <option value="" class="text-gray-400">-</option>
+                                </select>
+                            </div>
+                            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Property selection -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide" for="propertySelect">Select or
+                                Multi-Select
+                                Property</label>
+                            <select id="propertySelect" name="propertySelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                            </select>
+                            <p id="propertySelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Submit button -->
+                        <button type="submit" id="submit-button"
+                            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+                            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                            </div>
+                            <span id="submit-button-text">Start Update</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="progress-display" class="hidden space-y-6">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-bold uppercase tracking-wide">Progress</h2>
+                        </div>
+                        <div class="h-4 w-full border-4 border-black bg-white">
+                            <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="logs-container"
+                        class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
+                    </div>
+                    <button id="reset-button"
+                        class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Start New Update</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script type="module">
-    import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
-    import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
-    import { createHeader } from './js/header.js'; // Import createHeader
+    <script type="module">
+        import { getLocalStorageWithExpiry, updateUI, initializeAuth } from './js/auth.js';
+        import { OAUTH_HANDLER_URL, WORKER_URL, WORKER_TOKEN } from './js/constants.js'; // Import OAUTH_HANDLER_URL and WORKER_URL
+        import { createHeader } from './js/header.js'; // Import createHeader
 
-    const form = document.getElementById('options-form');
-    const submitButton = document.getElementById('submit-button');
-    const submitButtonText = document.getElementById('submit-button-text');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const progressDisplay = document.getElementById('progress-display');
-    const progressBar = document.getElementById('progress-bar');
-    const logsContainer = document.getElementById('logs-container');
-    const resetButton = document.getElementById('reset-button');
-    const mainContainer = document.getElementById('main-container');
-    const authBanner = document.getElementById('auth-banner');
-    const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
-    const databaseSection = document.getElementById('database-section');
-    const propertySelect = document.getElementById("propertySelect");
+        const form = document.getElementById('options-form');
+        const submitButton = document.getElementById('submit-button');
+        const submitButtonText = document.getElementById('submit-button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const progressDisplay = document.getElementById('progress-display');
+        const progressBar = document.getElementById('progress-bar');
+        const logsContainer = document.getElementById('logs-container');
+        const resetButton = document.getElementById('reset-button');
+        const mainContainer = document.getElementById('main-container');
+        const authBanner = document.getElementById('auth-banner');
+        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+        const databaseSection = document.getElementById('database-section');
+        const propertySelect = document.getElementById("propertySelect");
 
-    // Form Data and State
-    let isProcessing = false;
-    let progress = { current: 0, total: 0 };
-    let logs = [];
-    let notionToken = null; // Store notion token
-    let propertyType = null;
+        // Form Data and State
+        let isProcessing = false;
+        let progress = { current: 0, total: 0 };
+        let logs = [];
+        let notionToken = null; // Store notion token
+        let propertyType = null;
 
-    // Prefill the workerUrl input
-    const workerUrlInput = document.getElementById('workerUrl');
-    if (WORKER_URL) {
-      workerUrlInput.value = WORKER_URL;
-    }
-
-    // Prefill the workerToken input
-    const workerTokenInput = document.getElementById('workerToken');
-    if (WORKER_TOKEN) {
-      workerTokenInput.value = WORKER_TOKEN;
-    }
-
-    // --- Insert the header here ---
-    const headerContainer = document.getElementById('header-container');
-    headerContainer.innerHTML = createHeader();
-    const userInfoContainer = document.getElementById('user-info'); // NOW it will find it
-    // ---------------------------------
-
-    // Load worker config from localStorage or constants
-    function loadWorkerConfig() {
-      const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
-      if (savedConfig) {
-        const config = JSON.parse(savedConfig);
-        workerUrlInput.value = config.url;
-        workerTokenInput.value = config.token;
-      } else if (WORKER_URL) {
-        workerUrlInput.value = WORKER_URL;
-        if (WORKER_TOKEN) {
-          workerTokenInput.value = WORKER_TOKEN;
+        // Prefill the workerUrl input
+        const workerUrlInput = document.getElementById('workerUrl');
+        if (WORKER_URL) {
+            workerUrlInput.value = WORKER_URL;
         }
-      }
-      checkWorkerUrl(); // Check URL state after loading config
-    }
 
-    // Save worker config to localStorage
-    function saveWorkerConfig(url, token) {
-      localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
-    }
+        // Prefill the workerToken input
+        const workerTokenInput = document.getElementById('workerToken');
+        if (WORKER_TOKEN) {
+            workerTokenInput.value = WORKER_TOKEN;
+        }
 
-    // Function to check login status, show banner if needed, and update header.
-    async function checkAuthStatus() {
-      const nomsData = getLocalStorageWithExpiry("nomsData");
-      const authBanner = document.getElementById('auth-banner');
+        // --- Insert the header here ---
+        const headerContainer = document.getElementById('header-container');
+        headerContainer.innerHTML = createHeader();
+        const userInfoContainer = document.getElementById('user-info'); // NOW it will find it
+        // ---------------------------------
 
-      if (!nomsData) {
-        // Not logged in: Show banner, disable button, don't update header here
-        authBanner.classList.remove('hidden');
-        submitButton.disabled = true;
-        return; // Stop execution.  Don't try to fetch from the worker.
-      }
+        // Load worker config from localStorage or constants
+        function loadWorkerConfig() {
+            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                workerUrlInput.value = config.url;
+                workerTokenInput.value = config.token;
+            } else if (WORKER_URL) {
+                workerUrlInput.value = WORKER_URL;
+                if (WORKER_TOKEN) {
+                    workerTokenInput.value = WORKER_TOKEN;
+                }
+            }
+            checkWorkerUrl(); // Check URL state after loading config
+        }
 
-      // Logged in:
-      notionToken = nomsData.accessToken;
-      updateUI(userInfoContainer); // Update header (logout/disconnect)
-      submitButton.disabled = false; // Enable the button
-      authBanner.classList.add('hidden'); // Hide the banner
-      loadWorkerConfig();
-      checkWorkerUrl(); // Check initial state
-    }
+        // Save worker config to localStorage
+        function saveWorkerConfig(url, token) {
+            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+        }
+
+        // Function to check login status, show banner if needed, and update header.
+        async function checkAuthStatus() {
+            const nomsData = getLocalStorageWithExpiry("nomsData");
+            const authBanner = document.getElementById('auth-banner');
+
+            if (!nomsData) {
+                // Not logged in: Show banner, disable button, don't update header here
+                authBanner.classList.remove('hidden');
+                submitButton.disabled = true;
+                return; // Stop execution.  Don't try to fetch from the worker.
+            }
+
+            // Logged in:
+            notionToken = nomsData.accessToken;
+            updateUI(userInfoContainer); // Update header (logout/disconnect)
+            submitButton.disabled = false; // Enable the button
+            authBanner.classList.add('hidden'); // Hide the banner
+            loadWorkerConfig();
+            checkWorkerUrl(); // Check initial state
+        }
 
 
-    // Add function to check if worker config is complete
-    function isWorkerConfigComplete() {
-      const url = workerUrlInput.value.trim();
-      const token = workerTokenInput.value.trim();
-      return url && token;
-    }
+        // Add function to check if worker config is complete
+        function isWorkerConfigComplete() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            return url && token;
+        }
 
-    // Update checkWorkerUrl to check both fields
-    function checkWorkerUrl() {
-      const url = workerUrlInput.value.trim();
-      const token = workerTokenInput.value.trim();
-      submitButton.disabled = !url || !token;
+        // Update checkWorkerUrl to check both fields
+        function checkWorkerUrl() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            submitButton.disabled = !url || !token;
 
-      if (url && token) {
-        saveWorkerConfig(url, token);
-      }
-    }
+            if (url && token) {
+                saveWorkerConfig(url, token);
+            }
+        }
 
-    // --- Event Handlers ---
-    form.addEventListener('input', (e) => {
-      if (e.target.tagName === 'INPUT') {
-        clearError(e.target);
-      }
-    });
-
-    workerUrlInput.addEventListener('input', () => {
-      clearError(workerUrlInput);
-      checkWorkerUrl();
-    });
-
-    workerTokenInput.addEventListener('input', () => {
-      clearError(workerTokenInput);
-      checkWorkerUrl();
-    });
-
-    // --- Notion Request Helpers (reusable) ---
-    async function makeNotionRequest(endpoint, options = {}) {
-      if (!isWorkerConfigComplete()) {
-        throw new Error('Worker URL and Token are required');
-      }
-
-      const workerUrl = workerUrlInput.value.trim();
-      const workerToken = workerTokenInput.value.trim();
-
-      const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
-      try {
-        const response = await fetch(url, {
-          ...options,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${notionToken}`,
-            ...options.headers,
-          },
+        // --- Event Handlers ---
+        form.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                clearError(e.target);
+            }
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          const errorMessage = errorData?.message || `API request failed: ${response.status}`;
-          throw new Error(errorMessage);
+        workerUrlInput.addEventListener('input', () => {
+            clearError(workerUrlInput);
+            checkWorkerUrl();
+        });
+
+        workerTokenInput.addEventListener('input', () => {
+            clearError(workerTokenInput);
+            checkWorkerUrl();
+        });
+
+        // --- Notion Request Helpers (reusable) ---
+        async function makeNotionRequest(endpoint, options = {}) {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${notionToken}`,
+                        ...options.headers,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    const errorMessage = errorData?.message || `API request failed: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+
+                return await response.json();
+            } catch (error) {
+                throw error;  // Re-throw to be caught by caller
+            }
         }
 
-        return await response.json();
-      } catch (error) {
-        throw error;  // Re-throw to be caught by caller
-      }
-    }
-
-    async function getDatabaseInfo(databaseId) {
-      return makeNotionRequest(`/databases/${databaseId}`);
-    }
-
-    // New function to check if an option is used
-    async function isOptionUsed(databaseId, propertyName, optionName, propertyType) {
-      const filter =
-        propertyType === "select"
-          ? { property: propertyName, select: { equals: optionName } }
-          : { property: propertyName, multi_select: { contains: optionName } };
-
-      const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
-        method: 'POST',
-        body: JSON.stringify({ filter }),
-      });
-      return response.results.length > 0;
-    }
-
-
-    // New function to update database options
-    async function updateDatabaseOptions(databaseId, propertyName, propertyType, newOptions) {
-      const updateData = {
-        properties: {
-          [propertyName]: {
-            [propertyType]: {
-              options: newOptions,
-            },
-          },
-        },
-      };
-      await makeNotionRequest(`/databases/${databaseId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(updateData),
-      });
-    }
-
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (isProcessing) return;
-
-      const databaseId = document.getElementById('databaseSelect').value;
-      const propertyName = document.getElementById('propertySelect').value;
-
-      let isValid = true;
-
-      if (!databaseId) {
-        showError(document.getElementById('databaseSelect'), 'Database is required');
-        isValid = false;
-      }
-      if (!propertyName) {
-        showError(document.getElementById('propertySelect'), 'Property is required');
-        isValid = false;
-      }
-      if (!isWorkerConfigComplete()) {
-        showError(workerUrlInput, "Worker URL is required");
-        showError(workerTokenInput, "Worker Token is required");
-        isValid = false;
-      }
-
-      if (!isValid) return;
-
-      isProcessing = true;
-      submitButton.disabled = true;
-      submitButtonText.classList.add('opacity-0');
-      loadingSpinner.classList.remove('hidden');
-      form.classList.add('hidden');
-      progressDisplay.classList.remove('hidden');
-      logs = [];
-      logsContainer.innerHTML = '';
-      progressBar.style.width = '0%';  // Initialize progress bar
-
-      try {
-        addLog(`Retrieving database info for ID: ${databaseId}`);
-        const dbInfo = await getDatabaseInfo(databaseId);
-
-        addLog("Database info retrieved");
-
-        if (!(propertyName in dbInfo.properties)) {
-          throw new Error(`Property '${propertyName}' not found`);
+        async function getDatabaseInfo(databaseId) {
+            return makeNotionRequest(`/databases/${databaseId}`);
         }
 
-        const propertyInfo = dbInfo.properties[propertyName];
-        propertyType = propertyInfo.type;
+        // New function to check if an option is used
+        async function isOptionUsed(databaseId, propertyName, optionName, propertyType) {
+            const filter =
+                propertyType === "select"
+                    ? { property: propertyName, select: { equals: optionName } }
+                    : { property: propertyName, multi_select: { contains: optionName } };
 
-        if (propertyType !== "select" && propertyType !== "multi_select") {
-          throw new Error(`Property '${propertyName}' is not select or multi_select`);
+            const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
+                method: 'POST',
+                body: JSON.stringify({ filter }),
+            });
+            return response.results.length > 0;
         }
 
-        const options = propertyInfo[propertyType].options;
-        addLog(`Checking ${options.length} options for property '${propertyName}'`);
-        const optionsToKeep = [];
 
-        progress.total = options.length;  // Set total for progress
-
-        for (const [index, option] of options.entries()) {
-          const optionName = option.name;
-          addLog(`Checking if option '${optionName}' is used...`);
-          const isUsed = await isOptionUsed(databaseId, propertyName, optionName, propertyType);
-          if (isUsed) {
-            optionsToKeep.push(option);
-            addLog(`Option '${optionName}' is used.`);
-          } else {
-            addLog(`Option '${optionName}' is NOT used.`);
-          }
-
-          // Update progress bar
-          progress.current = index + 1;
-          const progressPercentage = (progress.current / progress.total) * 100;
-          progressBar.style.width = `${progressPercentage}%`;
+        // New function to update database options
+        async function updateDatabaseOptions(databaseId, propertyName, propertyType, newOptions) {
+            const updateData = {
+                properties: {
+                    [propertyName]: {
+                        [propertyType]: {
+                            options: newOptions,
+                        },
+                    },
+                },
+            };
+            await makeNotionRequest(`/databases/${databaseId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(updateData),
+            });
         }
 
-        if (optionsToKeep.length < options.length) {
-          addLog(`Updating options for property '${propertyName}'`);
-          await updateDatabaseOptions(databaseId, propertyName, propertyType, optionsToKeep);
-          addLog(`Options for property '${propertyName}' updated in database`);
-        } else {
-          addLog(`No unused options found for property '${propertyName}'`);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (isProcessing) return;
+
+            const databaseId = document.getElementById('databaseSelect').value;
+            const propertyName = document.getElementById('propertySelect').value;
+
+            let isValid = true;
+
+            if (!databaseId) {
+                showError(document.getElementById('databaseSelect'), 'Database is required');
+                isValid = false;
+            }
+            if (!propertyName) {
+                showError(document.getElementById('propertySelect'), 'Property is required');
+                isValid = false;
+            }
+            if (!isWorkerConfigComplete()) {
+                showError(workerUrlInput, "Worker URL is required");
+                showError(workerTokenInput, "Worker Token is required");
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            isProcessing = true;
+            submitButton.disabled = true;
+            submitButtonText.classList.add('opacity-0');
+            loadingSpinner.classList.remove('hidden');
+            form.classList.add('hidden');
+            progressDisplay.classList.remove('hidden');
+            logs = [];
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';  // Initialize progress bar
+
+            try {
+                addLog(`Retrieving database info for ID: ${databaseId}`);
+                const dbInfo = await getDatabaseInfo(databaseId);
+
+                addLog("Database info retrieved");
+
+                if (!(propertyName in dbInfo.properties)) {
+                    throw new Error(`Property '${propertyName}' not found`);
+                }
+
+                const propertyInfo = dbInfo.properties[propertyName];
+                propertyType = propertyInfo.type;
+
+                if (propertyType !== "select" && propertyType !== "multi_select") {
+                    throw new Error(`Property '${propertyName}' is not select or multi_select`);
+                }
+
+                const options = propertyInfo[propertyType].options;
+                addLog(`Checking ${options.length} options for property '${propertyName}'`);
+                const optionsToKeep = [];
+
+                progress.total = options.length;  // Set total for progress
+
+                for (const [index, option] of options.entries()) {
+                    const optionName = option.name;
+                    addLog(`Checking if option '${optionName}' is used...`);
+                    const isUsed = await isOptionUsed(databaseId, propertyName, optionName, propertyType);
+                    if (isUsed) {
+                        optionsToKeep.push(option);
+                        addLog(`Option '${optionName}' is used.`);
+                    } else {
+                        addLog(`Option '${optionName}' is NOT used.`);
+                    }
+
+                    // Update progress bar
+                    progress.current = index + 1;
+                    const progressPercentage = (progress.current / progress.total) * 100;
+                    progressBar.style.width = `${progressPercentage}%`;
+                }
+
+                if (optionsToKeep.length < options.length) {
+                    addLog(`Updating options for property '${propertyName}'`);
+                    await updateDatabaseOptions(databaseId, propertyName, propertyType, optionsToKeep);
+                    addLog(`Options for property '${propertyName}' updated in database`);
+                } else {
+                    addLog(`No unused options found for property '${propertyName}'`);
+                }
+                addLog("✨ All Done!");
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+            } finally {
+                isProcessing = false;
+                submitButton.disabled = false;
+                submitButtonText.classList.remove("opacity-0");
+                loadingSpinner.classList.add("hidden");
+                resetButton.classList.remove('hidden'); // Show Reset
+            }
+        });
+
+        // --- UI Helper Functions ---
+        function addLog(message) {
+            logs.push(message);
+            const logElement = document.createElement('div');
+            logElement.textContent = message;
+            logElement.className = 'whitespace-pre-wrap';
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
         }
-        addLog("✨ All Done!");
 
-      } catch (error) {
-        addLog(`❌ Error: ${error.message}`);
-      } finally {
-        isProcessing = false;
-        submitButton.disabled = false;
-        submitButtonText.classList.remove("opacity-0");
-        loadingSpinner.classList.add("hidden");
-        resetButton.classList.remove('hidden'); // Show Reset
-      }
-    });
-
-    // --- UI Helper Functions ---
-    function addLog(message) {
-      logs.push(message);
-      const logElement = document.createElement('div');
-      logElement.textContent = message;
-      logElement.className = 'whitespace-pre-wrap';
-      logsContainer.appendChild(logElement);
-      logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll
-    }
-
-    function showError(inputElement, message) {
-      const errorElement = document.getElementById(`${inputElement.name}-error`);
-      if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.classList.remove('hidden');
-        inputElement.classList.add('border-red-500');
-      }
-    }
-
-    function clearError(inputElement) {
-      const errorElement = document.getElementById(`${inputElement.name}-error`);
-      if (errorElement) {
-        errorElement.textContent = '';
-        errorElement.classList.add('hidden');
-        inputElement.classList.remove('border-red-500');
-      }
-    }
-
-    resetButton.addEventListener('click', () => {
-      resetForm();
-    });
-
-    function resetForm() {
-      isProcessing = false;
-      progressDisplay.classList.add('hidden');
-      form.classList.remove('hidden');
-      resetButton.classList.add('hidden');
-      logsContainer.innerHTML = '';
-      progressBar.style.width = '0%'; // Reset progress
-      progress.current = 0;
-      progress.total = 0;
-    }
-
-    // --- Populate Dropdowns ---
-    function populateDropdowns(databases) {
-      const databaseSelect = document.getElementById('databaseSelect');
-      databaseSelect.innerHTML = '<option value="">-</option>';
-
-      databases.forEach(db => {
-        const option = document.createElement('option');
-        option.value = db.id;
-        option.textContent = db.title[0]?.plain_text || 'Untitled';
-        databaseSelect.appendChild(option);
-      });
-    }
-
-    function populatePropertyDropdown(databaseInfo) {
-      propertySelect.innerHTML = `<option value="">-</option>`; // Clear existing
-
-      if (!databaseInfo || !databaseInfo.properties) {
-        return; // No properties to populate
-      }
-
-      for (const propName in databaseInfo.properties) {
-        const prop = databaseInfo.properties[propName];
-        if (prop.type === "select" || prop.type === "multi_select") {
-          const option = document.createElement("option");
-          option.value = propName;
-          option.textContent = propName;
-          propertySelect.appendChild(option);
+        function showError(inputElement, message) {
+            const errorElement = document.getElementById(`${inputElement.name}-error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                inputElement.classList.add('border-red-500');
+            }
         }
-      }
-    }
 
-    // --- Fetch Databases/Properties ---
-    async function fetchDatabases() {
-      if (!isWorkerConfigComplete()) {
-        throw new Error('Worker URL and Token are required');
-      }
-      const workerUrl = workerUrlInput.value.trim();
-      const workerToken = workerTokenInput.value.trim();
-
-      const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${notionToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          filter: {
-            value: "database",
-            property: "object"
-          }
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch databases');
-
-      const data = await response.json();
-      localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
-      return data.results;
-
-    }
-
-    // --- Event Listeners ---
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initializeAuth();
-      checkAuthStatus();
-      updateUI(userInfoContainer);
-
-      // Populate databases from cache, don't fetch initially
-      const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
-      if (databases.length) {
-        populateDropdowns(databases);
-      }
-
-      // Refresh Databases button
-      document.getElementById('refreshDatabases').addEventListener('click', async () => {
-        if (!isWorkerConfigComplete()) {
-          showError(workerUrlInput, 'Worker URL and Token are required');
-          showError(workerTokenInput, 'Worker URL and Token are required');
-          return;
+        function clearError(inputElement) {
+            const errorElement = document.getElementById(`${inputElement.name}-error`);
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+                inputElement.classList.remove('border-red-500');
+            }
         }
-        try {
-          const databases = await fetchDatabases();
-          populateDropdowns(databases);
-        } catch (error) {
-          console.error('Failed to refresh databases:', error);
-          addLog(`Error refreshing databases: ${error.message}`);
-        }
-      });
 
-      // Database Select change
-      document.getElementById('databaseSelect').addEventListener('change', async (e) => {
-        const databaseId = e.target.value;
-        propertySelect.innerHTML = `<option value="">-</option>`; // Clear properties
-        if (databaseId) {
-          try {
-            const databaseInfo = await getDatabaseInfo(databaseId);
-            populatePropertyDropdown(databaseInfo);
-          } catch (error) {
-            console.error('Error loading database properties:', error);
-            addLog(`Error loading database properties: ${error.message}`);
-          }
-        }
-      });
+        resetButton.addEventListener('click', () => {
+            resetForm();
+        });
 
-      // Database Search input
-      document.getElementById('databaseSearch').addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
-        const filtered = databases.filter(db =>
-          db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
-        );
-        populateDropdowns(filtered);
-      });
-    });
-  </script>
+        function resetForm() {
+            isProcessing = false;
+            progressDisplay.classList.add('hidden');
+            form.classList.remove('hidden');
+            resetButton.classList.add('hidden');
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%'; // Reset progress
+            progress.current = 0;
+            progress.total = 0;
+        }
+
+        // --- Populate Dropdowns ---
+        function populateDropdowns(databases) {
+            const databaseSelect = document.getElementById('databaseSelect');
+            databaseSelect.innerHTML = '<option value="">-</option>';
+
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db.id;
+                option.textContent = db.title[0]?.plain_text || 'Untitled';
+                databaseSelect.appendChild(option);
+            });
+        }
+
+        function populatePropertyDropdown(databaseInfo) {
+            propertySelect.innerHTML = `<option value="">-</option>`; // Clear existing
+
+            if (!databaseInfo || !databaseInfo.properties) {
+                return; // No properties to populate
+            }
+
+            for (const propName in databaseInfo.properties) {
+                const prop = databaseInfo.properties[propName];
+                if (prop.type === "select" || prop.type === "multi_select") {
+                    const option = document.createElement("option");
+                    option.value = propName;
+                    option.textContent = propName;
+                    propertySelect.appendChild(option);
+                }
+            }
+        }
+
+        // --- Fetch Databases/Properties ---
+        async function fetchDatabases() {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filter: {
+                        value: "database",
+                        property: "object"
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch databases');
+
+            const data = await response.json();
+            localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
+            return data.results;
+
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+            checkAuthStatus();
+            updateUI(userInfoContainer);
+
+            // Populate databases from cache, don't fetch initially
+            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+            if (databases.length) {
+                populateDropdowns(databases);
+            }
+
+            // Refresh Databases button
+            document.getElementById('refreshDatabases').addEventListener('click', async () => {
+                if (!isWorkerConfigComplete()) {
+                    showError(workerUrlInput, 'Worker URL and Token are required');
+                    showError(workerTokenInput, 'Worker URL and Token are required');
+                    return;
+                }
+                try {
+                    const databases = await fetchDatabases();
+                    populateDropdowns(databases);
+                } catch (error) {
+                    console.error('Failed to refresh databases:', error);
+                    addLog(`Error refreshing databases: ${error.message}`);
+                }
+            });
+
+            // Database Select change
+            document.getElementById('databaseSelect').addEventListener('change', async (e) => {
+                const databaseId = e.target.value;
+                propertySelect.innerHTML = `<option value="">-</option>`; // Clear properties
+                if (databaseId) {
+                    try {
+                        const databaseInfo = await getDatabaseInfo(databaseId);
+                        populatePropertyDropdown(databaseInfo);
+                    } catch (error) {
+                        console.error('Error loading database properties:', error);
+                        addLog(`Error loading database properties: ${error.message}`);
+                    }
+                }
+            });
+
+            // Database Search input
+            document.getElementById('databaseSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                const filtered = databases.filter(db =>
+                    db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+                );
+                populateDropdowns(filtered);
+            });
+        });
+    </script>
 </body>
 
 </html>
