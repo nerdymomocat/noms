@@ -358,6 +358,24 @@
                 return /^[a-zA-Z_]/.test(sanitized) ? sanitized : `_${sanitized}`;
             }
 
+            // List reserved keywords in lower-case.
+            const reservedKeywords = new Set(['note', 'table', 'ref', 'enum', 'index', 'indices']); // Add other DBML reserved keywords as needed.
+
+            function sanitizeColumnName(name) {
+                // Replace any non-alphanumeric characters (excluding underscores) with underscores.
+                let sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_');
+
+                // Ensure the column name starts with a letter or underscore.
+                sanitized = /^[a-zA-Z_]/.test(sanitized) ? sanitized : `_${sanitized}`;
+
+                // If the lower-case version of the sanitized name is a reserved keyword, prefix it.
+                if (reservedKeywords.has(sanitized.toLowerCase())) {
+                    sanitized = `safe_${sanitized}`;
+                }
+
+                return sanitized;
+            }
+
 
             function generateDBML(databaseInfo, allDatabases) {
                 let dbml = "";
@@ -372,13 +390,22 @@
                         let dbmlType = "";
 
                         //Sanitize property names
-                        const sanitizedPropName = sanitizeTableName(propName);
+                        let sanitizedPropName = sanitizeColumnName(propName);
+
 
                         switch (prop.type) {
                             case "title":
+                                dbmlType = "text";
+                                break;
                             case "rich_text":
+                                dbmlType = "text";
+                                break;
                             case "url":
+                                dbmlType = "text";
+                                break;
                             case "email":
+                                dbmlType = "text";
+                                break;
                             case "phone_number":
                                 dbmlType = "text";
                                 break;
@@ -386,8 +413,12 @@
                                 dbmlType = "number";
                                 break;
                             case "select":
+                                dbmlType = "text"; // Could be a custom enum type, but text is safer.
+                                break;
                             case "multi_select":
-                            case "status": // Treat status like select/multi_select
+                                dbmlType = "text[]"; // Array of text
+                                break;
+                            case "status":
                                 dbmlType = "text";
                                 break;
                             case "date":
@@ -397,16 +428,20 @@
                                 dbmlType = "boolean";
                                 break;
                             case "files":
-                                dbmlType = "text[]";
+                                dbmlType = "text[]"; // Store as array of URLs (text)
                                 break;
                             case "created_by":
                             case "last_edited_by":
+                                dbmlType = "text";  // notion user id
+                                break;
                             case "formula":
+                                dbmlType = "text"; // formula result
+                                break;
                             case "rollup":
-                                dbmlType = "text";
+                                dbmlType = "text"; // rollup result, could be various types, text covers all.
                                 break;
                             case "relation":
-                                dbmlType = "text"; // Just use text; the Ref will handle the link.
+                                dbmlType = "text"; //  ID of related database. The Ref will connect them.
                                 break;
                             case "unique_id":
                                 dbmlType = "text";
@@ -430,6 +465,7 @@
                     const tableName = sanitizeTableName(dbInfo.title[0]?.plain_text || 'Untitled');
                     for (const propName in dbInfo.properties) {
                         const prop = dbInfo.properties[propName];
+                        const sanitizedPropName = sanitizeColumnName(propName);
                         if (prop.type === "relation") {
                             const relatedDbId = prop.relation.database_id;
 
@@ -442,9 +478,6 @@
                                 } else if (prop.relation.type === "dual_property") {
                                     refType = '-'; // one-to-one
                                 }
-
-                                const sanitizedPropName = sanitizeTableName(propName);
-
                                 dbml += `Ref: ${tableName}.${sanitizedPropName} ${refType} ${relatedTableName}.id\n`;
                                 addLog(`Generated Ref: ${tableName}.${sanitizedPropName} ${refType} ${relatedTableName}.id`);
 
