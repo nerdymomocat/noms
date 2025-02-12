@@ -73,8 +73,8 @@
             max-width: 600px;
         }
 
-        /* Textarea for DBML output */
-        #dbmlOutput {
+        /* Textarea for diagram output */
+        #diagramOutput {
             font-family: 'Geist Mono', monospace;
             width: 100%;
             height: 300px;
@@ -110,12 +110,12 @@
                 </h1>
             </div>
             <div class="tool-description">
-                Generate a DBML (Database Markup Language) representation of your Notion database
+                Generate a DBML/Mermaid representation of your Notion database
                 relationships to visualize its structure (ERD).
             </div>
 
             <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
-                <form id="dbml-form" class="space-y-6">
+                <form id="diagram-form" class="space-y-6">
                     <details open class="rounded-lg border-4 border-black p-4">
                         <summary class="cursor-pointer font-bold uppercase tracking-wide">
                             Worker Configuration
@@ -168,20 +168,34 @@
                             </div>
                             <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
                         </div>
+
+                        <!-- New Diagram Type selector -->
+                        <fieldset class="border-4 border-black p-4">
+                            <legend class="font-bold uppercase tracking-wide">Diagram Type</legend>
+                            <label>
+                                <input type="radio" name="diagramType" value="dbml" checked>
+                                DBML
+                            </label>
+                            <label class="ml-4">
+                                <input type="radio" name="diagramType" value="mermaid">
+                                Mermaid ER Diagram
+                            </label>
+                        </fieldset>
+
                         <!-- Submit button -->
                         <button type="submit" id="submit-button"
                             class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
                             <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
                                 <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
                             </div>
-                            <span id="submit-button-text">Generate DBML</span>
+                            <span id="submit-button-text">Generate Diagram</span>
                         </button>
                     </div>
                 </form>
 
                 <div id="output-section" class="hidden space-y-6">
-                    <h2 class="font-bold uppercase tracking-wide">DBML Output</h2>
-                    <textarea id="dbmlOutput" readonly placeholder="DBML output will appear here..."></textarea>
+                    <h2 class="font-bold uppercase tracking-wide">Diagram Output</h2>
+                    <textarea id="diagramOutput" readonly placeholder="DBML output will appear here..."></textarea>
                     <textarea id="logOutput" readonly placeholder="Logs will appear here..."
                         class="mt-4 w-full h-32 border-4 border-black bg-white p-2 text-black font-mono text-sm"></textarea>
                     <button id="copy-button"
@@ -200,7 +214,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        <span>Generate New DBML</span>
+                        <span>Generate New Diagram</span>
                     </button>
                 </div>
 
@@ -216,12 +230,12 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeAuth();
 
-            const form = document.getElementById('dbml-form');
+            const form = document.getElementById('diagram-form');
             const submitButton = document.getElementById('submit-button');
             const submitButtonText = document.getElementById('submit-button-text');
             const loadingSpinner = document.getElementById('loading-spinner');
             const outputSection = document.getElementById('output-section');
-            const dbmlOutput = document.getElementById('dbmlOutput');
+            const dbmlOutput = document.getElementById('diagramOutput');
             const copyButton = document.getElementById('copy-button');
             const resetButton = document.getElementById('reset-button');
             const authBanner = document.getElementById('auth-banner');
@@ -429,7 +443,46 @@
                 return dbml;
             }
 
-
+            // New function to generate a Mermaid ER diagram
+            function generateMermaidER(allDatabases) {
+                let mermaid = "erDiagram\n";
+                // Generate entity blocks with attributes (excluding relation properties)
+                allDatabases.forEach(db => {
+                    const tableName = sanitizeTableName(db.title[0]?.plain_text || 'Untitled');
+                    mermaid += `    ${tableName} {\n`;
+                    mermaid += `        text id\n`;
+                    for (const propName in db.properties) {
+                        const prop = db.properties[propName];
+                        // Skip relation properties in attributes list
+                        if (prop.type === "relation") continue;
+                        const sanitizedPropName = sanitizeColumnName(propName);
+                        mermaid += `        ${prop.type} ${sanitizedPropName}\n`;
+                    }
+                    mermaid += "    }\n\n";
+                });
+                // Generate relationships for relation properties
+                allDatabases.forEach(db => {
+                    const tableName = sanitizeTableName(db.title[0]?.plain_text || 'Untitled');
+                    for (const propName in db.properties) {
+                        const prop = db.properties[propName];
+                        if (prop.type === "relation") {
+                            const relatedDbId = prop.relation.database_id;
+                            const relatedDb = allDatabases.find(d => d.id === relatedDbId);
+                            if (relatedDb) {
+                                const relatedTableName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
+                                // Mapping cardinality based on relation type
+                                let connector = "||--o{"; // default: one-to-many
+                                if (prop.relation.type === "single_property")
+                                    connector = "||--o{";
+                                else if (prop.relation.type === "dual_property")
+                                    connector = "||--||";
+                                mermaid += `    ${tableName} ${connector} ${relatedTableName} : ${sanitizeColumnName(propName)}\n`;
+                            }
+                        }
+                    }
+                });
+                return mermaid;
+            }
 
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -451,7 +504,7 @@
                 loadingSpinner.classList.remove('hidden');
                 form.classList.add('hidden');
                 outputSection.classList.remove('hidden');
-                dbmlOutput.value = '';
+                diagramOutput.value = '';
 
                 try {
                     async function getAllRelatedDatabases(startingDatabaseId, visited = new Set()) {
@@ -478,7 +531,6 @@
                                         relatedDatabases.push(relatedDb);
                                     }
                                 }
-
                             } else if (prop.type === "rollup") {
                                 addLog(`Checking rollup property: ${propName}`);
                                 if (currentDb.properties[prop.rollup.relation_property_name]?.type === "relation") {
@@ -494,14 +546,13 @@
                             } else if (prop.type === "formula") {
                                 addLog(`Checking formula property: ${propName}`);
                                 const formulaExpression = prop.formula.expression;
-                                const relationRegex = /\.relation/g;  // Look for .relation
+                                const relationRegex = /\.relation/g;
                                 if (relationRegex.test(formulaExpression)) {
                                     for (const innerPropName in currentDb.properties) {
                                         const innerProp = currentDb.properties[innerPropName];
                                         if (innerProp.type === "relation") {
                                             const relatedDbId = innerProp.relation.database_id;
                                             addLog(`Found formula relation: ${propName} -> Database ID: ${relatedDbId}`);
-
                                             const relatedSubDatabases = await getAllRelatedDatabases(relatedDbId, visited);
                                             for (const relatedDb of relatedSubDatabases) {
                                                 if (!relatedDatabases.some(db => db.id === relatedDb.id)) {
@@ -517,13 +568,20 @@
                     }
 
                     const allRelatedDatabases = await getAllRelatedDatabases(databaseId);
-                    const dbml = generateDBML(allRelatedDatabases[0], allRelatedDatabases);
-                    dbmlOutput.value = dbml;
-                    addLog("DBML Generated!"); // Add this line
+                    // Check selected diagram type
+                    const diagramType = document.querySelector('input[name="diagramType"]:checked').value;
+                    let outputCode = "";
+                    if (diagramType === "mermaid") {
+                        outputCode = generateMermaidER(allRelatedDatabases);
+                    } else {
+                        outputCode = generateDBML(allRelatedDatabases[0], allRelatedDatabases);
+                    }
+                    diagramOutput.value = outputCode;
+                    addLog(diagramType === "mermaid" ? "Mermaid ER Diagram Generated!" : "DBML Generated!");
 
                 } catch (error) {
-                    dbmlOutput.value = `Error: ${error.message}`;
-                    addLog(`Error generating DBML: ${error.message}`);
+                    diagramOutput.value = `Error: ${error.message}`;
+                    addLog(`Error generating diagram: ${error.message}`);
                 } finally {
                     isProcessing = false;
                     submitButton.disabled = false;
@@ -566,7 +624,7 @@
                 outputSection.classList.add('hidden');
                 form.classList.remove('hidden');
                 resetButton.classList.add('hidden');
-                dbmlOutput.value = '';
+                diagramOutput.value = '';
                 logOutput.value = ''; //clear logs
             }
 
@@ -613,7 +671,7 @@
             }
 
             document.getElementById('copy-button').addEventListener('click', () => {
-                dbmlOutput.select();
+                diagramOutput.select();
                 document.execCommand('copy');
                 copyButton.textContent = "Copied!";
                 setTimeout(() => {
