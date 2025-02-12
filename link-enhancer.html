@@ -90,6 +90,7 @@
 
           <!-- Show database section but keep submit disabled -->
           <div id="database-section" class="space-y-6">
+            <!-- Database selection -->
             <div class="w-full">
               <div class="flex items-center justify-between mb-2">
                 <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Database</label>
@@ -113,36 +114,7 @@
               <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
 
-            <!-- Property selection dropdowns -->
-            <div class="w-full">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
-              <select id="urlPropertySelect" name="urlPropertyName" required
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="">Select URL property</option>
-              </select>
-              <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-            </div>
-
-            <div class="w-full" id="ogImagePropertyName-container">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertySelect">OG Image
-                Property</label>
-              <select id="ogImagePropertySelect" name="ogImagePropertyName"
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="">Select files property</option>
-              </select>
-              <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-            </div>
-
-            <div class="w-full">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertySelect">Checked
-                Property</label>
-              <select id="checkedPropertySelect" name="checkedPropertyName"
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                <option value="">Select checkbox property</option>
-              </select>
-              <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-            </div>
-
+            <!-- Elements to Add section - moved up -->
             <div class="space-y-3">
               <h3 class="font-bold uppercase tracking-wide">
                 Elements to Add
@@ -196,36 +168,38 @@
                 </label>
               </div>
             </div>
+
+            <!-- Property selection dropdowns -->
             <div class="w-full">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertyName">URL Property
-                Name</label>
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="text" id="urlPropertyName" name="urlPropertyName" placeholder="Enter the name of the URL property"
-                required />
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
+              <select id="urlPropertySelect" name="urlPropertyName" required
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="">Select URL property</option>
+              </select>
               <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
+
             <div class="w-full" id="ogImagePropertyName-container">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertyName">OG Image Property
-                Name</label>
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="text" id="ogImagePropertyName" name="ogImagePropertyName"
-                placeholder="Enter the name of the OG Image property" />
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertySelect">OG Image
+                Property</label>
+              <select id="ogImagePropertySelect" name="ogImagePropertyName"
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="">Select files property</option>
+              </select>
               <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
 
             <div class="w-full">
-              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertyName">Checked Property
-                Name
-                (Optional)</label>
-              <input
-                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                type="text" id="checkedPropertyName" name="checkedPropertyName"
-                placeholder="Enter the name of the checkbox property" />
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertySelect">Checked
+                Property</label>
+              <select id="checkedPropertySelect" name="checkedPropertyName"
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="">Select checkbox property</option>
+              </select>
               <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
             </div>
 
+            <!-- Submit button -->
             <button type="submit" id="submit-button"
               class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
               <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
@@ -891,10 +865,11 @@
       }
     }
 
-    // Update initialization to not auto-fetch
+    // Single DOMContentLoaded listener
     document.addEventListener('DOMContentLoaded', async () => {
       await initializeAuth();
       checkAuthStatus();
+      updateUI(userInfoContainer);
 
       // Only populate from cache, don't fetch
       const databases = JSON.parse(localStorage.getItem('nomsDataDatabases') || '[]');
@@ -932,12 +907,6 @@
         );
         populateDropdowns(filtered);
       });
-    });
-    // Initialize database selection
-    document.addEventListener('DOMContentLoaded', async () => { // Now async
-      await initializeAuth(); // Call and AWAIT initializeAuth
-      checkAuthStatus();
-      updateUI(userInfoContainer);
     });
   </script>
 </body>
