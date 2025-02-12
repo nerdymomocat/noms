@@ -875,18 +875,6 @@
       });
     });
 
-    // Update checkWorkerUrl to not auto-fetch on every change
-    function checkWorkerUrl() {
-      const url = workerUrlInput.value.trim();
-      const token = workerTokenInput.value.trim();
-      submitButton.disabled = !url || !token;
-
-      if (url && token) {
-        // Just save configuration
-        saveWorkerConfig(url, token);
-      }
-    }
-
     async function loadDatabaseProperties(databaseId) {
       try {
         const response = await fetch(`${WORKER_URL}/databases/${databaseId}?token=${encodeURIComponent(WORKER_TOKEN)}`, {
