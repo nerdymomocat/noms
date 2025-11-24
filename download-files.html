@@ -6,15 +6,18 @@
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Noms · Download Files</title>
-    <meta name="description" content="Download all files from a specific property in your Notion database as a ZIP archive." />
+    <meta name="description"
+        content="Download all files from a specific property in your Notion database as a ZIP archive." />
     <meta property="og:title" content="Noms · Download Files" />
-    <meta property="og:description" content="Download all files from a specific property in your Notion database as a ZIP archive." />
+    <meta property="og:description"
+        content="Download all files from a specific property in your Notion database as a ZIP archive." />
     <meta property="og:image" content="https://nerdymomocat.github.io/noms/ogImages/index.png" />
     <meta property="og:url" content="https://nerdymomocat.github.io/noms/download-files.html" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Noms · Download Files" />
-    <meta name="twitter:description" content="Download all files from a specific property in your Notion database as a ZIP archive." />
+    <meta name="twitter:description"
+        content="Download all files from a specific property in your Notion database as a ZIP archive." />
     <meta name="twitter:image" content="https://nerdymomocat.github.io/noms/ogImages/index.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -107,7 +110,8 @@
                     Download Files
                 </h1>
             </div>
-            <div class="tool-description">Download all files from a specific property in your Notion database as a ZIP archive.</div>
+            <div class="tool-description">Download all files from a specific property in your Notion database as a ZIP
+                archive.</div>
 
             <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
                 <form id="download-form" class="space-y-6">
@@ -197,19 +201,22 @@
                                         </div>
                                         <div class="flex space-x-2">
                                             <div class="w-1/2">
-                                                <label class="text-xs font-bold uppercase text-gray-500">Start Date</label>
+                                                <label class="text-xs font-bold uppercase text-gray-500">Start
+                                                    Date</label>
                                                 <input type="date" id="startDate"
                                                     class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
                                             </div>
                                             <div class="w-1/2">
-                                                <label class="text-xs font-bold uppercase text-gray-500">End Date</label>
+                                                <label class="text-xs font-bold uppercase text-gray-500">End
+                                                    Date</label>
                                                 <input type="date" id="endDate"
                                                     class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
                                             </div>
                                         </div>
                                     </div>
                                     <p class="text-sm text-gray-600 mt-1">
-                                        Leave empty for all time. Set Start for "After", End for "Before", or both for "Between".
+                                        Leave empty for all time. Set Start for "After", End for "Before", or both for
+                                        "Between".
                                     </p>
                                 </div>
 
@@ -245,7 +252,7 @@
                             </div>
                         </details>
 
-                         <details class="rounded-lg border-4 border-black p-4">
+                        <details class="rounded-lg border-4 border-black p-4">
                             <summary class="cursor-pointer font-bold uppercase tracking-wide">
                                 File Options
                             </summary>
@@ -271,7 +278,7 @@
                                     </label>
                                 </div>
                             </div>
-                         </details>
+                        </details>
 
                         <!-- Submit button -->
                         <button type="submit" id="submit-button"
@@ -326,10 +333,10 @@
         const resetButton = document.getElementById('reset-button');
         const authBanner = document.getElementById('auth-banner');
         const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
-        
+
         const workerUrlInput = document.getElementById('workerUrl');
         const workerTokenInput = document.getElementById('workerToken');
-        
+
         const databaseSelect = document.getElementById('databaseSelect');
         const filePropertySelect = document.getElementById('filePropertySelect');
         // New Filters
@@ -339,7 +346,7 @@
         const statusPropertySelect = document.getElementById('statusPropertySelect');
         const statusValueSelect = document.getElementById('statusValueSelect');
         const titleFilterInput = document.getElementById('titleFilterInput');
-        
+
         const fileExtensionsInput = document.getElementById('fileExtensions');
         const groupByPageCheckbox = document.getElementById('groupByPage');
 
@@ -479,25 +486,25 @@
         }
 
         // --- File Fetching Helpers ---
-        
+
         // Fetch a file as a blob from a URL (handling potential CORS if worker proxies it, or direct if permitted)
         // NOTE: Notion S3 links are signed but might have CORS issues if fetched directly from browser.
         // We might need to proxy through our worker if CORS fails. 
         // However, usually Notion S3 links allow GET.
         async function fetchFileBlob(url) {
-             try {
+            try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Failed to fetch file: ${response.statusText}`);
                 return await response.blob();
             } catch (error) {
-                 // If direct fetch fails (CORS?), try proxying through worker if implemented.
-                 // Since we don't have a guaranteed proxy endpoint for generic files in the provided worker file list,
-                 // we will hope standard fetch works or the user has a CORS proxy.
-                 // Actually, standard Notion signed URLs usually work for direct download/img src, but fetch API might be blocked by CORS.
-                 // If CORS blocks it, we are in trouble without a proxy.
-                 // Let's try standard fetch. If it fails, we might need to implement a proxy in the worker?
-                 // For now, assuming standard fetch works for Signed URLs (often they allow Origin *).
-                 throw new Error(`Download failed (possibly CORS): ${error.message}`);
+                // If direct fetch fails (CORS?), try proxying through worker if implemented.
+                // Since we don't have a guaranteed proxy endpoint for generic files in the provided worker file list,
+                // we will hope standard fetch works or the user has a CORS proxy.
+                // Actually, standard Notion signed URLs usually work for direct download/img src, but fetch API might be blocked by CORS.
+                // If CORS blocks it, we are in trouble without a proxy.
+                // Let's try standard fetch. If it fails, we might need to implement a proxy in the worker?
+                // For now, assuming standard fetch works for Signed URLs (often they allow Origin *).
+                throw new Error(`Download failed (possibly CORS): ${error.message}`);
             }
         }
 
@@ -511,7 +518,7 @@
             const databaseId = databaseSelect.value;
             const filePropId = filePropertySelect.value;
             const filePropName = filePropertySelect.options[filePropertySelect.selectedIndex].text;
-            
+
             // New Filter Values
             const dateProp = datePropertySelect.value;
             const startDate = startDateInput.value;
@@ -560,22 +567,22 @@
 
             try {
                 addLog('Fetching pages...');
-                
+
                 // Fetch Pages with new filters
                 const pages = await withExponentialBackoff(() => fetchPages(databaseId, {
                     dateProp, startDate, endDate, statusProp, statusValue, titleFilter
                 }));
                 addLog(`Found ${pages.length} pages to process.`);
-                
+
                 const totalPages = pages.length;
-                
+
                 for (let i = 0; i < totalPages; i++) {
                     const page = pages[i];
-                    
+
                     // Update Progress
                     const progressPercentage = ((i) / totalPages) * 100;
                     progressBar.style.width = `${progressPercentage}%`;
-                    
+
                     // Get Page Title
                     let pageTitle = "Untitled";
                     // Try to find title property
@@ -593,13 +600,13 @@
                     // Properties might be by ID or Name. `page.properties` keys are names usually.
                     // But we have `filePropName` from our select.
                     const fileData = page.properties[filePropName];
-                    
+
                     if (fileData && fileData.type === 'files' && fileData.files.length > 0) {
-                        
+
                         for (const fileObj of fileData.files) {
                             const fileUrl = fileObj.file?.url || fileObj.external?.url;
                             let fileName = fileObj.name;
-                            
+
                             if (!fileUrl) continue;
 
                             // Attempt to recover extension if missing
@@ -622,10 +629,10 @@
                             }
 
                             addLog(`Downloading: ${fileName} (Page: ${pageTitle})`);
-                            
+
                             try {
                                 const blob = await fetchFileBlob(fileUrl);
-                                
+
                                 // Add to Zip
                                 let filePath = fileName;
                                 if (groupByPage) {
@@ -634,25 +641,25 @@
                                     // Handle duplicate filenames in flat structure
                                     filePath = `${pageTitle}_${pageIdShort}_${fileName}`;
                                 }
-                                
+
                                 zip.file(filePath, blob);
                                 fileCount++;
-                                
+
                             } catch (err) {
                                 addLog(`❌ Failed to download ${fileName}: ${err.message}`);
                             }
                         }
                     }
                 }
-                
+
                 progressBar.style.width = '100%';
-                
+
                 if (fileCount === 0) {
                     addLog('No files found matching criteria.');
                 } else {
                     addLog(`Generating ZIP with ${fileCount} files...`);
                     const zipContent = await zip.generateAsync({ type: "blob" });
-                    saveAs(zipContent, `notion_files_export_${new Date().toISOString().slice(0,10)}.zip`);
+                    saveAs(zipContent, `notion_files_export_${new Date().toISOString().slice(0, 10)}.zip`);
                     addLog('✅ Download started!');
                 }
 
@@ -668,304 +675,306 @@
             }
         });
 
-                        // --- Data Fetching Implementation ---
-                
-                        async function fetchPages(databaseId, { dateProp, startDate, endDate, statusProp, statusValue, titleFilter }) {
-                            const filters = [];
-                            
-                            // 1. Date Filter
-                            if (startDate) {
-                                const formattedDate = new Date(startDate).toISOString();
-                                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
-                                     filters.push({
-                                        timestamp: dateProp,
-                                        [dateProp]: { on_or_after: formattedDate }
-                                    });
-                                } else {
-                                    filters.push({
-                                        property: dateProp,
-                                        date: { on_or_after: formattedDate }
-                                    });
-                                }
-                            }
-                            if (endDate) {
-                                const formattedDate = new Date(endDate).toISOString();
-                                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
-                                     filters.push({
-                                        timestamp: dateProp,
-                                        [dateProp]: { on_or_before: formattedDate }
-                                    });
-                                } else {
-                                    filters.push({
-                                        property: dateProp,
-                                        date: { on_or_before: formattedDate }
-                                    });
-                                }
-                            }
-                
-                            // 2. Status/Select/Checkbox Filter                    if (statusProp && statusValue) {
-                        const propDef = currentDatabaseProperties[statusProp];
-                        if (propDef) {
-                            if (propDef.type === 'select') {
-                                filters.push({
-                                    property: statusProp,
-                                    select: { equals: statusValue }
-                                });
-                            } else if (propDef.type === 'multi_select') {
-                                filters.push({
-                                    property: statusProp,
-                                    multi_select: { contains: statusValue }
-                                });
-                            } else if (propDef.type === 'status') {
-                                filters.push({
-                                    property: statusProp,
-                                    status: { equals: statusValue }
-                                });
-                            } else if (propDef.type === 'checkbox') {
-                                filters.push({
-                                    property: statusProp,
-                                    checkbox: { equals: statusValue === 'true' }
-                                });
-                            }
-                        }
-                    }
-        
-                    // 3. Title Filter
-                    if (titleFilter) {
+        // --- Data Fetching Implementation ---
+
+        async function fetchPages(databaseId, { dateProp, startDate, endDate, statusProp, statusValue, titleFilter }) {
+            const filters = [];
+
+            // 1. Date Filter
+            if (startDate) {
+                const formattedDate = new Date(startDate).toISOString();
+                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                    filters.push({
+                        timestamp: dateProp,
+                        [dateProp]: { on_or_after: formattedDate }
+                    });
+                } else {
+                    filters.push({
+                        property: dateProp,
+                        date: { on_or_after: formattedDate }
+                    });
+                }
+            }
+            if (endDate) {
+                const formattedDate = new Date(endDate).toISOString();
+                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                    filters.push({
+                        timestamp: dateProp,
+                        [dateProp]: { on_or_before: formattedDate }
+                    });
+                } else {
+                    filters.push({
+                        property: dateProp,
+                        date: { on_or_before: formattedDate }
+                    });
+                }
+            }
+
+            // 2. Status/Select/Checkbox Filter
+            if (statusProp && statusValue) {
+                const propDef = currentDatabaseProperties[statusProp];
+                if (propDef) {
+                    if (propDef.type === 'select') {
                         filters.push({
-                            property: "title", // Notion always uses "title" type for the name property, filtering by type "title" usually works by property name too but 'title' key is safer if we don't know the name. 
-                            // Actually, the API docs say: { "property": "Name", "title": { "contains": "..." } }
-                            // We need to find the property name of type title.
-                            // Let's iterate currentDatabaseProperties to find the title property name.
-                            // However, standard practice is using the property name.
+                            property: statusProp,
+                            select: { equals: statusValue }
                         });
-                         // Find title property name
-                        let titlePropName = "Name";
-                        for (const [key, val] of Object.entries(currentDatabaseProperties)) {
-                            if (val.type === 'title') {
-                                titlePropName = key;
-                                break;
-                            }
-                        }
+                    } else if (propDef.type === 'multi_select') {
                         filters.push({
-                            property: titlePropName,
-                            title: { contains: titleFilter }
+                            property: statusProp,
+                            multi_select: { contains: statusValue }
+                        });
+                    } else if (propDef.type === 'status') {
+                        filters.push({
+                            property: statusProp,
+                            status: { equals: statusValue }
+                        });
+                    } else if (propDef.type === 'checkbox') {
+                        filters.push({
+                            property: statusProp,
+                            checkbox: { equals: statusValue === 'true' }
                         });
                     }
-        
-                    const data = filters.length > 0 ? { filter: { and: filters } } : {};
-                    
-                    let allResults = [];
-                    let hasMore = true;
-                    let startCursor = undefined;
-        
-                    while (hasMore) {
-                        if (startCursor) data.start_cursor = startCursor;
-                        const response = await makeNotionRequest(`/data_sources/${databaseId}/query`, {
-                            method: 'POST',
-                            body: JSON.stringify(data),
-                        });
-                        allResults.push(...response.results);
-                        hasMore = response.has_more;
-                        startCursor = response.next_cursor;
-                    }
-                    return allResults;
                 }
-                
-                // --- UI Helper Functions ---
-                function addLog(message) {
-                    logs.push(message);
-                    const logElement = document.createElement('div');
-                    logElement.textContent = message;
-                    logElement.className = 'whitespace-pre-wrap';
-                    logsContainer.appendChild(logElement);
-                    logsContainer.scrollTop = logsContainer.scrollHeight;
-                }
-        
-                function showError(inputElement, message) {
-                    const errorElement = document.getElementById(`${inputElement.id}-error`);
-                    if (errorElement) {
-                        errorElement.textContent = message;
-                        errorElement.classList.remove('hidden');
-                        inputElement.classList.add('border-red-500');
-                    }
-                }
-        
-                function clearError(inputElement) {
-                    const errorElement = document.getElementById(`${inputElement.id}-error`);
-                    if (errorElement) {
-                        errorElement.textContent = '';
-                        errorElement.classList.add('hidden');
-                        inputElement.classList.remove('border-red-500');
-                    }
-                }
-        
-                // --- Initialization & Event Listeners ---
-        
-                resetButton.addEventListener('click', () => {
-                    isProcessing = false;
-                    progressDisplay.classList.add('hidden');
-                    form.classList.remove('hidden');
-                    resetButton.classList.add('hidden');
-                    logsContainer.innerHTML = '';
-                    progressBar.style.width = '0%';
+            }
+
+            // 3. Title Filter
+            if (titleFilter) {
+                filters.push({
+                    property: "title", // Notion always uses "title" type for the name property, filtering by type "title" usually works by property name too but 'title' key is safer if we don't know the name. 
+                    // Actually, the API docs say: { "property": "Name", "title": { "contains": "..." } }
+                    // We need to find the property name of type title.
+                    // Let's iterate currentDatabaseProperties to find the title property name.
+                    // However, standard practice is using the property name.
                 });
-        
-                function populateDropdowns(databases) {
-                    databaseSelect.innerHTML = '<option value="">-</option>';
-                    databases.forEach(db => {
-                        const option = document.createElement('option');
-                        option.value = db.id;
-                        option.textContent = db.title[0]?.plain_text || 'Untitled';
-                        databaseSelect.appendChild(option);
-                    });
+                // Find title property name
+                let titlePropName = "Name";
+                for (const [key, val] of Object.entries(currentDatabaseProperties)) {
+                    if (val.type === 'title') {
+                        titlePropName = key;
+                        break;
+                    }
                 }
-                
-                async function fetchDatabases() {
-                    if (!isWorkerConfigComplete()) throw new Error('Worker config missing');
-                     const workerUrl = workerUrlInput.value.trim();
-                    const workerToken = workerTokenInput.value.trim();
-        
-                    const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${notionToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            filter: {
-                                value: "data_source",
-                                property: "object"
-                            }
-                        })
-                    });
-                     if (!response.ok) throw new Error('Failed to fetch databases');
-                    const data = await response.json();
-                    localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
-                    return data.results;
-                }
-        
-                // Populate Property Selects
-                async function populatePropertySelects(databaseId) {
-                    filePropertySelect.innerHTML = '<option value="">-</option>';
-                    // Reset new filters
-                    datePropertySelect.innerHTML = `
+                filters.push({
+                    property: titlePropName,
+                    title: { contains: titleFilter }
+                });
+            }
+
+            const data = filters.length > 0 ? { filter: { and: filters } } : {};
+
+            let allResults = [];
+            let hasMore = true;
+            let startCursor = undefined;
+
+            while (hasMore) {
+                if (startCursor) data.start_cursor = startCursor;
+                const response = await makeNotionRequest(`/data_sources/${databaseId}/query`, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                allResults.push(...response.results);
+                hasMore = response.has_more;
+                startCursor = response.next_cursor;
+            }
+            return allResults;
+        }
+
+        // --- UI Helper Functions ---
+        function addLog(message) {
+            logs.push(message);
+            const logElement = document.createElement('div');
+            logElement.textContent = message;
+            logElement.className = 'whitespace-pre-wrap';
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function showError(inputElement, message) {
+            const errorElement = document.getElementById(`${inputElement.id}-error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                inputElement.classList.add('border-red-500');
+            }
+        }
+
+        function clearError(inputElement) {
+            const errorElement = document.getElementById(`${inputElement.id}-error`);
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+                inputElement.classList.remove('border-red-500');
+            }
+        }
+
+        // --- Initialization & Event Listeners ---
+
+        resetButton.addEventListener('click', () => {
+            isProcessing = false;
+            progressDisplay.classList.add('hidden');
+            form.classList.remove('hidden');
+            resetButton.classList.add('hidden');
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+        });
+
+        function populateDropdowns(databases) {
+            databaseSelect.innerHTML = '<option value="">-</option>';
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db.id;
+                option.textContent = db.title[0]?.plain_text || 'Untitled';
+                databaseSelect.appendChild(option);
+            });
+        }
+
+        async function fetchDatabases() {
+            if (!isWorkerConfigComplete()) throw new Error('Worker config missing');
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${notionToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    filter: {
+                        value: "data_source",
+                        property: "object"
+                    }
+                })
+            });
+            if (!response.ok) throw new Error('Failed to fetch databases');
+            const data = await response.json();
+            localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
+            return data.results;
+        }
+
+        // Populate Property Selects
+        async function populatePropertySelects(databaseId) {
+            filePropertySelect.innerHTML = '<option value="">-</option>';
+            // Reset new filters
+            datePropertySelect.innerHTML = `
                         <option value="last_edited_time">Last Edited Time</option>
                         <option value="created_time">Created Time</option>
                     `;
-                    statusPropertySelect.innerHTML = '<option value="">- Select Property -</option>';
-                    statusValueSelect.innerHTML = '<option value="">- Select Value -</option>';
-                    statusValueSelect.disabled = true;
-                    
-                    try {
-                        const dbInfo = await getDatabaseInfo(databaseId);
-                        currentDatabaseProperties = dbInfo.properties; // Store for later use
-                        
-                        for (const [name, prop] of Object.entries(currentDatabaseProperties)) {
-                            // File Properties
-                            if (prop.type === 'files') {
-                                const opt = document.createElement('option');
-                                opt.value = prop.id; // Can use ID or name, stick to ID for selects usually
-                                opt.textContent = name;
-                                filePropertySelect.appendChild(opt);
-                            }
-                            // Date Properties
-                            if (prop.type === 'date') {
-                                const opt = document.createElement('option');
-                                opt.value = name; // Use name for filter construction
-                                opt.textContent = name;
-                                datePropertySelect.appendChild(opt);
-                            }
-                            // Status/Select/Checkbox Properties
-                            if (['select', 'multi_select', 'status', 'checkbox'].includes(prop.type)) {
-                                const opt = document.createElement('option');
-                                opt.value = name; // Use name for easier lookup
-                                opt.textContent = name;
-                                statusPropertySelect.appendChild(opt);
-                            }
-                        }
-                    } catch (e) {
-                        addLog(`Error loading properties: ${e.message}`);
+            statusPropertySelect.innerHTML = '<option value="">- Select Property -</option>';
+            statusValueSelect.innerHTML = '<option value="">- Select Value -</option>';
+            statusValueSelect.disabled = true;
+
+            try {
+                const dbInfo = await getDatabaseInfo(databaseId);
+                currentDatabaseProperties = dbInfo.properties; // Store for later use
+
+                for (const [name, prop] of Object.entries(currentDatabaseProperties)) {
+                    // File Properties
+                    if (prop.type === 'files') {
+                        const opt = document.createElement('option');
+                        opt.value = prop.id; // Can use ID or name, stick to ID for selects usually
+                        opt.textContent = name;
+                        filePropertySelect.appendChild(opt);
+                    }
+                    // Date Properties
+                    if (prop.type === 'date') {
+                        const opt = document.createElement('option');
+                        opt.value = name; // Use name for filter construction
+                        opt.textContent = name;
+                        datePropertySelect.appendChild(opt);
+                    }
+                    // Status/Select/Checkbox Properties
+                    if (['select', 'multi_select', 'status', 'checkbox'].includes(prop.type)) {
+                        const opt = document.createElement('option');
+                        opt.value = name; // Use name for easier lookup
+                        opt.textContent = name;
+                        statusPropertySelect.appendChild(opt);
                     }
                 }
-        
-                document.addEventListener('DOMContentLoaded', async () => {
-                    await initializeAuth();
-                    checkAuthStatus();
-                    loadWorkerConfig();
-                    checkWorkerUrl();
-                    updateUIHeader(userInfoContainer);
-        
-                    const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
-                    if (databases.length) populateDropdowns(databases);
-        
-                    document.getElementById('refreshDatabases').addEventListener('click', async () => {
-                        try {
-                            const dbs = await fetchDatabases();
-                            populateDropdowns(dbs);
-                        } catch (e) {
-                            console.error(e);
-                        }
-                    });
-                    
-                    document.getElementById('databaseSearch').addEventListener('input', (e) => {
-                        const searchTerm = e.target.value.toLowerCase();
-                        const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
-                        const filtered = databases.filter(db => {
-                            const title = db.title?.[0]?.plain_text || "";
-                            return title.toLowerCase().includes(searchTerm);
-                        });
-                        populateDropdowns(filtered);
-                    });
-        
-                    databaseSelect.addEventListener('change', (e) => {
-                        if (e.target.value) populatePropertySelects(e.target.value);
-                    });
-                    
-                    // Handle Status Property Change
-                    statusPropertySelect.addEventListener('change', (e) => {
-                        const propName = e.target.value;
-                        statusValueSelect.innerHTML = '<option value="">- Select Value -</option>';
-                        
-                        if (!propName) {
-                            statusValueSelect.disabled = true;
-                            return;
-                        }
-                        
-                        const prop = currentDatabaseProperties[propName];
-                        if (prop) {
-                            statusValueSelect.disabled = false;
-                            if (prop.type === 'select' || prop.type === 'multi_select') {
-                                 prop[prop.type].options.forEach(opt => {
-                                    const option = document.createElement('option');
-                                    option.value = opt.name;
-                                    option.textContent = opt.name;
-                                    statusValueSelect.appendChild(option);
-                                 });
-                            } else if (prop.type === 'status') {
-                                prop.status.options.forEach(opt => {
-                                    const option = document.createElement('option');
-                                    option.value = opt.name;
-                                    option.textContent = opt.name;
-                                    statusValueSelect.appendChild(option);
-                                 });
-                                 // Status might also have groups, but usually options list all.
-                            } else if (prop.type === 'checkbox') {
-                                 // Checkbox manual options
-                                 const trueOpt = document.createElement('option');
-                                 trueOpt.value = "true";
-                                 trueOpt.textContent = "Checked";
-                                 statusValueSelect.appendChild(trueOpt);
-                                 
-                                 const falseOpt = document.createElement('option');
-                                 falseOpt.value = "false";
-                                 falseOpt.textContent = "Unchecked";
-                                 statusValueSelect.appendChild(falseOpt);
-                            }
-                        }
-                    });
+            } catch (e) {
+                addLog(`Error loading properties: ${e.message}`);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+            checkAuthStatus();
+            loadWorkerConfig();
+            checkWorkerUrl();
+            updateUIHeader(userInfoContainer);
+
+            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+            if (databases.length) populateDropdowns(databases);
+
+            document.getElementById('refreshDatabases').addEventListener('click', async () => {
+                try {
+                    const dbs = await fetchDatabases();
+                    populateDropdowns(dbs);
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+
+            document.getElementById('databaseSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                const filtered = databases.filter(db => {
+                    const title = db.title?.[0]?.plain_text || "";
+                    return title.toLowerCase().includes(searchTerm);
                 });
+                populateDropdowns(filtered);
+            });
+
+            databaseSelect.addEventListener('change', (e) => {
+                if (e.target.value) populatePropertySelects(e.target.value);
+            });
+
+            // Handle Status Property Change
+            statusPropertySelect.addEventListener('change', (e) => {
+                const propName = e.target.value;
+                statusValueSelect.innerHTML = '<option value="">- Select Value -</option>';
+
+                if (!propName) {
+                    statusValueSelect.disabled = true;
+                    return;
+                }
+
+                const prop = currentDatabaseProperties[propName];
+                if (prop) {
+                    statusValueSelect.disabled = false;
+                    if (prop.type === 'select' || prop.type === 'multi_select') {
+                        prop[prop.type].options.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt.name;
+                            option.textContent = opt.name;
+                            statusValueSelect.appendChild(option);
+                        });
+                    } else if (prop.type === 'status') {
+                        prop.status.options.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt.name;
+                            option.textContent = opt.name;
+                            statusValueSelect.appendChild(option);
+                        });
+                        // Status might also have groups, but usually options list all.
+                    } else if (prop.type === 'checkbox') {
+                        // Checkbox manual options
+                        const trueOpt = document.createElement('option');
+                        trueOpt.value = "true";
+                        trueOpt.textContent = "Checked";
+                        statusValueSelect.appendChild(trueOpt);
+
+                        const falseOpt = document.createElement('option');
+                        falseOpt.value = "false";
+                        falseOpt.textContent = "Unchecked";
+                        statusValueSelect.appendChild(falseOpt);
+                    }
+                }
+            });
+        });
     </script>
     <script src="./js/loadKofi.js"></script>
 </body>
+
 </html>
