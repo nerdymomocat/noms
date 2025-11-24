@@ -187,21 +187,29 @@
                                     <label class="mb-2 block font-bold uppercase tracking-wide">
                                         Date Filter (Optional)
                                     </label>
-                                    <div class="flex space-x-2">
-                                        <div class="w-1/2">
+                                    <div class="space-y-2">
+                                        <div class="w-full">
                                             <select id="datePropertySelect"
                                                 class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
                                                 <option value="last_edited_time">Last Edited Time</option>
                                                 <option value="created_time">Created Time</option>
                                             </select>
                                         </div>
-                                        <div class="w-1/2">
-                                            <input type="date" id="filterDate"
-                                                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                        <div class="flex space-x-2">
+                                            <div class="w-1/2">
+                                                <label class="text-xs font-bold uppercase text-gray-500">Start Date</label>
+                                                <input type="date" id="startDate"
+                                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                            </div>
+                                            <div class="w-1/2">
+                                                <label class="text-xs font-bold uppercase text-gray-500">End Date</label>
+                                                <input type="date" id="endDate"
+                                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                            </div>
                                         </div>
                                     </div>
                                     <p class="text-sm text-gray-600 mt-1">
-                                        Include pages on or after this date.
+                                        Leave empty for all time. Set Start for "After", End for "Before", or both for "Between".
                                     </p>
                                 </div>
 
@@ -326,7 +334,8 @@
         const filePropertySelect = document.getElementById('filePropertySelect');
         // New Filters
         const datePropertySelect = document.getElementById('datePropertySelect');
-        const filterDateInput = document.getElementById('filterDate');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
         const statusPropertySelect = document.getElementById('statusPropertySelect');
         const statusValueSelect = document.getElementById('statusValueSelect');
         const titleFilterInput = document.getElementById('titleFilterInput');
@@ -505,7 +514,8 @@
             
             // New Filter Values
             const dateProp = datePropertySelect.value;
-            const filterDate = filterDateInput.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
             const statusProp = statusPropertySelect.value;
             const statusValue = statusValueSelect.value;
             const titleFilter = titleFilterInput.value;
@@ -553,7 +563,7 @@
                 
                 // Fetch Pages with new filters
                 const pages = await withExponentialBackoff(() => fetchPages(databaseId, {
-                    dateProp, filterDate, statusProp, statusValue, titleFilter
+                    dateProp, startDate, endDate, statusProp, statusValue, titleFilter
                 }));
                 addLog(`Found ${pages.length} pages to process.`);
                 
@@ -588,9 +598,22 @@
                         
                         for (const fileObj of fileData.files) {
                             const fileUrl = fileObj.file?.url || fileObj.external?.url;
-                            const fileName = fileObj.name;
+                            let fileName = fileObj.name;
                             
                             if (!fileUrl) continue;
+
+                            // Attempt to recover extension if missing
+                            if (fileName.indexOf('.') === -1) {
+                                try {
+                                    const urlObj = new URL(fileUrl);
+                                    const urlPath = urlObj.pathname;
+                                    const urlExt = urlPath.split('.').pop();
+                                    // Simple validation: 1-5 alphanumeric chars
+                                    if (urlExt && urlExt !== urlPath && urlExt.length <= 5 && /^[a-z0-9]+$/i.test(urlExt)) {
+                                        fileName = `${fileName}.${urlExt}`;
+                                    }
+                                } catch (e) { /* Ignore URL parsing errors */ }
+                            }
 
                             // Check Extension
                             const ext = fileName.split('.').pop().toLowerCase();
@@ -645,34 +668,42 @@
             }
         });
 
-                // --- Data Fetching Implementation ---
-        
-                async function fetchPages(databaseId, { dateProp, filterDate, statusProp, statusValue, titleFilter }) {
-                    const filters = [];
-                    
-                    // 1. Date Filter
-                    if (filterDate) {
-                        const formattedDate = new Date(filterDate).toISOString(); // Notion expects ISO string
-                        if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
-                             filters.push({
-                                timestamp: dateProp,
-                                [dateProp]: {
-                                    on_or_after: formattedDate
+                        // --- Data Fetching Implementation ---
+                
+                        async function fetchPages(databaseId, { dateProp, startDate, endDate, statusProp, statusValue, titleFilter }) {
+                            const filters = [];
+                            
+                            // 1. Date Filter
+                            if (startDate) {
+                                const formattedDate = new Date(startDate).toISOString();
+                                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                                     filters.push({
+                                        timestamp: dateProp,
+                                        [dateProp]: { on_or_after: formattedDate }
+                                    });
+                                } else {
+                                    filters.push({
+                                        property: dateProp,
+                                        date: { on_or_after: formattedDate }
+                                    });
                                 }
-                            });
-                        } else {
-                             // Custom Date Property
-                            filters.push({
-                                property: dateProp,
-                                date: {
-                                    on_or_after: formattedDate
+                            }
+                            if (endDate) {
+                                const formattedDate = new Date(endDate).toISOString();
+                                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                                     filters.push({
+                                        timestamp: dateProp,
+                                        [dateProp]: { on_or_before: formattedDate }
+                                    });
+                                } else {
+                                    filters.push({
+                                        property: dateProp,
+                                        date: { on_or_before: formattedDate }
+                                    });
                                 }
-                            });
-                        }
-                    }
-        
-                    // 2. Status/Select/Checkbox Filter
-                    if (statusProp && statusValue) {
+                            }
+                
+                            // 2. Status/Select/Checkbox Filter                    if (statusProp && statusValue) {
                         const propDef = currentDatabaseProperties[statusProp];
                         if (propDef) {
                             if (propDef.type === 'select') {
