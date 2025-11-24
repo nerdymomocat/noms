@@ -590,7 +590,7 @@
       }
 
       async validateAccess() {
-        const database = await this.makeRequest(`/databases/${this.config.databaseId}`);
+        const database = await this.makeRequest(`/data_sources/${this.config.databaseId}`);
         const properties = database.properties;
 
         // Find and store the title property name
@@ -637,7 +637,7 @@
 
         while (hasMore) {
           const response = await this.makeRequest(
-            `/databases/${this.config.databaseId}/query`,
+            `/data_sources/${this.config.databaseId}/query`,
             {
               method: 'POST',
               body: JSON.stringify({
@@ -843,7 +843,7 @@
           },
           body: JSON.stringify({
             filter: {
-              value: "database",
+              value: "data_source",
               property: "object"
             }
           })
@@ -870,7 +870,7 @@
         const workerUrl = workerUrlInput.value.trim();
         const workerToken = workerTokenInput.value.trim();
 
-        const response = await fetch(`${workerUrl}/databases/${databaseId}?token=${encodeURIComponent(workerToken)}`, {
+        const response = await fetch(`${workerUrl}/data_sources/${databaseId}?token=${encodeURIComponent(workerToken)}`, {
           headers: {
             'Authorization': `Bearer ${notionToken}`
           }

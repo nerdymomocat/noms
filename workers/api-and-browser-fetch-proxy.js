@@ -62,7 +62,7 @@ async function handleRequest(request, env) {
 
     // NOTION MODE: Add Notion-Version.  DO *NOT* forward Authorization!
     if (!isGeneral) {
-        modifiedRequest.headers.set("Notion-Version", "2022-06-28");
+        modifiedRequest.headers.set("Notion-Version", "2025-09-03");
         // REMOVE Authorization header forwarding:
         // if (request.headers.has("Authorization")) {
         //   modifiedRequest.headers.set("Authorization", request.headers.get("Authorization"));

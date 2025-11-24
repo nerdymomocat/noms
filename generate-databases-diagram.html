@@ -378,9 +378,9 @@
                 }
             };
 
-            const getDatabaseInfo = async (databaseId) => {
+            const getDatabaseInfo = async (databaseId) {
                 addLog(`Fetching database info for ID: ${databaseId}`);
-                return makeNotionRequest(`/databases/${databaseId}`);
+                return makeNotionRequest(`/data_sources/${databaseId}`);
             };
 
             const fetchDatabases = async () => {
@@ -388,7 +388,7 @@
                 addLog('Fetching databases...');
                 const response = await makeNotionRequest('/search', {
                     method: 'POST',
-                    body: JSON.stringify({ filter: { value: "database", property: "object" } })
+                    body: JSON.stringify({ filter: { value: "data_source", property: "object" } })
                 });
                 localStorage.setItem('nomsDatabases', JSON.stringify(response.results));
                 addLog(`Fetched ${response.results.length} databases.`);
@@ -459,7 +459,7 @@
                         const sanitizedPropName = sanitizeColumnName(propName);
 
                         if (prop.type === "relation") {
-                            const relatedDbId = prop.relation.database_id;
+                            const relatedDbId = prop.relation.data_source_id;
                             addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
                             await processDatabase(relatedDbId, databaseId, propName);
 
@@ -469,7 +469,7 @@
                             const rolledUpPropName = prop.rollup.rollup_property_name;
 
                             if (relationPropName && currentDb.properties[relationPropName]?.type === "relation") {
-                                const relatedDbId = currentDb.properties[relationPropName].relation.database_id;
+                                const relatedDbId = currentDb.properties[relationPropName].relation.data_source_id;
 
                                 if (relatedDbId) {
                                     const relatedDb = await getDatabaseInfo(relatedDbId);
@@ -514,7 +514,7 @@
 
                                 if (referencedProp) {
                                     if (referencedProp.type === "relation") {
-                                        const relatedDbId = referencedProp.relation.database_id;
+                                        const relatedDbId = referencedProp.relation.data_source_id;
                                         addLog(`Found formula relation via prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
 
                                         if (relatedDbId) {
@@ -543,7 +543,7 @@
                                         const relationPropName = referencedProp.rollup?.relation_property_name;
                                         const rolledUpPropName = referencedProp.rollup?.rollup_property_name;
                                         if (relationPropName && currentDb.properties[relationPropName]?.type === "relation") {
-                                            const relatedDbId = currentDb.properties[relationPropName].relation.database_id;
+                                            const relatedDbId = currentDb.properties[relationPropName].relation.data_source_id;
 
                                             if (relatedDbId) {
                                                 const relatedDb = await getDatabaseInfo(relatedDbId);

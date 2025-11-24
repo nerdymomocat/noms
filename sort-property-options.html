@@ -377,7 +377,7 @@
         }
 
         async function getDatabaseInfo(databaseId) {
-            return makeNotionRequest(`/databases/${databaseId}`);
+            return makeNotionRequest(`/data_sources/${databaseId}`);
         }
 
 
@@ -392,7 +392,7 @@
                     },
                 },
             };
-            await makeNotionRequest(`/databases/${databaseId}`, {
+            await makeNotionRequest(`/data_sources/${databaseId}`, {
                 method: 'PATCH',
                 body: JSON.stringify(updateData),
             });
@@ -583,7 +583,7 @@
                 },
                 body: JSON.stringify({
                     filter: {
-                        value: "database",
+                        value: "data_source",
                         property: "object"
                     }
                 })

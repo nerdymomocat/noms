@@ -362,7 +362,7 @@
         }
 
         async function getDatabaseInfo(databaseId) {
-            return makeNotionRequest(`/databases/${databaseId}`);
+            return makeNotionRequest(`/data_sources/${databaseId}`);
         }
 
         // New function to check if an option is used
@@ -372,7 +372,7 @@
                     ? { property: propertyName, select: { equals: optionName } }
                     : { property: propertyName, multi_select: { contains: optionName } };
 
-            const response = await makeNotionRequest(`/databases/${databaseId}/query`, {
+            const response = await makeNotionRequest(`/data_sources/${databaseId}/query`, {
                 method: 'POST',
                 body: JSON.stringify({ filter }),
             });
@@ -391,7 +391,7 @@
                     },
                 },
             };
-            await makeNotionRequest(`/databases/${databaseId}`, {
+            await makeNotionRequest(`/data_sources/${databaseId}`, {
                 method: 'PATCH',
                 body: JSON.stringify(updateData),
             });
@@ -583,7 +583,7 @@
                 },
                 body: JSON.stringify({
                     filter: {
-                        value: "database",
+                        value: "data_source",
                         property: "object"
                     }
                 })
