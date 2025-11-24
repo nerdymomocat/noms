@@ -24,6 +24,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
         rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -174,7 +175,7 @@
                         <div class="w-full">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select
-                                    Database</label>
+                                    Data Source</label>
                                 <button type="button" id="refreshDatabases"
                                     class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,15 +226,27 @@
                     <textarea id="logOutput" readonly placeholder="Logs will appear here..."
                         class="mt-4 w-full h-32 border-4 border-black bg-white p-2 text-black font-mono text-sm"></textarea>
                     <div id="pasteMessage"></div>
-                    <button id="copy-button" disabled
-                        class="w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                        <span>Copy to Clipboard</span>
-                    </button>
+                    <div class="flex space-x-4">
+                        <button id="copy-button" disabled
+                            class="flex-1 h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                        <button id="download-button" disabled
+                            class="flex-1 h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>Download</span>
+                        </button>
+                    </div>
+                    <div id="mermaid-preview" class="hidden w-full border-4 border-black bg-white p-4 overflow-auto"></div>
                     <button id="reset-button"
                         class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
                         <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -378,7 +391,7 @@
                 }
             };
 
-            const getDatabaseInfo = async (databaseId) {
+            const getDatabaseInfo = async (databaseId) => {
                 addLog(`Fetching database info for ID: ${databaseId}`);
                 return makeNotionRequest(`/data_sources/${databaseId}`);
             };
@@ -397,7 +410,13 @@
 
             // Sanitization
             const sanitizeTableName = (name) => (name.replace(/[^a-zA-Z0-9_]+/g, '_')).replace(/^[^a-zA-Z_]/, '_$&');
-            const reservedKeywords = new Set(['note', 'table', 'ref', 'enum', 'index', 'indices']);
+            // Expanded reserved keywords for DBML and Mermaid
+            const reservedKeywords = new Set([
+                'note', 'table', 'ref', 'enum', 'index', 'indices', 'project', 'schema', // DBML
+                'erdiagram', 'class', 'state', 'sequence', 'gantt', 'pie', 'info', // Mermaid
+                'id', 'date', 'user', 'group', 'order', 'by', 'where', 'from', 'select', // Common SQL
+                'string', 'number', 'boolean', 'int', 'float', 'text' // Types
+            ]);
             const sanitizeColumnName = (name) => {
                 let sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_').replace(/^[^a-zA-Z_]/, '_$&');
                 return reservedKeywords.has(sanitized.toLowerCase()) ? `safe_${sanitized}` : sanitized;
@@ -454,6 +473,8 @@
                         }
                     }
 
+                    const childPromises = [];
+
                     for (const propName in currentDb.properties) {
                         const prop = currentDb.properties[propName];
                         const sanitizedPropName = sanitizeColumnName(propName);
@@ -461,7 +482,7 @@
                         if (prop.type === "relation") {
                             const relatedDbId = prop.relation.data_source_id;
                             addLog(`Found relation: ${propName} -> Database ID: ${relatedDbId}`);
-                            await processDatabase(relatedDbId, databaseId, propName);
+                            childPromises.push(processDatabase(relatedDbId, databaseId, propName));
 
                         } else if (prop.type === "rollup") {
                             addLog(`Checking rollup property: ${propName}`);
@@ -472,28 +493,29 @@
                                 const relatedDbId = currentDb.properties[relationPropName].relation.data_source_id;
 
                                 if (relatedDbId) {
-                                    const relatedDb = await getDatabaseInfo(relatedDbId);
+                                    childPromises.push((async () => {
+                                        const relatedDb = await getDatabaseInfo(relatedDbId);
 
-                                    // --- CHECK IF RELATED DATABASE ALREADY ADDED ---
-                                    if (!allDatabases.some(db => db.id === relatedDb.id)) {
-                                        allDatabases.push(relatedDb);
-                                    }
+                                        if (!allDatabases.some(db => db.id === relatedDb.id)) {
+                                            allDatabases.push(relatedDb);
+                                        }
 
-                                    const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
-                                    const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
+                                        const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
+                                        const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
 
-                                    if (relatedDb.properties && relatedDb.properties[rolledUpPropName]) {
-                                        allRelations.push({
-                                            type: 'rollup_relation',
-                                            from: currentDbName,
-                                            to: relatedDbName,
-                                            fromCol: sanitizedPropName,
-                                            toCol: sanitizedRolledUpPropName,
-                                            relationProp: sanitizeColumnName(relationPropName)
-                                        });
-                                    } else {
-                                        addLog(`Rollup property ${rolledUpPropName} not found in related database ${relatedDbId}`);
-                                    }
+                                        if (relatedDb.properties && relatedDb.properties[rolledUpPropName]) {
+                                            allRelations.push({
+                                                type: 'rollup_relation',
+                                                from: currentDbName,
+                                                to: relatedDbName,
+                                                fromCol: sanitizedPropName,
+                                                toCol: sanitizedRolledUpPropName,
+                                                relationProp: sanitizeColumnName(relationPropName)
+                                            });
+                                        } else {
+                                            addLog(`Rollup property ${rolledUpPropName} not found in related database ${relatedDbId}`);
+                                        }
+                                    })());
                                 } else {
                                     addLog(`Rollup points to invalid relatedDbId for relation property ${relationPropName}`);
                                 }
@@ -518,23 +540,19 @@
                                         addLog(`Found formula relation via prop: ${referencedPropName} -> Database ID: ${relatedDbId}`);
 
                                         if (relatedDbId) {
-                                            await processDatabase(relatedDbId, databaseId, referencedPropName);
-                                            const relatedDb = await getDatabaseInfo(relatedDbId);
-
-                                            // --- CHECK IF RELATED DATABASE ALREADY ADDED ---
-                                            if (!allDatabases.some(db => db.id === relatedDb.id)) {
-                                                allDatabases.push(relatedDb);
-                                            }
-
-                                            const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
-
-                                            allRelations.push({
-                                                type: 'formula_relation',
-                                                from: currentDbName,
-                                                to: relatedDbName,
-                                                fromCol: sanitizedPropName,
-                                                toCol: sanitizedReferencedPropName,
-                                            });
+                                            childPromises.push(processDatabase(relatedDbId, databaseId, referencedPropName).then(() => {
+                                                const relatedDb = allDatabases.find(db => db.id === relatedDbId);
+                                                if (relatedDb) {
+                                                    const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || 'Untitled');
+                                                    allRelations.push({
+                                                        type: 'formula_relation',
+                                                        from: currentDbName,
+                                                        to: relatedDbName,
+                                                        fromCol: sanitizedPropName,
+                                                        toCol: sanitizedReferencedPropName,
+                                                    });
+                                                }
+                                            }));
                                         } else {
                                             addLog(`Formula ${propName} references relation property ${referencedPropName} with invalid relatedDbId`);
                                         }
@@ -546,27 +564,27 @@
                                             const relatedDbId = currentDb.properties[relationPropName].relation.data_source_id;
 
                                             if (relatedDbId) {
-                                                const relatedDb = await getDatabaseInfo(relatedDbId);
+                                                childPromises.push((async () => {
+                                                    const relatedDb = await getDatabaseInfo(relatedDbId);
+                                                    if (!allDatabases.some(db => db.id === relatedDb.id)) {
+                                                        allDatabases.push(relatedDb);
+                                                    }
 
-                                                // --- CHECK IF RELATED DATABASE ALREADY ADDED ---
-                                                if (!allDatabases.some(db => db.id === relatedDb.id)) {
-                                                    allDatabases.push(relatedDb);
-                                                }
+                                                    const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
+                                                    const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
 
-                                                const relatedDbName = sanitizeTableName(relatedDb.title[0]?.plain_text || "Untitled");
-                                                const sanitizedRolledUpPropName = sanitizeColumnName(rolledUpPropName);
-
-                                                if (relatedDb && relatedDb.properties && relatedDb.properties[rolledUpPropName]) {
-                                                    allRelations.push({
-                                                        type: 'formula_rollup',
-                                                        from: currentDbName,
-                                                        to: relatedDbName,
-                                                        fromCol: sanitizedPropName,
-                                                        toCol: sanitizedRolledUpPropName,
-                                                    });
-                                                } else {
-                                                    addLog(`Formula ${propName} references rollup ${referencedPropName} which points to a non-existent property in related database.`);
-                                                }
+                                                    if (relatedDb && relatedDb.properties && relatedDb.properties[rolledUpPropName]) {
+                                                        allRelations.push({
+                                                            type: 'formula_rollup',
+                                                            from: currentDbName,
+                                                            to: relatedDbName,
+                                                            fromCol: sanitizedPropName,
+                                                            toCol: sanitizedRolledUpPropName,
+                                                        });
+                                                    } else {
+                                                        addLog(`Formula ${propName} references rollup ${referencedPropName} which points to a non-existent property in related database.`);
+                                                    }
+                                                })());
                                             } else {
                                                 addLog(`Formula ${propName} references rollup ${referencedPropName} which points to invalid relatedDbId`);
                                             }
@@ -589,6 +607,7 @@
                             }
                         }
                     }
+                    await Promise.all(childPromises);
                 };
 
                 await processDatabase(startingDatabaseId);
@@ -689,12 +708,26 @@
                 document.getElementById('diagram-form').classList.add('hidden');
                 document.getElementById('output-section').classList.remove('hidden');
                 document.getElementById('diagramOutput').value = '';
+                document.getElementById('mermaid-preview').innerHTML = '';
+                document.getElementById('mermaid-preview').classList.add('hidden');
 
                 try {
                     const { allDatabases, allRelations } = await extractDatabaseRelationships(databaseId);
                     const diagramType = document.querySelector('input[name="diagramType"]:checked').value;
                     const generateDiagram = diagramType === "mermaid" ? generateMermaidER : generateDBML;
-                    document.getElementById('diagramOutput').value = generateDiagram(allDatabases, allRelations);
+                    const output = generateDiagram(allDatabases, allRelations);
+                    document.getElementById('diagramOutput').value = output;
+
+                    if (diagramType === 'mermaid') {
+                        document.getElementById('mermaid-preview').classList.remove('hidden');
+                        try {
+                             await mermaid.render('mermaid-svg', output).then(({ svg }) => {
+                                document.getElementById('mermaid-preview').innerHTML = svg;
+                            });
+                        } catch (err) {
+                            document.getElementById('mermaid-preview').innerHTML = `<div class="text-red-500">Error rendering Mermaid: ${err.message}</div>`;
+                        }
+                    }
 
                     addLog(`${diagramType === "mermaid" ? "Mermaid ER Diagram" : "DBML"} Generated!`);
                     document.getElementById('pasteMessage').innerHTML = diagramType === "mermaid"
@@ -702,6 +735,7 @@
                         : 'Paste your DBML diagram at <a href="https://dbdiagram.io/home" target="_blank">dbdiagram.io/home</a> or <a href="https://databasediagram.com/app" target="_blank">databasediagram.com/app</a> (select DBML).';
                     document.getElementById('pasteMessage').classList.add('text-sm', 'p-2', 'border-2', 'border-dashed', 'border-gray-500');
                     document.getElementById('copy-button').disabled = false;
+                    document.getElementById('download-button').disabled = false;
 
                 } catch (error) {
                     document.getElementById('diagramOutput').value = `Error: ${error.message}`;
@@ -718,12 +752,26 @@
             document.getElementById('copy-button').addEventListener('click', () => {
                 document.getElementById('diagramOutput').select();
                 document.execCommand('copy');
+                const originalContent = document.getElementById('copy-button').innerHTML;
                 document.getElementById('copy-button').textContent = "Copied!";
                 setTimeout(() => {
-                    document.getElementById('copy-button').innerHTML = `  <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg> <span>Copy to Clipboard</span>`;
+                    document.getElementById('copy-button').innerHTML = originalContent;
                 }, 2000);
+            });
+
+            document.getElementById('download-button').addEventListener('click', () => {
+                const content = document.getElementById('diagramOutput').value;
+                const diagramType = document.querySelector('input[name="diagramType"]:checked').value;
+                const extension = diagramType === 'mermaid' ? 'mmd' : 'dbml';
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `database-diagram.${extension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             });
 
             document.getElementById('refreshDatabases').addEventListener('click', async () => {
@@ -743,6 +791,7 @@
 
 
             // Initialization
+            mermaid.initialize({ startOnLoad: false });
             const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
             if (databases.length) populateDropdowns(databases);
             await checkAuthStatus();
