@@ -246,7 +246,8 @@
                             <span>Download</span>
                         </button>
                     </div>
-                    <div id="mermaid-preview" class="hidden w-full border-4 border-black bg-white p-4 overflow-auto"></div>
+                    <div id="mermaid-preview" class="hidden w-full border-4 border-black bg-white p-4 overflow-auto">
+                    </div>
                     <button id="reset-button"
                         class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
                         <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -721,7 +722,7 @@
                     if (diagramType === 'mermaid') {
                         document.getElementById('mermaid-preview').classList.remove('hidden');
                         try {
-                             await mermaid.render('mermaid-svg', output).then(({ svg }) => {
+                            await mermaid.render('mermaid-svg', output).then(({ svg }) => {
                                 document.getElementById('mermaid-preview').innerHTML = svg;
                             });
                         } catch (err) {

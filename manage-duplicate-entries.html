@@ -726,11 +726,11 @@
                     const duplicateGroup = potentialDuplicateMap.get(generateComparisonKey(page, selectedCompareProperties));
 
                     if (duplicateGroup && duplicateGroup.length > 1) {
-                        
+
                         // Filter out pages that don't have the required timestamp, treating them as "unmatched" (safe)
                         const validDuplicates = duplicateGroup.filter(p => {
-                             const val = p[timestampType] || (p.properties[timestampType] ? p.properties[timestampType].date?.start : null);
-                             return val && !isNaN(new Date(val).getTime());
+                            const val = p[timestampType] || (p.properties[timestampType] ? p.properties[timestampType].date?.start : null);
+                            return val && !isNaN(new Date(val).getTime());
                         });
 
                         if (validDuplicates.length > 1) {
@@ -747,7 +747,7 @@
                                 processedPageIds.add(duplicatePage.id); // Mark as processed
                             }
                         }
-                        
+
                         // Mark all original group members as processed to avoid re-evaluating them
                         duplicateGroup.forEach(p => processedPageIds.add(p.id));
                     }

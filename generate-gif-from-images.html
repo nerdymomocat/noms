@@ -14,7 +14,8 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Noms · Generate GIF from Images" />
-    <meta name="twitter:description" content="Create a GIF from images in a Notion database property, sorted by date." />
+    <meta name="twitter:description"
+        content="Create a GIF from images in a Notion database property, sorted by date." />
     <meta name="twitter:image" content="https://nerdymomocat.github.io/noms/ogImages/index.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -120,8 +121,7 @@
                                     URL</label>
                                 <input
                                     class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="url" id="workerUrl" name="workerUrl"
-                                    placeholder="Enter your Worker URL"
+                                    type="url" id="workerUrl" name="workerUrl" placeholder="Enter your Worker URL"
                                     required />
                                 <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
                             </div>
@@ -141,7 +141,8 @@
                         <!-- Database Selection -->
                         <div class="w-full">
                             <div class="flex items-center justify-between mb-2">
-                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Data Source</label>
+                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Data
+                                    Source</label>
                                 <button type="button" id="refreshDatabases"
                                     class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +152,7 @@
                                     Refresh
                                 </button>
                             </div>
-                             <div class="relative">
+                            <div class="relative">
                                 <input type="text" id="databaseSearch" placeholder="Search databases..."
                                     class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
                                 <select id="databaseSelect"
@@ -162,7 +163,7 @@
                             <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
                         </div>
 
-                         <!-- Image Property -->
+                        <!-- Image Property -->
                         <div class="w-full">
                             <label class="mb-2 block font-bold uppercase tracking-wide" for="filePropertySelect">
                                 Image Property
@@ -179,15 +180,16 @@
                             <summary class="cursor-pointer font-bold uppercase tracking-wide">
                                 Date Settings
                             </summary>
-                             <div class="mt-4 space-y-4">
+                            <div class="mt-4 space-y-4">
                                 <div class="w-full">
-                                    <label class="mb-2 block font-bold uppercase tracking-wide" for="datePropertySelect">
+                                    <label class="mb-2 block font-bold uppercase tracking-wide"
+                                        for="datePropertySelect">
                                         Date Property
                                     </label>
                                     <select id="datePropertySelect"
                                         class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-                                         <option value="last_edited_time">Last Edited Time</option>
-                                         <option value="created_time">Created Time</option>
+                                        <option value="last_edited_time">Last Edited Time</option>
+                                        <option value="created_time">Created Time</option>
                                     </select>
                                 </div>
 
@@ -207,17 +209,17 @@
                                             class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
                                     </div>
                                 </div>
-                             </div>
+                            </div>
                         </details>
 
-                         <!-- GIF Options -->
+                        <!-- GIF Options -->
                         <details open class="rounded-lg border-4 border-black p-4">
                             <summary class="cursor-pointer font-bold uppercase tracking-wide">
                                 GIF Options
                             </summary>
                             <div class="mt-4 space-y-4">
                                 <div class="w-full flex space-x-2">
-                                     <div class="w-1/2">
+                                    <div class="w-1/2">
                                         <label class="mb-2 block font-bold uppercase tracking-wide" for="frameDuration">
                                             Frame Duration (ms)
                                         </label>
@@ -232,7 +234,7 @@
                                             class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
                                     </div>
                                 </div>
-                                
+
                                 <div class="w-full flex items-center space-x-3">
                                     <input type="checkbox" id="overlayDate" checked
                                         class="h-6 w-6 border-4 border-black text-[#FEA97F] focus:ring-[#FEA97F]" />
@@ -255,11 +257,14 @@
                 </form>
 
                 <div id="progress-display" class="hidden space-y-6">
-                     <!-- Preview Area -->
-                    <div id="preview-container" class="hidden w-full border-4 border-black p-2 bg-gray-50 flex justify-center items-center">
-                        <img id="gif-preview" src="" alt="Generated GIF" class="max-w-full max-h-[500px] object-contain" />
+                    <!-- Preview Area -->
+                    <div id="preview-container"
+                        class="hidden w-full border-4 border-black p-2 bg-gray-50 flex justify-center items-center">
+                        <img id="gif-preview" src="" alt="Generated GIF"
+                            class="max-w-full max-h-[500px] object-contain" />
                     </div>
-                    <a id="download-link" href="#" download="animation.gif" class="hidden relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-black hover:bg-gray-800">
+                    <a id="download-link" href="#" download="animation.gif"
+                        class="hidden relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-black hover:bg-gray-800">
                         Download GIF
                     </a>
 
@@ -303,20 +308,20 @@
         const logsContainer = document.getElementById('logs-container');
         const resetButton = document.getElementById('reset-button');
         const authBanner = document.getElementById('auth-banner');
-        
+
         const workerUrlInput = document.getElementById('workerUrl');
         const workerTokenInput = document.getElementById('workerToken');
-        
+
         const databaseSelect = document.getElementById('databaseSelect');
         const filePropertySelect = document.getElementById('filePropertySelect');
         const datePropertySelect = document.getElementById('datePropertySelect');
         const startDateInput = document.getElementById('startDate');
         const endDateInput = document.getElementById('endDate');
-        
+
         const frameDurationInput = document.getElementById('frameDuration');
         const outputWidthInput = document.getElementById('outputWidth');
         const overlayDateCheckbox = document.getElementById('overlayDate');
-        
+
         const previewContainer = document.getElementById('preview-container');
         const gifPreview = document.getElementById('gif-preview');
         const downloadLink = document.getElementById('download-link');
@@ -416,7 +421,7 @@
             clearError(workerUrlInput);
             checkWorkerUrl();
         });
-         workerTokenInput.addEventListener('input', () => {
+        workerTokenInput.addEventListener('input', () => {
             clearError(workerTokenInput);
             checkWorkerUrl();
         });
@@ -429,7 +434,7 @@
             const workerUrl = workerUrlInput.value.trim();
             const workerToken = workerTokenInput.value.trim();
             const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
-            
+
             try {
                 const response = await fetch(url, {
                     ...options,
@@ -450,8 +455,8 @@
                 throw error;
             }
         }
-        
-         async function getDatabaseInfo(databaseId) {
+
+        async function getDatabaseInfo(databaseId) {
             return makeNotionRequest(`/data_sources/${databaseId}`);
         }
 
@@ -474,15 +479,15 @@
             }
             throw new Error(`API call failed after ${maxRetries} retries.`);
         }
-        
+
         // --- Fetching Pages ---
         async function fetchPages(databaseId, { dateProp, startDate, endDate }) {
             const filters = [];
-            
+
             // Date Filters
             if (startDate) {
                 const val = { on_or_after: new Date(startDate).toISOString() };
-                 if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
                     filters.push({ timestamp: dateProp, [dateProp]: val });
                 } else {
                     filters.push({ property: dateProp, date: val });
@@ -490,7 +495,7 @@
             }
             if (endDate) {
                 const val = { on_or_before: new Date(endDate).toISOString() };
-                 if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
                     filters.push({ timestamp: dateProp, [dateProp]: val });
                 } else {
                     filters.push({ property: dateProp, date: val });
@@ -498,7 +503,7 @@
             }
 
             const data = filters.length > 0 ? { filter: { and: filters } } : {};
-            
+
             // Sort by Date Ascending
             data.sorts = [];
             if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
@@ -532,11 +537,11 @@
             const databaseId = databaseSelect.value;
             const filePropId = filePropertySelect.value;
             const filePropName = filePropertySelect.options[filePropertySelect.selectedIndex].text;
-            
+
             const dateProp = datePropertySelect.value;
             const startDate = startDateInput.value;
             const endDate = endDateInput.value;
-            
+
             const frameDuration = parseInt(frameDurationInput.value) || 500;
             const outputWidth = parseInt(outputWidthInput.value) || 600;
             const overlayDate = overlayDateCheckbox.checked;
@@ -561,16 +566,16 @@
                 addLog('Fetching pages...');
                 const pages = await withExponentialBackoff(() => fetchPages(databaseId, { dateProp, startDate, endDate }));
                 addLog(`Found ${pages.length} pages. Extracting images...`);
-                
+
                 const frames = [];
-                
+
                 // 1. Extract Image URLs and Dates
                 for (const page of pages) {
                     const fileData = page.properties[filePropName];
                     if (fileData && fileData.type === 'files' && fileData.files.length > 0) {
                         const fileObj = fileData.files[0]; // Take first image
                         const fileUrl = fileObj.file?.url || fileObj.external?.url;
-                        
+
                         // Extract Date Value for Overlay
                         let dateValue = "";
                         if (dateProp === 'last_edited_time') dateValue = page.last_edited_time;
@@ -579,26 +584,26 @@
                             const dp = page.properties[dateProp];
                             if (dp && dp.date) dateValue = dp.date.start;
                         }
-                        
+
                         if (fileUrl) {
                             frames.push({ url: fileUrl, date: dateValue });
                         }
                     }
                 }
-                
+
                 if (frames.length === 0) {
                     throw new Error("No images found matching the criteria.");
                 }
-                
+
                 addLog(`Preparing ${frames.length} images...`);
-                
+
                 // 2. Init GIF
                 // We use a Blob for the worker script to avoid cross-origin worker issues with CDN
                 const workerBlob = new Blob([`
                     importScripts('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
                 `], { type: 'application/javascript' });
                 const workerUrl = URL.createObjectURL(workerBlob);
-                
+
                 const gif = new GIF({
                     workers: 2,
                     quality: 10,
@@ -606,104 +611,104 @@
                     height: null, // Will set based on aspect ratio of first image or canvas
                     workerScript: workerUrl
                 });
-                
+
                 // 3. Process Images
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
+
                 // Pre-calculate height based on first image aspect ratio if possible, 
                 // OR strictly resize all to fit width and maintain aspect ratio (variable height? GIF usually fixed size)
                 // Standard GIF: fixed width/height. We will set canvas height based on first image and crop/scale others?
                 // Or just scale width and let height vary? GIF.js usually takes one dimension.
                 // Let's scale to Fixed Width, and Fixed Height (based on first image ratio).
-                
+
                 let fixedHeight = 0;
-                
+
                 for (let i = 0; i < frames.length; i++) {
-                     const frame = frames[i];
-                     addLog(`Processing frame ${i + 1}/${frames.length}...`);
-                     
-                     // Fetch Blob -> Object URL
-                     // Note: We use fetch here to get the image data.
-                     // This works if the worker proxy forwards the request OR if Notion S3 allows it (usually yes for Signed URLs).
-                     const resp = await fetch(frame.url);
-                     if (!resp.ok) throw new Error(`Failed to fetch image: ${frame.url}`);
-                     const blob = await resp.blob();
-                     const imgUrl = URL.createObjectURL(blob);
-                     
-                     await new Promise((resolve, reject) => {
-                         const img = new Image();
-                         img.onload = () => {
-                             // Calculate dimensions
-                             if (i === 0) {
-                                 const ratio = img.height / img.width;
-                                 fixedHeight = Math.round(outputWidth * ratio);
-                                 canvas.width = outputWidth;
-                                 canvas.height = fixedHeight;
-                                 // Update GIF dimensions? GIF.js takes options in constructor.
-                                 // Actually, GIF.js automatically detects size from first frame if not specified?
-                                 // But we passed width. Let's assume it handles it or we might need to re-init.
-                                 // Safest: Set canvas size.
-                             }
-                             
-                             // Clear
-                             ctx.fillStyle = '#000';
-                             ctx.fillRect(0, 0, canvas.width, canvas.height);
-                             
-                             // Draw Image (Scale to Fit)
-                             // We scale width to match, height to maintain aspect ratio.
-                             // If height differs from fixedHeight, center it?
-                             const ratio = img.height / img.width;
-                             const drawHeight = Math.round(outputWidth * ratio);
-                             const yOffset = (fixedHeight - drawHeight) / 2;
-                             
-                             ctx.drawImage(img, 0, yOffset, outputWidth, drawHeight);
-                             
-                             // Overlay
-                             if (overlayDate && frame.date) {
-                                 const dateStr = new Date(frame.date).toLocaleDateString(); // Simple format
-                                 ctx.font = "bold 20px monospace";
-                                 ctx.textAlign = "right";
-                                 ctx.textBaseline = "top";
-                                 
-                                 // Shadow for readability
-                                 ctx.fillStyle = "black";
-                                 ctx.fillText(dateStr, canvas.width - 12, 12); // Offset shadow
-                                 
-                                 ctx.fillStyle = "#FEA97F"; // Brand color or White?
-                                 ctx.fillStyle = "white";
-                                 ctx.fillText(dateStr, canvas.width - 10, 10);
-                             }
-                             
-                             gif.addFrame(ctx, { copy: true, delay: frameDuration });
-                             URL.revokeObjectURL(imgUrl);
-                             resolve();
-                         };
-                         img.onerror = (e) => {
+                    const frame = frames[i];
+                    addLog(`Processing frame ${i + 1}/${frames.length}...`);
+
+                    // Fetch Blob -> Object URL
+                    // Note: We use fetch here to get the image data.
+                    // This works if the worker proxy forwards the request OR if Notion S3 allows it (usually yes for Signed URLs).
+                    const resp = await fetch(frame.url);
+                    if (!resp.ok) throw new Error(`Failed to fetch image: ${frame.url}`);
+                    const blob = await resp.blob();
+                    const imgUrl = URL.createObjectURL(blob);
+
+                    await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            // Calculate dimensions
+                            if (i === 0) {
+                                const ratio = img.height / img.width;
+                                fixedHeight = Math.round(outputWidth * ratio);
+                                canvas.width = outputWidth;
+                                canvas.height = fixedHeight;
+                                // Update GIF dimensions? GIF.js takes options in constructor.
+                                // Actually, GIF.js automatically detects size from first frame if not specified?
+                                // But we passed width. Let's assume it handles it or we might need to re-init.
+                                // Safest: Set canvas size.
+                            }
+
+                            // Clear
+                            ctx.fillStyle = '#000';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                            // Draw Image (Scale to Fit)
+                            // We scale width to match, height to maintain aspect ratio.
+                            // If height differs from fixedHeight, center it?
+                            const ratio = img.height / img.width;
+                            const drawHeight = Math.round(outputWidth * ratio);
+                            const yOffset = (fixedHeight - drawHeight) / 2;
+
+                            ctx.drawImage(img, 0, yOffset, outputWidth, drawHeight);
+
+                            // Overlay
+                            if (overlayDate && frame.date) {
+                                const dateStr = new Date(frame.date).toLocaleDateString(); // Simple format
+                                ctx.font = "bold 20px monospace";
+                                ctx.textAlign = "right";
+                                ctx.textBaseline = "top";
+
+                                // Shadow for readability
+                                ctx.fillStyle = "black";
+                                ctx.fillText(dateStr, canvas.width - 12, 12); // Offset shadow
+
+                                ctx.fillStyle = "#FEA97F"; // Brand color or White?
+                                ctx.fillStyle = "white";
+                                ctx.fillText(dateStr, canvas.width - 10, 10);
+                            }
+
+                            gif.addFrame(ctx, { copy: true, delay: frameDuration });
+                            URL.revokeObjectURL(imgUrl);
+                            resolve();
+                        };
+                        img.onerror = (e) => {
                             URL.revokeObjectURL(imgUrl);
                             reject(new Error("Image load failed"));
-                         };
-                         img.src = imgUrl;
-                     });
-                     
-                     const progress = ((i + 1) / frames.length) * 100;
-                     progressBar.style.width = `${progress * 0.8}%`; // Reserve 20% for rendering
+                        };
+                        img.src = imgUrl;
+                    });
+
+                    const progress = ((i + 1) / frames.length) * 100;
+                    progressBar.style.width = `${progress * 0.8}%`; // Reserve 20% for rendering
                 }
-                
+
                 addLog('Rendering GIF (this may take a moment)...');
-                
+
                 gif.on('finished', (blob) => {
                     progressBar.style.width = '100%';
                     const resultUrl = URL.createObjectURL(blob);
-                    
+
                     // Show Preview
                     previewContainer.classList.remove('hidden');
                     gifPreview.src = resultUrl;
-                    
+
                     // Setup Download
                     downloadLink.href = resultUrl;
                     downloadLink.classList.remove('hidden');
-                    
+
                     addLog('✨ GIF Generated Successfully!');
                     isProcessing = false;
                     submitButton.disabled = false;
@@ -711,7 +716,7 @@
                     loadingSpinner.classList.add('hidden');
                     resetButton.classList.remove('hidden');
                 });
-                
+
                 gif.render();
 
             } catch (error) {
@@ -751,8 +756,8 @@
                     populateDropdowns(dbs);
                 } catch (e) { console.error(e); }
             });
-            
-             document.getElementById('databaseSearch').addEventListener('input', (e) => {
+
+            document.getElementById('databaseSearch').addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
                 const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
                 const filtered = databases.filter(db =>
@@ -765,7 +770,7 @@
                 if (e.target.value) populatePropertySelects(e.target.value);
             });
         });
-        
+
         function populateDropdowns(databases) {
             databaseSelect.innerHTML = '<option value="">-</option>';
             databases.forEach(db => {
@@ -775,7 +780,7 @@
                 databaseSelect.appendChild(option);
             });
         }
-        
+
         async function populatePropertySelects(databaseId) {
             filePropertySelect.innerHTML = '<option value="">-</option>';
             // Keep default date options
@@ -783,11 +788,11 @@
                 <option value="last_edited_time">Last Edited Time</option>
                 <option value="created_time">Created Time</option>
             `;
-            
+
             try {
                 const dbInfo = await getDatabaseInfo(databaseId);
                 currentDatabaseProperties = dbInfo.properties;
-                
+
                 for (const [name, prop] of Object.entries(dbInfo.properties)) {
                     if (prop.type === 'files') {
                         const opt = document.createElement('option');
@@ -802,7 +807,7 @@
                         datePropertySelect.appendChild(opt);
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 addLog(`Error loading properties: ${e.message}`);
             }
         }
@@ -810,4 +815,5 @@
     </script>
     <script src="./js/loadKofi.js"></script>
 </body>
+
 </html>

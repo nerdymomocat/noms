@@ -200,89 +200,89 @@
                   <span class="select-none font-bold">Add OG Image</span>
                 </label>
 
-              <label class="flex cursor-pointer items-center space-x-2">
-                <div class="relative">
-                  <input type="checkbox" class="peer absolute opacity-0" id="addIcon" name="addIcon" checked />
-                  <div
-                    class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
-                    <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd" />
-                    </svg>
+                <label class="flex cursor-pointer items-center space-x-2">
+                  <div class="relative">
+                    <input type="checkbox" class="peer absolute opacity-0" id="addIcon" name="addIcon" checked />
+                    <div
+                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                      <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-                <span class="select-none font-bold">Add Icon</span>
-              </label>
+                  <span class="select-none font-bold">Add Icon</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Property selection dropdowns -->
+            <div class="w-full">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
+              <select id="urlPropertySelect" name="urlPropertyName" required
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="" class="text-gray-400">-</option>
+              </select>
+              <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+            </div>
+
+            <div class="w-full" id="ogImagePropertyName-container">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertySelect">OG Image
+                Property</label>
+              <select id="ogImagePropertySelect" name="ogImagePropertyName"
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="" class="text-gray-400">-</option>
+              </select>
+              <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+            </div>
+
+            <div class="w-full">
+              <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertySelect">Checked
+                Property</label>
+              <select id="checkedPropertySelect" name="checkedPropertyName"
+                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                <option value="" class="text-gray-400">-</option>
+              </select>
+              <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" id="submit-button"
+              class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+              <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+              </div>
+              <span id="submit-button-text">Start Update</span>
+            </button>
+          </div>
+        </form>
+
+        <div id="progress-display" class="hidden space-y-6">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h2 class="font-bold uppercase tracking-wide">Progress</h2>
+              <span id="progress-text" class="font-mono font-bold">0 / 0 pages</span>
+            </div>
+            <div class="h-4 w-full border-4 border-black bg-white">
+              <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300" style="width: 0%"></div>
             </div>
           </div>
-
-          <!-- Property selection dropdowns -->
-          <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="urlPropertySelect">URL Property</label>
-            <select id="urlPropertySelect" name="urlPropertyName" required
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-              <option value="" class="text-gray-400">-</option>
-            </select>
-            <p id="urlPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+          <div id="logs-container"
+            class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
           </div>
-
-          <div class="w-full" id="ogImagePropertyName-container">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="ogImagePropertySelect">OG Image
-              Property</label>
-            <select id="ogImagePropertySelect" name="ogImagePropertyName"
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-              <option value="" class="text-gray-400">-</option>
-            </select>
-            <p id="ogImagePropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
-
-          <div class="w-full">
-            <label class="mb-2 block font-bold uppercase tracking-wide" for="checkedPropertySelect">Checked
-              Property</label>
-            <select id="checkedPropertySelect" name="checkedPropertyName"
-              class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
-              <option value="" class="text-gray-400">-</option>
-            </select>
-            <p id="checkedPropertyName-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
-          </div>
-
-          <!-- Submit button -->
-          <button type="submit" id="submit-button"
-            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
-            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
-              <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-            </div>
-            <span id="submit-button-text">Start Update</span>
+          <button id="reset-button"
+            class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Start New Update</span>
           </button>
-      </div>
-      </form>
-
-      <div id="progress-display" class="hidden space-y-6">
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <h2 class="font-bold uppercase tracking-wide">Progress</h2>
-            <span id="progress-text" class="font-mono font-bold">0 / 0 pages</span>
-          </div>
-          <div class="h-4 w-full border-4 border-black bg-white">
-            <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300" style="width: 0%"></div>
-          </div>
         </div>
-        <div id="logs-container"
-          class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
-        </div>
-        <button id="reset-button"
-          class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
-          <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span>Start New Update</span>
-        </button>
       </div>
     </div>
-  </div>
   </div>
 
   <script type="module">
@@ -488,22 +488,22 @@
         // Parallel processing configuration
         const BATCH_SIZE = 5; // Process 5 pages concurrently
         const pagesToProcess = pages.filter(page => page.properties[formData.urlPropertyName]?.url);
-        
+
         for (let i = 0; i < pagesToProcess.length; i += BATCH_SIZE) {
-            const batch = pagesToProcess.slice(i, i + BATCH_SIZE);
-            addLog(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1} of ${Math.ceil(pagesToProcess.length/BATCH_SIZE)}...`);
-            
-            await Promise.all(batch.map(async (page) => {
-                const url = page.properties[formData.urlPropertyName]?.url;
-                try {
-                    await enhancer.updatePage(page, url);
-                    addLog(`✓ Updated page: ${url}`);
-                } catch (err) {
-                    addLog(`❌ Failed to update page ${url}: ${err.message}`);
-                } finally {
-                    updateProgress(progress.current + 1, progress.total);
-                }
-            }));
+          const batch = pagesToProcess.slice(i, i + BATCH_SIZE);
+          addLog(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(pagesToProcess.length / BATCH_SIZE)}...`);
+
+          await Promise.all(batch.map(async (page) => {
+            const url = page.properties[formData.urlPropertyName]?.url;
+            try {
+              await enhancer.updatePage(page, url);
+              addLog(`✓ Updated page: ${url}`);
+            } catch (err) {
+              addLog(`❌ Failed to update page ${url}: ${err.message}`);
+            } finally {
+              updateProgress(progress.current + 1, progress.total);
+            }
+          }));
         }
 
         addLog('✨ All pages processed');
