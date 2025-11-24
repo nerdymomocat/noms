@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noms · Generate GIF from Images</title>
+    <meta name="description" content="Create a GIF from images in a Notion database property, sorted by date." />
+    <meta property="og:title" content="Noms · Generate GIF from Images" />
+    <meta property="og:description" content="Create a GIF from images in a Notion database property, sorted by date." />
+    <meta property="og:image" content="https://nerdymomocat.github.io/noms/ogImages/index.png" />
+    <meta property="og:url" content="https://nerdymomocat.github.io/noms/generate-gif-from-images.html" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Noms · Generate GIF from Images" />
+    <meta name="twitter:description" content="Create a GIF from images in a Notion database property, sorted by date." />
+    <meta name="twitter:image" content="https://nerdymomocat.github.io/noms/ogImages/index.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Geist', 'system-ui', 'sans-serif'],
+                        mono: ['Geist Mono', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <style>
+        @view-transition {
+            navigation: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Custom styles */
+        body {
+            font-family: 'Geist', sans-serif;
+        }
+
+        h1 {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        h2,
+        .font-mono {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        /* Custom select styles */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        select option:first-child {
+            color: #9CA3AF;
+        }
+
+        select.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .tool-description {
+            font-family: 'Geist Mono', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #000;
+            padding: 1rem;
+            margin: 1.5rem auto;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-container"></div>
+    <div id="root" class="min-h-screen bg-gray-100 p-8">
+        <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
+            You need to be logged in to use this tool. Please log in above.
+        </div>
+        <div class="mx-auto max-w-2xl">
+            <div class="mb-8 flex items-center justify-center space-x-4">
+                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <h1 class="text-3xl font-black uppercase tracking-wider">
+                    GIF Generator
+                </h1>
+            </div>
+            <div class="tool-description">Create a GIF from images in a Notion database property, sorted by date.</div>
+
+            <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
+                <form id="gif-form" class="space-y-6">
+                    <details open class="rounded-lg border-4 border-black p-4">
+                        <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                            Worker Configuration
+                        </summary>
+                        <div class="mt-4 space-y-4">
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker
+                                    URL</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="url" id="workerUrl" name="workerUrl"
+                                    placeholder="Enter your Worker URL"
+                                    required />
+                                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker
+                                    Token</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="password" id="workerToken" name="workerToken"
+                                    placeholder="Enter your Worker Token" required />
+                                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div id="database-section" class="space-y-6">
+                        <!-- Database Selection -->
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select Data Source</label>
+                                <button type="button" id="refreshDatabases"
+                                    class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                             <div class="relative">
+                                <input type="text" id="databaseSearch" placeholder="Search databases..."
+                                    class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <select id="databaseSelect"
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                    <option value="" class="text-gray-400">-</option>
+                                </select>
+                            </div>
+                            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                         <!-- Image Property -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide" for="filePropertySelect">
+                                Image Property
+                            </label>
+                            <select id="filePropertySelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                            </select>
+                            <p id="filePropertySelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- Date Settings -->
+                        <details open class="rounded-lg border-4 border-black p-4">
+                            <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                                Date Settings
+                            </summary>
+                             <div class="mt-4 space-y-4">
+                                <div class="w-full">
+                                    <label class="mb-2 block font-bold uppercase tracking-wide" for="datePropertySelect">
+                                        Date Property
+                                    </label>
+                                    <select id="datePropertySelect"
+                                        class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                         <option value="last_edited_time">Last Edited Time</option>
+                                         <option value="created_time">Created Time</option>
+                                    </select>
+                                </div>
+
+                                <div class="w-full flex space-x-2">
+                                    <div class="w-1/2">
+                                        <label class="mb-2 block font-bold uppercase tracking-wide" for="startDate">
+                                            Start Date (Optional)
+                                        </label>
+                                        <input type="date" id="startDate"
+                                            class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="mb-2 block font-bold uppercase tracking-wide" for="endDate">
+                                            End Date (Optional)
+                                        </label>
+                                        <input type="date" id="endDate"
+                                            class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                    </div>
+                                </div>
+                             </div>
+                        </details>
+
+                         <!-- GIF Options -->
+                        <details open class="rounded-lg border-4 border-black p-4">
+                            <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                                GIF Options
+                            </summary>
+                            <div class="mt-4 space-y-4">
+                                <div class="w-full flex space-x-2">
+                                     <div class="w-1/2">
+                                        <label class="mb-2 block font-bold uppercase tracking-wide" for="frameDuration">
+                                            Frame Duration (ms)
+                                        </label>
+                                        <input type="number" id="frameDuration" value="500" min="50" step="50"
+                                            class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="mb-2 block font-bold uppercase tracking-wide" for="outputWidth">
+                                            Output Width (px)
+                                        </label>
+                                        <input type="number" id="outputWidth" value="600" min="100" step="50"
+                                            class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                    </div>
+                                </div>
+                                
+                                <div class="w-full flex items-center space-x-3">
+                                    <input type="checkbox" id="overlayDate" checked
+                                        class="h-6 w-6 border-4 border-black text-[#FEA97F] focus:ring-[#FEA97F]" />
+                                    <label class="font-bold uppercase tracking-wide" for="overlayDate">
+                                        Overlay Date (Camcorder Style)
+                                    </label>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- Submit button -->
+                        <button type="submit" id="submit-button"
+                            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+                            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                            </div>
+                            <span id="submit-button-text">Generate GIF</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="progress-display" class="hidden space-y-6">
+                     <!-- Preview Area -->
+                    <div id="preview-container" class="hidden w-full border-4 border-black p-2 bg-gray-50 flex justify-center items-center">
+                        <img id="gif-preview" src="" alt="Generated GIF" class="max-w-full max-h-[500px] object-contain" />
+                    </div>
+                    <a id="download-link" href="#" download="animation.gif" class="hidden relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-black hover:bg-gray-800">
+                        Download GIF
+                    </a>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-bold uppercase tracking-wide">Progress</h2>
+                        </div>
+                        <div class="h-4 w-full border-4 border-black bg-white">
+                            <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="logs-container"
+                        class="h-[200px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
+                    </div>
+                    <button id="reset-button"
+                        class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Start New GIF</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
+        import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
+        import { createHeader } from './js/header.js';
+
+        // --- DOM Element References ---
+        const form = document.getElementById('gif-form');
+        const submitButton = document.getElementById('submit-button');
+        const submitButtonText = document.getElementById('submit-button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const progressDisplay = document.getElementById('progress-display');
+        const progressBar = document.getElementById('progress-bar');
+        const logsContainer = document.getElementById('logs-container');
+        const resetButton = document.getElementById('reset-button');
+        const authBanner = document.getElementById('auth-banner');
+        
+        const workerUrlInput = document.getElementById('workerUrl');
+        const workerTokenInput = document.getElementById('workerToken');
+        
+        const databaseSelect = document.getElementById('databaseSelect');
+        const filePropertySelect = document.getElementById('filePropertySelect');
+        const datePropertySelect = document.getElementById('datePropertySelect');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        
+        const frameDurationInput = document.getElementById('frameDuration');
+        const outputWidthInput = document.getElementById('outputWidth');
+        const overlayDateCheckbox = document.getElementById('overlayDate');
+        
+        const previewContainer = document.getElementById('preview-container');
+        const gifPreview = document.getElementById('gif-preview');
+        const downloadLink = document.getElementById('download-link');
+
+        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+
+        // --- State ---
+        let isProcessing = false;
+        let logs = [];
+        let notionToken = null;
+        let currentDatabaseProperties = {};
+
+        // --- UI Helpers ---
+        const headerContainer = document.getElementById('header-container');
+        headerContainer.innerHTML = createHeader();
+        const userInfoContainer = document.getElementById('user-info');
+
+        function addLog(message) {
+            logs.push(message);
+            const logElement = document.createElement('div');
+            logElement.textContent = message;
+            logElement.className = 'whitespace-pre-wrap';
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function showError(inputElement, message) {
+            const errorElement = document.getElementById(`${inputElement.id}-error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                inputElement.classList.add('border-red-500');
+            }
+        }
+
+        function clearError(inputElement) {
+            const errorElement = document.getElementById(`${inputElement.id}-error`);
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+                inputElement.classList.remove('border-red-500');
+            }
+        }
+
+        function loadWorkerConfig() {
+            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                workerUrlInput.value = config.url;
+                workerTokenInput.value = config.token;
+            } else if (WORKER_URL) {
+                workerUrlInput.value = WORKER_URL;
+                if (WORKER_TOKEN) {
+                    workerTokenInput.value = WORKER_TOKEN;
+                }
+            }
+        }
+
+        function saveWorkerConfig(url, token) {
+            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+        }
+
+        async function checkAuthStatus() {
+            const nomsData = getLocalStorageWithExpiry("nomsData");
+            if (!nomsData) {
+                authBanner.classList.remove('hidden');
+                submitButton.disabled = true;
+                return;
+            }
+            notionToken = nomsData.accessToken;
+            submitButton.disabled = false;
+            authBanner.classList.add('hidden');
+        }
+
+        function isWorkerConfigComplete() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            return url && token;
+        }
+
+        function checkWorkerUrl() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            submitButton.disabled = !url || !token;
+            if (url && token) {
+                saveWorkerConfig(url, token);
+            }
+        }
+
+        form.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                clearError(e.target);
+            }
+        });
+
+        workerUrlInput.addEventListener('input', () => {
+            clearError(workerUrlInput);
+            checkWorkerUrl();
+        });
+         workerTokenInput.addEventListener('input', () => {
+            clearError(workerTokenInput);
+            checkWorkerUrl();
+        });
+
+
+        // --- Notion API ---
+        async function makeNotionRequest(endpoint, options = {}) {
+            if (!isWorkerConfigComplete()) throw new Error('Worker URL and Token are required');
+
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${notionToken}`,
+                        ...options.headers,
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    const errorMessage = errorData?.message || `API request failed: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+        
+         async function getDatabaseInfo(databaseId) {
+            return makeNotionRequest(`/data_sources/${databaseId}`);
+        }
+
+        async function withExponentialBackoff(apiCall, maxRetries = 5) {
+            let retries = 0;
+            let delay = 1000;
+            while (retries < maxRetries) {
+                try {
+                    return await apiCall();
+                } catch (error) {
+                    if (error.message.includes("429") || error.message.includes("rate limit")) {
+                        addLog(`Rate limited. Retrying in ${delay / 1000} seconds...`);
+                        await new Promise((resolve) => setTimeout(resolve, delay));
+                        delay *= 2;
+                        retries++;
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+            throw new Error(`API call failed after ${maxRetries} retries.`);
+        }
+        
+        // --- Fetching Pages ---
+        async function fetchPages(databaseId, { dateProp, startDate, endDate }) {
+            const filters = [];
+            
+            // Date Filters
+            if (startDate) {
+                const val = { on_or_after: new Date(startDate).toISOString() };
+                 if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                    filters.push({ timestamp: dateProp, [dateProp]: val });
+                } else {
+                    filters.push({ property: dateProp, date: val });
+                }
+            }
+            if (endDate) {
+                const val = { on_or_before: new Date(endDate).toISOString() };
+                 if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                    filters.push({ timestamp: dateProp, [dateProp]: val });
+                } else {
+                    filters.push({ property: dateProp, date: val });
+                }
+            }
+
+            const data = filters.length > 0 ? { filter: { and: filters } } : {};
+            
+            // Sort by Date Ascending
+            data.sorts = [];
+            if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                data.sorts.push({ timestamp: dateProp, direction: 'ascending' });
+            } else {
+                data.sorts.push({ property: dateProp, direction: 'ascending' });
+            }
+
+            let allResults = [];
+            let hasMore = true;
+            let startCursor = undefined;
+
+            while (hasMore) {
+                if (startCursor) data.start_cursor = startCursor;
+                const response = await makeNotionRequest(`/data_sources/${databaseId}/query`, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                allResults.push(...response.results);
+                hasMore = response.has_more;
+                startCursor = response.next_cursor;
+            }
+            return allResults;
+        }
+
+        // --- Main Logic ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (isProcessing) return;
+
+            const databaseId = databaseSelect.value;
+            const filePropId = filePropertySelect.value;
+            const filePropName = filePropertySelect.options[filePropertySelect.selectedIndex].text;
+            
+            const dateProp = datePropertySelect.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            
+            const frameDuration = parseInt(frameDurationInput.value) || 500;
+            const outputWidth = parseInt(outputWidthInput.value) || 600;
+            const overlayDate = overlayDateCheckbox.checked;
+
+            if (!databaseId || !filePropId || !dateProp || !isWorkerConfigComplete()) {
+                return; // Basic validation handled by required attributes mostly, but strict check good
+            }
+
+            isProcessing = true;
+            submitButton.disabled = true;
+            submitButtonText.classList.add('opacity-0');
+            loadingSpinner.classList.remove('hidden');
+            form.classList.add('hidden');
+            progressDisplay.classList.remove('hidden');
+            previewContainer.classList.add('hidden');
+            downloadLink.classList.add('hidden');
+            logs = [];
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+
+            try {
+                addLog('Fetching pages...');
+                const pages = await withExponentialBackoff(() => fetchPages(databaseId, { dateProp, startDate, endDate }));
+                addLog(`Found ${pages.length} pages. Extracting images...`);
+                
+                const frames = [];
+                
+                // 1. Extract Image URLs and Dates
+                for (const page of pages) {
+                    const fileData = page.properties[filePropName];
+                    if (fileData && fileData.type === 'files' && fileData.files.length > 0) {
+                        const fileObj = fileData.files[0]; // Take first image
+                        const fileUrl = fileObj.file?.url || fileObj.external?.url;
+                        
+                        // Extract Date Value for Overlay
+                        let dateValue = "";
+                        if (dateProp === 'last_edited_time') dateValue = page.last_edited_time;
+                        else if (dateProp === 'created_time') dateValue = page.created_time;
+                        else {
+                            const dp = page.properties[dateProp];
+                            if (dp && dp.date) dateValue = dp.date.start;
+                        }
+                        
+                        if (fileUrl) {
+                            frames.push({ url: fileUrl, date: dateValue });
+                        }
+                    }
+                }
+                
+                if (frames.length === 0) {
+                    throw new Error("No images found matching the criteria.");
+                }
+                
+                addLog(`Preparing ${frames.length} images...`);
+                
+                // 2. Init GIF
+                // We use a Blob for the worker script to avoid cross-origin worker issues with CDN
+                const workerBlob = new Blob([`
+                    importScripts('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+                `], { type: 'application/javascript' });
+                const workerUrl = URL.createObjectURL(workerBlob);
+                
+                const gif = new GIF({
+                    workers: 2,
+                    quality: 10,
+                    width: outputWidth,
+                    height: null, // Will set based on aspect ratio of first image or canvas
+                    workerScript: workerUrl
+                });
+                
+                // 3. Process Images
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Pre-calculate height based on first image aspect ratio if possible, 
+                // OR strictly resize all to fit width and maintain aspect ratio (variable height? GIF usually fixed size)
+                // Standard GIF: fixed width/height. We will set canvas height based on first image and crop/scale others?
+                // Or just scale width and let height vary? GIF.js usually takes one dimension.
+                // Let's scale to Fixed Width, and Fixed Height (based on first image ratio).
+                
+                let fixedHeight = 0;
+                
+                for (let i = 0; i < frames.length; i++) {
+                     const frame = frames[i];
+                     addLog(`Processing frame ${i + 1}/${frames.length}...`);
+                     
+                     // Fetch Blob -> Object URL
+                     // Note: We use fetch here to get the image data.
+                     // This works if the worker proxy forwards the request OR if Notion S3 allows it (usually yes for Signed URLs).
+                     const resp = await fetch(frame.url);
+                     if (!resp.ok) throw new Error(`Failed to fetch image: ${frame.url}`);
+                     const blob = await resp.blob();
+                     const imgUrl = URL.createObjectURL(blob);
+                     
+                     await new Promise((resolve, reject) => {
+                         const img = new Image();
+                         img.onload = () => {
+                             // Calculate dimensions
+                             if (i === 0) {
+                                 const ratio = img.height / img.width;
+                                 fixedHeight = Math.round(outputWidth * ratio);
+                                 canvas.width = outputWidth;
+                                 canvas.height = fixedHeight;
+                                 // Update GIF dimensions? GIF.js takes options in constructor.
+                                 // Actually, GIF.js automatically detects size from first frame if not specified?
+                                 // But we passed width. Let's assume it handles it or we might need to re-init.
+                                 // Safest: Set canvas size.
+                             }
+                             
+                             // Clear
+                             ctx.fillStyle = '#000';
+                             ctx.fillRect(0, 0, canvas.width, canvas.height);
+                             
+                             // Draw Image (Scale to Fit)
+                             // We scale width to match, height to maintain aspect ratio.
+                             // If height differs from fixedHeight, center it?
+                             const ratio = img.height / img.width;
+                             const drawHeight = Math.round(outputWidth * ratio);
+                             const yOffset = (fixedHeight - drawHeight) / 2;
+                             
+                             ctx.drawImage(img, 0, yOffset, outputWidth, drawHeight);
+                             
+                             // Overlay
+                             if (overlayDate && frame.date) {
+                                 const dateStr = new Date(frame.date).toLocaleDateString(); // Simple format
+                                 ctx.font = "bold 20px monospace";
+                                 ctx.textAlign = "right";
+                                 ctx.textBaseline = "top";
+                                 
+                                 // Shadow for readability
+                                 ctx.fillStyle = "black";
+                                 ctx.fillText(dateStr, canvas.width - 12, 12); // Offset shadow
+                                 
+                                 ctx.fillStyle = "#FEA97F"; // Brand color or White?
+                                 ctx.fillStyle = "white";
+                                 ctx.fillText(dateStr, canvas.width - 10, 10);
+                             }
+                             
+                             gif.addFrame(ctx, { copy: true, delay: frameDuration });
+                             URL.revokeObjectURL(imgUrl);
+                             resolve();
+                         };
+                         img.onerror = (e) => {
+                            URL.revokeObjectURL(imgUrl);
+                            reject(new Error("Image load failed"));
+                         };
+                         img.src = imgUrl;
+                     });
+                     
+                     const progress = ((i + 1) / frames.length) * 100;
+                     progressBar.style.width = `${progress * 0.8}%`; // Reserve 20% for rendering
+                }
+                
+                addLog('Rendering GIF (this may take a moment)...');
+                
+                gif.on('finished', (blob) => {
+                    progressBar.style.width = '100%';
+                    const resultUrl = URL.createObjectURL(blob);
+                    
+                    // Show Preview
+                    previewContainer.classList.remove('hidden');
+                    gifPreview.src = resultUrl;
+                    
+                    // Setup Download
+                    downloadLink.href = resultUrl;
+                    downloadLink.classList.remove('hidden');
+                    
+                    addLog('✨ GIF Generated Successfully!');
+                    isProcessing = false;
+                    submitButton.disabled = false;
+                    submitButtonText.classList.remove('opacity-0');
+                    loadingSpinner.classList.add('hidden');
+                    resetButton.classList.remove('hidden');
+                });
+                
+                gif.render();
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                console.error(error);
+                isProcessing = false;
+                submitButton.disabled = false;
+                submitButtonText.classList.remove('opacity-0');
+                loadingSpinner.classList.add('hidden');
+                resetButton.classList.remove('hidden');
+            }
+        });
+
+        resetButton.addEventListener('click', () => {
+            isProcessing = false;
+            progressDisplay.classList.add('hidden');
+            form.classList.remove('hidden');
+            resetButton.classList.add('hidden');
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth();
+            checkAuthStatus();
+            loadWorkerConfig();
+            checkWorkerUrl();
+            updateUIHeader(userInfoContainer);
+
+            const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+            if (databases.length) populateDropdowns(databases);
+
+            document.getElementById('refreshDatabases').addEventListener('click', async () => {
+                try {
+                    const dbs = await fetchDatabases();
+                    populateDropdowns(dbs);
+                } catch (e) { console.error(e); }
+            });
+            
+             document.getElementById('databaseSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                const filtered = databases.filter(db =>
+                    db.title[0]?.plain_text.toLowerCase().includes(searchTerm)
+                );
+                populateDropdowns(filtered);
+            });
+
+            databaseSelect.addEventListener('change', (e) => {
+                if (e.target.value) populatePropertySelects(e.target.value);
+            });
+        });
+        
+        function populateDropdowns(databases) {
+            databaseSelect.innerHTML = '<option value="">-</option>';
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db.id;
+                option.textContent = db.title[0]?.plain_text || 'Untitled';
+                databaseSelect.appendChild(option);
+            });
+        }
+        
+        async function populatePropertySelects(databaseId) {
+            filePropertySelect.innerHTML = '<option value="">-</option>';
+            // Keep default date options
+            datePropertySelect.innerHTML = `
+                <option value="last_edited_time">Last Edited Time</option>
+                <option value="created_time">Created Time</option>
+            `;
+            
+            try {
+                const dbInfo = await getDatabaseInfo(databaseId);
+                currentDatabaseProperties = dbInfo.properties;
+                
+                for (const [name, prop] of Object.entries(dbInfo.properties)) {
+                    if (prop.type === 'files') {
+                        const opt = document.createElement('option');
+                        opt.value = prop.id;
+                        opt.textContent = name;
+                        filePropertySelect.appendChild(opt);
+                    }
+                    if (prop.type === 'date') {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        datePropertySelect.appendChild(opt);
+                    }
+                }
+            } catch(e) {
+                addLog(`Error loading properties: ${e.message}`);
+            }
+        }
+
+    </script>
+    <script src="./js/loadKofi.js"></script>
+</body>
+</html>

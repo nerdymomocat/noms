@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noms · Download Files</title>
+    <meta name="description" content="Download all files from a specific property in your Notion database as a ZIP archive." />
+    <meta property="og:title" content="Noms · Download Files" />
+    <meta property="og:description" content="Download all files from a specific property in your Notion database as a ZIP archive." />
+    <meta property="og:image" content="https://nerdymomocat.github.io/noms/ogImages/index.png" />
+    <meta property="og:url" content="https://nerdymomocat.github.io/noms/download-files.html" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Noms · Download Files" />
+    <meta name="twitter:description" content="Download all files from a specific property in your Notion database as a ZIP archive." />
+    <meta name="twitter:image" content="https://nerdymomocat.github.io/noms/ogImages/index.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Geist', 'system-ui', 'sans-serif'],
+                        mono: ['Geist Mono', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        @view-transition {
+            navigation: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Custom styles */
+        body {
+            font-family: 'Geist', sans-serif;
+        }
+
+        h1 {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        h2,
+        .font-mono {
+            font-family: 'Geist Mono', monospace;
+        }
+
+        /* Custom select styles */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        select option:first-child {
+            color: #9CA3AF;
+        }
+
+        select.border-black {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .tool-description {
+            font-family: 'Geist Mono', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #000;
+            padding: 1rem;
+            margin: 1.5rem auto;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-container"></div>
+    <div id="root" class="min-h-screen bg-gray-100 p-8">
+        <div id="auth-banner" class="hidden bg-red-500 text-white p-4 text-center mb-8">
+            You need to be logged in to use this tool. Please log in above.
+        </div>
+        <div class="mx-auto max-w-2xl">
+            <div class="mb-8 flex items-center justify-center space-x-4">
+                <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <h1 class="text-3xl font-black uppercase tracking-wider">
+                    Download Files
+                </h1>
+            </div>
+            <div class="tool-description">Download all files from a specific property in your Notion database as a ZIP archive.</div>
+
+            <div id="main-container" class="rounded-lg border-8 border-black bg-white p-8 shadow-[8px_8px_0_0_#000]">
+                <form id="download-form" class="space-y-6">
+                    <details open class="rounded-lg border-4 border-black p-4">
+                        <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                            Worker Configuration
+                        </summary>
+                        <div class="mt-4 space-y-4">
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerUrl">Worker
+                                    URL</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="url" id="workerUrl" name="workerUrl"
+                                    placeholder="Enter your Worker URL (e.g., https://your-worker.workers.dev)"
+                                    required />
+                                <p id="workerUrl-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                            <div class="w-full">
+                                <label class="mb-2 block font-bold uppercase tracking-wide" for="workerToken">Worker
+                                    Token</label>
+                                <input
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="password" id="workerToken" name="workerToken"
+                                    placeholder="Enter your Worker Token" required />
+                                <p id="workerToken-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Show database section but keep submit disabled -->
+                    <div id="database-section" class="space-y-6">
+                        <!-- Database selection -->
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select
+                                    Data Source</label>
+                                <button type="button" id="refreshDatabases"
+                                    class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <input type="text" id="databaseSearch" placeholder="Search databases..."
+                                    class="w-full border-4 border-black bg-white px-3 py-2 mb-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <select id="databaseSelect"
+                                    class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                    <option value="" class="text-gray-400">-</option>
+                                </select>
+                            </div>
+                            <p id="databaseSelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <!-- File Property Selection -->
+                        <div class="w-full">
+                            <label class="mb-2 block font-bold uppercase tracking-wide" for="filePropertySelect">
+                                Property with Files
+                            </label>
+                            <select id="filePropertySelect"
+                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                <option value="" class="text-gray-400">-</option>
+                            </select>
+                            <p id="filePropertySelect-error" class="mt-1 hidden text-sm font-bold text-red-500"></p>
+                        </div>
+
+                        <details class="rounded-lg border-4 border-black p-4">
+                            <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                                Optional Filters
+                            </summary>
+                            <div class="mt-4 space-y-4">
+                                <!-- Date Filter -->
+                                <div class="w-full">
+                                    <label class="mb-2 block font-bold uppercase tracking-wide">
+                                        Date Filter (Optional)
+                                    </label>
+                                    <div class="flex space-x-2">
+                                        <div class="w-1/2">
+                                            <select id="datePropertySelect"
+                                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                                <option value="last_edited_time">Last Edited Time</option>
+                                                <option value="created_time">Created Time</option>
+                                            </select>
+                                        </div>
+                                        <div class="w-1/2">
+                                            <input type="date" id="filterDate"
+                                                class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Include pages on or after this date.
+                                    </p>
+                                </div>
+
+                                <!-- Status/Select Filter -->
+                                <div class="w-full">
+                                    <label class="mb-2 block font-bold uppercase tracking-wide">
+                                        Property Filter (Optional)
+                                    </label>
+                                    <div class="flex space-x-2">
+                                        <div class="w-1/2">
+                                            <select id="statusPropertySelect"
+                                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F]">
+                                                <option value="">- Select Property -</option>
+                                            </select>
+                                        </div>
+                                        <div class="w-1/2">
+                                            <select id="statusValueSelect" disabled
+                                                class="w-full border-4 border-black bg-white px-3 py-2 text-black focus:outline-none focus:ring-4 focus:ring-[#FEA97F] disabled:opacity-50 disabled:cursor-not-allowed">
+                                                <option value="">- Select Value -</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Title Filter -->
+                                <div class="w-full">
+                                    <label class="mb-2 block font-bold uppercase tracking-wide" for="titleFilterInput">
+                                        Title Contains (Optional)
+                                    </label>
+                                    <input type="text" id="titleFilterInput" placeholder="e.g. Project Alpha"
+                                        class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                </div>
+                            </div>
+                        </details>
+
+                         <details class="rounded-lg border-4 border-black p-4">
+                            <summary class="cursor-pointer font-bold uppercase tracking-wide">
+                                File Options
+                            </summary>
+                            <div class="mt-4 space-y-4">
+                                <!-- File Extensions -->
+                                <div class="w-full">
+                                    <label class="mb-2 block font-bold uppercase tracking-wide" for="fileExtensions">
+                                        File Extensions (Optional)
+                                    </label>
+                                    <input type="text" id="fileExtensions" placeholder="e.g. pdf, png, jpg"
+                                        class="w-full border-4 border-black bg-white px-3 py-2 text-black placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-[#FEA97F]" />
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Comma separated. Leave empty to download all file types.
+                                    </p>
+                                </div>
+
+                                <!-- Folder Structure -->
+                                <div class="w-full flex items-center space-x-3">
+                                    <input type="checkbox" id="groupByPage" checked
+                                        class="h-6 w-6 border-4 border-black text-[#FEA97F] focus:ring-[#FEA97F]" />
+                                    <label class="font-bold uppercase tracking-wide" for="groupByPage">
+                                        Group files in folders by Page Name
+                                    </label>
+                                </div>
+                            </div>
+                         </details>
+
+                        <!-- Submit button -->
+                        <button type="submit" id="submit-button"
+                            class="relative inline-flex items-center justify-center w-full h-12 px-8 py-4 font-bold text-white transition-colors bg-[#FEA97F] hover:bg-[#fe9665] active:bg-[#fe8b51] disabled:pointer-events-none disabled:opacity-50">
+                            <div id="loading-spinner" class="absolute inset-0 hidden items-center justify-center">
+                                <div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+                            </div>
+                            <span id="submit-button-text">Download ZIP</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="progress-display" class="hidden space-y-6">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-bold uppercase tracking-wide">Progress</h2>
+                        </div>
+                        <div class="h-4 w-full border-4 border-black bg-white">
+                            <div id="progress-bar" class="h-full bg-[#FEA97F] transition-all duration-300"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="logs-container"
+                        class="h-[300px] space-y-1 overflow-y-auto border-4 border-black bg-white p-4 font-mono">
+                    </div>
+                    <button id="reset-button"
+                        class="hidden w-full h-12 flex items-center justify-center font-bold text-black transition-colors border-4 border-black bg-white hover:bg-gray-100">
+                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Start New Download</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { getLocalStorageWithExpiry, updateUIHeader, initializeAuth } from './js/auth.js';
+        import { WORKER_URL, WORKER_TOKEN } from './js/constants.js';
+        import { createHeader } from './js/header.js';
+
+        // --- DOM Element References ---
+        const form = document.getElementById('download-form');
+        const submitButton = document.getElementById('submit-button');
+        const submitButtonText = document.getElementById('submit-button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const progressDisplay = document.getElementById('progress-display');
+        const progressBar = document.getElementById('progress-bar');
+        const logsContainer = document.getElementById('logs-container');
+        const resetButton = document.getElementById('reset-button');
+        const authBanner = document.getElementById('auth-banner');
+        const WORKER_CONFIG_KEY = 'nomsWorkerConfig';
+        
+        const workerUrlInput = document.getElementById('workerUrl');
+        const workerTokenInput = document.getElementById('workerToken');
+        
+        const databaseSelect = document.getElementById('databaseSelect');
+        const filePropertySelect = document.getElementById('filePropertySelect');
+        // New Filters
+        const datePropertySelect = document.getElementById('datePropertySelect');
+        const filterDateInput = document.getElementById('filterDate');
+        const statusPropertySelect = document.getElementById('statusPropertySelect');
+        const statusValueSelect = document.getElementById('statusValueSelect');
+        const titleFilterInput = document.getElementById('titleFilterInput');
+        
+        const fileExtensionsInput = document.getElementById('fileExtensions');
+        const groupByPageCheckbox = document.getElementById('groupByPage');
+
+
+        // --- Form Data and State ---
+        let isProcessing = false;
+        let logs = [];
+        let notionToken = null;
+        let abortController = null;
+        let currentDatabaseProperties = {}; // Store property definitions
+
+        // --- Utility Functions ---
+
+        const headerContainer = document.getElementById('header-container');
+        headerContainer.innerHTML = createHeader();
+        const userInfoContainer = document.getElementById('user-info');
+
+
+        function loadWorkerConfig() {
+            const savedConfig = localStorage.getItem(WORKER_CONFIG_KEY);
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                workerUrlInput.value = config.url;
+                workerTokenInput.value = config.token;
+            } else if (WORKER_URL) {
+                workerUrlInput.value = WORKER_URL;
+                if (WORKER_TOKEN) {
+                    workerTokenInput.value = WORKER_TOKEN;
+                }
+            }
+        }
+
+        function saveWorkerConfig(url, token) {
+            localStorage.setItem(WORKER_CONFIG_KEY, JSON.stringify({ url, token }));
+        }
+
+        async function checkAuthStatus() {
+            const nomsData = getLocalStorageWithExpiry("nomsData");
+            if (!nomsData) {
+                authBanner.classList.remove('hidden');
+                submitButton.disabled = true;
+                return;
+            }
+            notionToken = nomsData.accessToken;
+            submitButton.disabled = false;
+            authBanner.classList.add('hidden');
+        }
+
+        function isWorkerConfigComplete() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            return url && token;
+        }
+
+        function checkWorkerUrl() {
+            const url = workerUrlInput.value.trim();
+            const token = workerTokenInput.value.trim();
+            submitButton.disabled = !url || !token;
+            if (url && token) {
+                saveWorkerConfig(url, token);
+            }
+        }
+
+        form.addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                clearError(e.target);
+            }
+        });
+
+        workerUrlInput.addEventListener('input', () => {
+            clearError(workerUrlInput);
+            checkWorkerUrl();
+        });
+
+        workerTokenInput.addEventListener('input', () => {
+            clearError(workerTokenInput);
+            checkWorkerUrl();
+        });
+
+        // --- Notion API Request Helpers ---
+
+        async function makeNotionRequest(endpoint, options = {}) {
+            if (!isWorkerConfigComplete()) {
+                throw new Error('Worker URL and Token are required');
+            }
+
+            const workerUrl = workerUrlInput.value.trim();
+            const workerToken = workerTokenInput.value.trim();
+
+            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${notionToken}`,
+                        ...options.headers,
+                    },
+                    signal: options.signal // Pass signal for abortion
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    const errorMessage = errorData?.message || `API request failed: ${response.status}`;
+                    throw new Error(errorMessage);
+                }
+
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function getDatabaseInfo(databaseId) {
+            return makeNotionRequest(`/data_sources/${databaseId}`);
+        }
+
+        async function withExponentialBackoff(apiCall, maxRetries = 5) {
+            let retries = 0;
+            let delay = 1000;
+
+            while (retries < maxRetries) {
+                try {
+                    return await apiCall();
+                } catch (error) {
+                    if (error.message.includes("429") || error.message.includes("rate limit")) {
+                        addLog(`Rate limited. Retrying in ${delay / 1000} seconds...`);
+                        await new Promise((resolve) => setTimeout(resolve, delay));
+                        delay *= 2;
+                        retries++;
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+            throw new Error(`API call failed after ${maxRetries} retries.`);
+        }
+
+        // --- File Fetching Helpers ---
+        
+        // Fetch a file as a blob from a URL (handling potential CORS if worker proxies it, or direct if permitted)
+        // NOTE: Notion S3 links are signed but might have CORS issues if fetched directly from browser.
+        // We might need to proxy through our worker if CORS fails. 
+        // However, usually Notion S3 links allow GET.
+        async function fetchFileBlob(url) {
+             try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Failed to fetch file: ${response.statusText}`);
+                return await response.blob();
+            } catch (error) {
+                 // If direct fetch fails (CORS?), try proxying through worker if implemented.
+                 // Since we don't have a guaranteed proxy endpoint for generic files in the provided worker file list,
+                 // we will hope standard fetch works or the user has a CORS proxy.
+                 // Actually, standard Notion signed URLs usually work for direct download/img src, but fetch API might be blocked by CORS.
+                 // If CORS blocks it, we are in trouble without a proxy.
+                 // Let's try standard fetch. If it fails, we might need to implement a proxy in the worker?
+                 // For now, assuming standard fetch works for Signed URLs (often they allow Origin *).
+                 throw new Error(`Download failed (possibly CORS): ${error.message}`);
+            }
+        }
+
+
+        // --- Form Submission and Processing ---
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (isProcessing) return;
+
+            const databaseId = databaseSelect.value;
+            const filePropId = filePropertySelect.value;
+            const filePropName = filePropertySelect.options[filePropertySelect.selectedIndex].text;
+            
+            // New Filter Values
+            const dateProp = datePropertySelect.value;
+            const filterDate = filterDateInput.value;
+            const statusProp = statusPropertySelect.value;
+            const statusValue = statusValueSelect.value;
+            const titleFilter = titleFilterInput.value;
+
+            const extensionsStr = fileExtensionsInput.value.trim();
+            const groupByPage = groupByPageCheckbox.checked;
+
+            // Validation
+            let isValid = true;
+            if (!databaseId) {
+                showError(databaseSelect, 'Database is required');
+                isValid = false;
+            }
+            if (!filePropId) {
+                showError(filePropertySelect, 'File property is required');
+                isValid = false;
+            }
+            if (!isWorkerConfigComplete()) {
+                showError(workerUrlInput, "Worker URL/Token required");
+                showError(workerTokenInput, "Worker URL/Token required");
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Parse extensions
+            const allowedExtensions = extensionsStr ? extensionsStr.split(',').map(s => s.trim().toLowerCase().replace('.', '')) : null;
+
+            isProcessing = true;
+            submitButton.disabled = true;
+            submitButtonText.classList.add('opacity-0');
+            loadingSpinner.classList.remove('hidden');
+            form.classList.add('hidden');
+            progressDisplay.classList.remove('hidden');
+            logs = [];
+            logsContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+            abortController = new AbortController();
+
+            const zip = new JSZip();
+            let fileCount = 0;
+
+            try {
+                addLog('Fetching pages...');
+                
+                // Fetch Pages with new filters
+                const pages = await withExponentialBackoff(() => fetchPages(databaseId, {
+                    dateProp, filterDate, statusProp, statusValue, titleFilter
+                }));
+                addLog(`Found ${pages.length} pages to process.`);
+                
+                const totalPages = pages.length;
+                
+                for (let i = 0; i < totalPages; i++) {
+                    const page = pages[i];
+                    
+                    // Update Progress
+                    const progressPercentage = ((i) / totalPages) * 100;
+                    progressBar.style.width = `${progressPercentage}%`;
+                    
+                    // Get Page Title
+                    let pageTitle = "Untitled";
+                    // Try to find title property
+                    for (const [key, val] of Object.entries(page.properties)) {
+                        if (val.type === 'title') {
+                            pageTitle = val.title.map(t => t.plain_text).join('') || "Untitled";
+                            break;
+                        }
+                    }
+                    // Sanitize title for filename
+                    pageTitle = pageTitle.replace(/[^a-z0-9 \-_]/gi, '_').trim();
+                    const pageIdShort = page.id.replace(/-/g, '').substring(0, 6); // Short ID for uniqueness
+
+                    // Get Files
+                    // Properties might be by ID or Name. `page.properties` keys are names usually.
+                    // But we have `filePropName` from our select.
+                    const fileData = page.properties[filePropName];
+                    
+                    if (fileData && fileData.type === 'files' && fileData.files.length > 0) {
+                        
+                        for (const fileObj of fileData.files) {
+                            const fileUrl = fileObj.file?.url || fileObj.external?.url;
+                            const fileName = fileObj.name;
+                            
+                            if (!fileUrl) continue;
+
+                            // Check Extension
+                            const ext = fileName.split('.').pop().toLowerCase();
+                            if (allowedExtensions && !allowedExtensions.includes(ext)) {
+                                continue;
+                            }
+
+                            addLog(`Downloading: ${fileName} (Page: ${pageTitle})`);
+                            
+                            try {
+                                const blob = await fetchFileBlob(fileUrl);
+                                
+                                // Add to Zip
+                                let filePath = fileName;
+                                if (groupByPage) {
+                                    filePath = `${pageTitle}_${pageIdShort}/${fileName}`;
+                                } else {
+                                    // Handle duplicate filenames in flat structure
+                                    filePath = `${pageTitle}_${pageIdShort}_${fileName}`;
+                                }
+                                
+                                zip.file(filePath, blob);
+                                fileCount++;
+                                
+                            } catch (err) {
+                                addLog(`❌ Failed to download ${fileName}: ${err.message}`);
+                            }
+                        }
+                    }
+                }
+                
+                progressBar.style.width = '100%';
+                
+                if (fileCount === 0) {
+                    addLog('No files found matching criteria.');
+                } else {
+                    addLog(`Generating ZIP with ${fileCount} files...`);
+                    const zipContent = await zip.generateAsync({ type: "blob" });
+                    saveAs(zipContent, `notion_files_export_${new Date().toISOString().slice(0,10)}.zip`);
+                    addLog('✅ Download started!');
+                }
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                console.error(error);
+            } finally {
+                isProcessing = false;
+                submitButton.disabled = false;
+                submitButtonText.classList.remove('opacity-0');
+                loadingSpinner.classList.add('hidden');
+                resetButton.classList.remove('hidden');
+            }
+        });
+
+                // --- Data Fetching Implementation ---
+        
+                async function fetchPages(databaseId, { dateProp, filterDate, statusProp, statusValue, titleFilter }) {
+                    const filters = [];
+                    
+                    // 1. Date Filter
+                    if (filterDate) {
+                        const formattedDate = new Date(filterDate).toISOString(); // Notion expects ISO string
+                        if (dateProp === 'last_edited_time' || dateProp === 'created_time') {
+                             filters.push({
+                                timestamp: dateProp,
+                                [dateProp]: {
+                                    on_or_after: formattedDate
+                                }
+                            });
+                        } else {
+                             // Custom Date Property
+                            filters.push({
+                                property: dateProp,
+                                date: {
+                                    on_or_after: formattedDate
+                                }
+                            });
+                        }
+                    }
+        
+                    // 2. Status/Select/Checkbox Filter
+                    if (statusProp && statusValue) {
+                        const propDef = currentDatabaseProperties[statusProp];
+                        if (propDef) {
+                            if (propDef.type === 'select') {
+                                filters.push({
+                                    property: statusProp,
+                                    select: { equals: statusValue }
+                                });
+                            } else if (propDef.type === 'multi_select') {
+                                filters.push({
+                                    property: statusProp,
+                                    multi_select: { contains: statusValue }
+                                });
+                            } else if (propDef.type === 'status') {
+                                filters.push({
+                                    property: statusProp,
+                                    status: { equals: statusValue }
+                                });
+                            } else if (propDef.type === 'checkbox') {
+                                filters.push({
+                                    property: statusProp,
+                                    checkbox: { equals: statusValue === 'true' }
+                                });
+                            }
+                        }
+                    }
+        
+                    // 3. Title Filter
+                    if (titleFilter) {
+                        filters.push({
+                            property: "title", // Notion always uses "title" type for the name property, filtering by type "title" usually works by property name too but 'title' key is safer if we don't know the name. 
+                            // Actually, the API docs say: { "property": "Name", "title": { "contains": "..." } }
+                            // We need to find the property name of type title.
+                            // Let's iterate currentDatabaseProperties to find the title property name.
+                            // However, standard practice is using the property name.
+                        });
+                         // Find title property name
+                        let titlePropName = "Name";
+                        for (const [key, val] of Object.entries(currentDatabaseProperties)) {
+                            if (val.type === 'title') {
+                                titlePropName = key;
+                                break;
+                            }
+                        }
+                        filters.push({
+                            property: titlePropName,
+                            title: { contains: titleFilter }
+                        });
+                    }
+        
+                    const data = filters.length > 0 ? { filter: { and: filters } } : {};
+                    
+                    let allResults = [];
+                    let hasMore = true;
+                    let startCursor = undefined;
+        
+                    while (hasMore) {
+                        if (startCursor) data.start_cursor = startCursor;
+                        const response = await makeNotionRequest(`/data_sources/${databaseId}/query`, {
+                            method: 'POST',
+                            body: JSON.stringify(data),
+                        });
+                        allResults.push(...response.results);
+                        hasMore = response.has_more;
+                        startCursor = response.next_cursor;
+                    }
+                    return allResults;
+                }
+                
+                // --- UI Helper Functions ---
+                function addLog(message) {
+                    logs.push(message);
+                    const logElement = document.createElement('div');
+                    logElement.textContent = message;
+                    logElement.className = 'whitespace-pre-wrap';
+                    logsContainer.appendChild(logElement);
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }
+        
+                function showError(inputElement, message) {
+                    const errorElement = document.getElementById(`${inputElement.id}-error`);
+                    if (errorElement) {
+                        errorElement.textContent = message;
+                        errorElement.classList.remove('hidden');
+                        inputElement.classList.add('border-red-500');
+                    }
+                }
+        
+                function clearError(inputElement) {
+                    const errorElement = document.getElementById(`${inputElement.id}-error`);
+                    if (errorElement) {
+                        errorElement.textContent = '';
+                        errorElement.classList.add('hidden');
+                        inputElement.classList.remove('border-red-500');
+                    }
+                }
+        
+                // --- Initialization & Event Listeners ---
+        
+                resetButton.addEventListener('click', () => {
+                    isProcessing = false;
+                    progressDisplay.classList.add('hidden');
+                    form.classList.remove('hidden');
+                    resetButton.classList.add('hidden');
+                    logsContainer.innerHTML = '';
+                    progressBar.style.width = '0%';
+                });
+        
+                function populateDropdowns(databases) {
+                    databaseSelect.innerHTML = '<option value="">-</option>';
+                    databases.forEach(db => {
+                        const option = document.createElement('option');
+                        option.value = db.id;
+                        option.textContent = db.title[0]?.plain_text || 'Untitled';
+                        databaseSelect.appendChild(option);
+                    });
+                }
+                
+                async function fetchDatabases() {
+                    if (!isWorkerConfigComplete()) throw new Error('Worker config missing');
+                     const workerUrl = workerUrlInput.value.trim();
+                    const workerToken = workerTokenInput.value.trim();
+        
+                    const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${notionToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            filter: {
+                                value: "data_source",
+                                property: "object"
+                            }
+                        })
+                    });
+                     if (!response.ok) throw new Error('Failed to fetch databases');
+                    const data = await response.json();
+                    localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
+                    return data.results;
+                }
+        
+                // Populate Property Selects
+                async function populatePropertySelects(databaseId) {
+                    filePropertySelect.innerHTML = '<option value="">-</option>';
+                    // Reset new filters
+                    datePropertySelect.innerHTML = `
+                        <option value="last_edited_time">Last Edited Time</option>
+                        <option value="created_time">Created Time</option>
+                    `;
+                    statusPropertySelect.innerHTML = '<option value="">- Select Property -</option>';
+                    statusValueSelect.innerHTML = '<option value="">- Select Value -</option>';
+                    statusValueSelect.disabled = true;
+                    
+                    try {
+                        const dbInfo = await getDatabaseInfo(databaseId);
+                        currentDatabaseProperties = dbInfo.properties; // Store for later use
+                        
+                        for (const [name, prop] of Object.entries(currentDatabaseProperties)) {
+                            // File Properties
+                            if (prop.type === 'files') {
+                                const opt = document.createElement('option');
+                                opt.value = prop.id; // Can use ID or name, stick to ID for selects usually
+                                opt.textContent = name;
+                                filePropertySelect.appendChild(opt);
+                            }
+                            // Date Properties
+                            if (prop.type === 'date') {
+                                const opt = document.createElement('option');
+                                opt.value = name; // Use name for filter construction
+                                opt.textContent = name;
+                                datePropertySelect.appendChild(opt);
+                            }
+                            // Status/Select/Checkbox Properties
+                            if (['select', 'multi_select', 'status', 'checkbox'].includes(prop.type)) {
+                                const opt = document.createElement('option');
+                                opt.value = name; // Use name for easier lookup
+                                opt.textContent = name;
+                                statusPropertySelect.appendChild(opt);
+                            }
+                        }
+                    } catch (e) {
+                        addLog(`Error loading properties: ${e.message}`);
+                    }
+                }
+        
+                document.addEventListener('DOMContentLoaded', async () => {
+                    await initializeAuth();
+                    checkAuthStatus();
+                    loadWorkerConfig();
+                    checkWorkerUrl();
+                    updateUIHeader(userInfoContainer);
+        
+                    const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                    if (databases.length) populateDropdowns(databases);
+        
+                    document.getElementById('refreshDatabases').addEventListener('click', async () => {
+                        try {
+                            const dbs = await fetchDatabases();
+                            populateDropdowns(dbs);
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
+                    
+                    document.getElementById('databaseSearch').addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase();
+                        const databases = JSON.parse(localStorage.getItem('nomsDatabases') || '[]');
+                        const filtered = databases.filter(db => {
+                            const title = db.title?.[0]?.plain_text || "";
+                            return title.toLowerCase().includes(searchTerm);
+                        });
+                        populateDropdowns(filtered);
+                    });
+        
+                    databaseSelect.addEventListener('change', (e) => {
+                        if (e.target.value) populatePropertySelects(e.target.value);
+                    });
+                    
+                    // Handle Status Property Change
+                    statusPropertySelect.addEventListener('change', (e) => {
+                        const propName = e.target.value;
+                        statusValueSelect.innerHTML = '<option value="">- Select Value -</option>';
+                        
+                        if (!propName) {
+                            statusValueSelect.disabled = true;
+                            return;
+                        }
+                        
+                        const prop = currentDatabaseProperties[propName];
+                        if (prop) {
+                            statusValueSelect.disabled = false;
+                            if (prop.type === 'select' || prop.type === 'multi_select') {
+                                 prop[prop.type].options.forEach(opt => {
+                                    const option = document.createElement('option');
+                                    option.value = opt.name;
+                                    option.textContent = opt.name;
+                                    statusValueSelect.appendChild(option);
+                                 });
+                            } else if (prop.type === 'status') {
+                                prop.status.options.forEach(opt => {
+                                    const option = document.createElement('option');
+                                    option.value = opt.name;
+                                    option.textContent = opt.name;
+                                    statusValueSelect.appendChild(option);
+                                 });
+                                 // Status might also have groups, but usually options list all.
+                            } else if (prop.type === 'checkbox') {
+                                 // Checkbox manual options
+                                 const trueOpt = document.createElement('option');
+                                 trueOpt.value = "true";
+                                 trueOpt.textContent = "Checked";
+                                 statusValueSelect.appendChild(trueOpt);
+                                 
+                                 const falseOpt = document.createElement('option');
+                                 falseOpt.value = "false";
+                                 falseOpt.textContent = "Unchecked";
+                                 statusValueSelect.appendChild(falseOpt);
+                            }
+                        }
+                    });
+                });
+    </script>
+    <script src="./js/loadKofi.js"></script>
+</body>
+</html>
