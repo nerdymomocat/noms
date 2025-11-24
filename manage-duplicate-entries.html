@@ -265,7 +265,7 @@
                         <div class="w-full">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="font-bold uppercase tracking-wide" for="databaseSelect">Select
-                                    Database</label>
+                                    Data Source</label>
                                 <button type="button" id="refreshDatabases"
                                     class="text-sm text-[#FEA97F] hover:text-[#fe9665] flex items-center">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -726,18 +726,30 @@
                     const duplicateGroup = potentialDuplicateMap.get(generateComparisonKey(page, selectedCompareProperties));
 
                     if (duplicateGroup && duplicateGroup.length > 1) {
-                        // Sort the duplicate group based on retain criteria
-                        duplicateGroup.sort(comparePages(timestampType, direction));
+                        
+                        // Filter out pages that don't have the required timestamp, treating them as "unmatched" (safe)
+                        const validDuplicates = duplicateGroup.filter(p => {
+                             const val = p[timestampType] || (p.properties[timestampType] ? p.properties[timestampType].date?.start : null);
+                             return val && !isNaN(new Date(val).getTime());
+                        });
 
-                        addLog(`Found ${duplicateGroup.length - 1} potential duplicates for page ${page.id}.`);
+                        if (validDuplicates.length > 1) {
+                            // Sort the duplicate group based on retain criteria
+                            validDuplicates.sort(comparePages(timestampType, direction));
 
-                        // Apply outcome to all *but* the first (retained) page
-                        for (const duplicatePage of duplicateGroup.slice(1)) {
-                            if (processedPageIds.has(duplicatePage.id)) continue; // IMPORTANT: avoid double processing within the same group
-                            await withExponentialBackoff(() => applyOutcome(duplicatePage.id, outcome, conditionalProperty, duplicateGroup[0].id));
-                            addLog(`Applied outcome to page ${duplicatePage.id}.`);
-                            processedPageIds.add(duplicatePage.id); // Mark as processed
+                            addLog(`Found ${validDuplicates.length - 1} duplicates for page ${validDuplicates[0].id} (Group size: ${duplicateGroup.length}).`);
+
+                            // Apply outcome to all *but* the first (retained) page
+                            for (const duplicatePage of validDuplicates.slice(1)) {
+                                if (processedPageIds.has(duplicatePage.id)) continue; // IMPORTANT: avoid double processing within the same group
+                                await withExponentialBackoff(() => applyOutcome(duplicatePage.id, outcome, conditionalProperty, validDuplicates[0].id));
+                                addLog(`Applied outcome to page ${duplicatePage.id}.`);
+                                processedPageIds.add(duplicatePage.id); // Mark as processed
+                            }
                         }
+                        
+                        // Mark all original group members as processed to avoid re-evaluating them
+                        duplicateGroup.forEach(p => processedPageIds.add(p.id));
                     }
                     processedPageIds.add(page.id); //mark as processed
 
@@ -908,13 +920,24 @@
 
         function comparePages(timestampType, direction) {
             return (a, b) => {
-                const aTimestamp = a.properties[timestampType] ? new Date(a[timestampType]) : new Date(0); // Default to a very old date
-                const bTimestamp = b.properties[timestampType] ? new Date(b[timestampType]) : new Date(0);
+                // Access system properties directly (e.g., a.created_time), fallback to properties if not found (for future extensibility)
+                const aVal = a[timestampType] || (a.properties[timestampType] ? a.properties[timestampType].date?.start : null);
+                const bVal = b[timestampType] || (b.properties[timestampType] ? b.properties[timestampType].date?.start : null);
+
+                const aDate = aVal ? new Date(aVal) : null;
+                const bDate = bVal ? new Date(bVal) : null;
+
+                // If a date is missing, treat it as equal or handle as desired. 
+                // However, the filtering logic in the main loop should handle "unmatched" cases.
+                // Here we just provide a sort order.
+                if (!aDate && !bDate) return 0;
+                if (!aDate) return 1; // Missing dates go to the end (preserved if keeping first?)
+                if (!bDate) return -1;
 
                 if (direction === 'ascending') {
-                    return aTimestamp - bTimestamp;
+                    return aDate - bDate;
                 } else { // descending
-                    return bTimestamp - aTimestamp;
+                    return bDate - aDate;
                 }
             };
         }

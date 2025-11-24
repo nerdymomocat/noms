@@ -188,13 +188,17 @@
                   <div class="relative">
                     <input type="checkbox" class="peer absolute opacity-0" id="addOGImage" name="addOGImage" checked />
                     <div
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clip-rule="evenodd" />
-                    </svg>
+                      class="flex h-6 w-6 items-center justify-center border-4 border-black bg-white peer-checked:bg-[#FEA97F] peer-focus:ring-4 peer-focus:ring-[#FEA97F]">
+                      <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
-              </div>
-              <span class="select-none font-bold">Add OG Image</span>
-              </label>
+                  <span class="select-none font-bold">Add OG Image</span>
+                </label>
 
               <label class="flex cursor-pointer items-center space-x-2">
                 <div class="relative">
@@ -481,19 +485,27 @@
         updateProgress(0, pagesToActuallyProcess);
         addLog(`Found ${pagesToActuallyProcess} pages to process`);
 
-
-        for (const page of pages) {
-          const url = page.properties[formData.urlPropertyName]?.url;
-          if (!url) continue;
-
-          addLog(`Processing page: ${url}`);
-
-          // Pass the 'page' object to 'updatePage'
-          await enhancer.updatePage(page, url);
-          addLog(`✓ Updated page: ${url}`);
-          updateProgress(progress.current + 1, progress.total);
-
+        // Parallel processing configuration
+        const BATCH_SIZE = 5; // Process 5 pages concurrently
+        const pagesToProcess = pages.filter(page => page.properties[formData.urlPropertyName]?.url);
+        
+        for (let i = 0; i < pagesToProcess.length; i += BATCH_SIZE) {
+            const batch = pagesToProcess.slice(i, i + BATCH_SIZE);
+            addLog(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1} of ${Math.ceil(pagesToProcess.length/BATCH_SIZE)}...`);
+            
+            await Promise.all(batch.map(async (page) => {
+                const url = page.properties[formData.urlPropertyName]?.url;
+                try {
+                    await enhancer.updatePage(page, url);
+                    addLog(`✓ Updated page: ${url}`);
+                } catch (err) {
+                    addLog(`❌ Failed to update page ${url}: ${err.message}`);
+                } finally {
+                    updateProgress(progress.current + 1, progress.total);
+                }
+            }));
         }
+
         addLog('✨ All pages processed');
         resetButton.classList.remove('hidden');
       } catch (error) {
