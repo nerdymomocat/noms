@@ -592,6 +592,7 @@
             ...options,
             headers: {
               'Content-Type': 'application/json',
+              'Notion-Version': '2025-09-03',
               'Authorization': `Bearer ${this.notionToken}`, // Use the stored token
               ...options.headers,
             },
@@ -865,7 +866,8 @@
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${notionToken}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Notion-Version': '2025-09-03'
           },
           body: JSON.stringify({
             filter: {
@@ -904,7 +906,8 @@
 
         const response = await fetch(requestUrl.toString(), {
           headers: {
-            'Authorization': `Bearer ${notionToken}`
+            'Authorization': `Bearer ${notionToken}`,
+            'Notion-Version': '2025-09-03'
           }
         });
 
