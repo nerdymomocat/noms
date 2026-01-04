@@ -577,7 +577,15 @@
 
       async makeRequest(endpoint, options = {}) {
         // Use this.notionToken, *not* a secret URL parameter
-        const url = `${this.config.workerUrl}${endpoint}?token=${encodeURIComponent(this.config.workerToken)}`;
+        const workerUrl = this.config.workerUrl.trim().replace(/\/$/, '');
+        const workerToken = this.config.workerToken ? this.config.workerToken.trim() : '';
+        const targetUrl = `https://api.notion.com/v1${endpoint}`;
+        const requestUrl = new URL(workerUrl);
+        requestUrl.searchParams.append('url', targetUrl);
+        if (workerToken) {
+          requestUrl.searchParams.append('token', workerToken);
+        }
+        const url = requestUrl.toString();
 
         try {
           const response = await fetch(url, {
@@ -844,10 +852,16 @@
       }
 
       try {
-        const workerUrl = workerUrlInput.value.trim();
+        const workerUrl = workerUrlInput.value.trim().replace(/\/$/, '');
         const workerToken = workerTokenInput.value.trim();
+        const targetUrl = 'https://api.notion.com/v1/search';
+        const requestUrl = new URL(workerUrl);
+        requestUrl.searchParams.append('url', targetUrl);
+        if (workerToken) {
+          requestUrl.searchParams.append('token', workerToken);
+        }
 
-        const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+        const response = await fetch(requestUrl.toString(), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${notionToken}`,
@@ -879,10 +893,16 @@
       }
 
       try {
-        const workerUrl = workerUrlInput.value.trim();
+        const workerUrl = workerUrlInput.value.trim().replace(/\/$/, '');
         const workerToken = workerTokenInput.value.trim();
+        const targetUrl = `https://api.notion.com/v1/data_sources/${databaseId}`;
+        const requestUrl = new URL(workerUrl);
+        requestUrl.searchParams.append('url', targetUrl);
+        if (workerToken) {
+          requestUrl.searchParams.append('token', workerToken);
+        }
 
-        const response = await fetch(`${workerUrl}/data_sources/${databaseId}?token=${encodeURIComponent(workerToken)}`, {
+        const response = await fetch(requestUrl.toString(), {
           headers: {
             'Authorization': `Bearer ${notionToken}`
           }

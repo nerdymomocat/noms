@@ -433,10 +433,15 @@
                 throw new Error('Worker URL and Token are required');
             }
 
-            const workerUrl = workerUrlInput.value.trim();
+            const workerUrl = workerUrlInput.value.trim().replace(/\/$/, '');
             const workerToken = workerTokenInput.value.trim();
-
-            const url = `${workerUrl}${endpoint}?token=${encodeURIComponent(workerToken)}`;
+            const targetUrl = `https://api.notion.com/v1${endpoint}`;
+            const requestUrl = new URL(workerUrl);
+            requestUrl.searchParams.append('url', targetUrl);
+            if (workerToken) {
+                requestUrl.searchParams.append('token', workerToken);
+            }
+            const url = requestUrl.toString();
             try {
                 const response = await fetch(url, {
                     ...options,
@@ -831,15 +836,8 @@
 
         async function fetchDatabases() {
             if (!isWorkerConfigComplete()) throw new Error('Worker config missing');
-            const workerUrl = workerUrlInput.value.trim();
-            const workerToken = workerTokenInput.value.trim();
-
-            const response = await fetch(`${workerUrl}/search?token=${encodeURIComponent(workerToken)}`, {
+            const data = await makeNotionRequest('/search', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${notionToken}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({
                     filter: {
                         value: "data_source",
@@ -847,8 +845,6 @@
                     }
                 })
             });
-            if (!response.ok) throw new Error('Failed to fetch databases');
-            const data = await response.json();
             localStorage.setItem('nomsDatabases', JSON.stringify(data.results));
             return data.results;
         }
